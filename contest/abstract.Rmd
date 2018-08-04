@@ -1,0 +1,18 @@
+---
+title: "On the Surface: Analyzing the effect of court type in tennis grand slams"
+author: "The Competent Ones"
+date: "August 4, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Abstract
+
+Tennis grand slams consist of the Australian Open, French Open, Wimbledon, and US Open, which are played on hard (Plexicushion), clay, grass, and hard (DecoTurf) courts, respectively.  The surface type may substantially effect play including ball speed, height, and spin as well as player speed and agility.  It is also believed that play style and practice habits may contribute to different results across surface types.  For example, Rafael Nadal is thought to be the best clay court player of all time whereas Roger Federer is particularly known for dominance at Wimbledon.  On the women's side, Serena Williams once struggled on clay courts but has seemingly transformed her style to produce better results, but perhaps has suffered on grass as a consequence.
+
+In this analysis, we examine the result of top 100 players in grand slams from 2013-2018 across the four different surfaces.  We create a hierarchical model with fixed and random effects in order to predict the number of points won in a match.  We take into consideration player-specific effects, nationality (which is thought to have an effect on playstyle), sex, ranking, ELO, and game statistics. 
+
+We assess the fit of our model using (MSE, BIC??) in addition to "common sense" factors such as the fact that Rafael Nadal should in some way be indicated as a superior clay court player by our model.  We compare the results of top 100 players across slams as well as look into the results of Nadal, Federer, and S. Williams.
