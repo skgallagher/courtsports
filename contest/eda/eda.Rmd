@@ -1,0 +1,50 @@
+---
+title: "EDA"
+author: "The Competent Ones"
+date: "August 4, 2018"
+output: html_document
+---
+	
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+	
+```{r libraries}
+library(devtools)
+library(deuce)
+library(knitr)
+devtools::load_all("..") # Loads courtsports package
+```
+	
+
+	
+```{r data-extraction	}
+data("point_by_point")
+pbp = tbl_df(point_by_point)
+pbp$wim = grepl("Wimbledon", pbp$tny_name)
+pbp$french = grepl("FrenchOpen", pbp$tny_name)
+pbp$aus = grepl("AustralianOpen", pbp$tny_name)
+pbp$us = grepl("USOpen", pbp$tny_name)
+pbp$qual = grepl("Qualifying", pbp$tny_name)
+
+# Create data for Grand Slam finals
+gsf = filter(pbp, !qual & (wim | french | us | aus))
+```
+```{r numbers}
+dim(gsf)
+colnames(gsf)
+kable(table(gsf$tny_name))
+
+any(grepl("Serena", gsf$server1))
+any(grepl("Nadal", gsf$server1))
+any(grepl("Federer", gsf$server1))
+
+## Opponents of our 3
+## Serena
+gsf$server2[grepl("Serena", gsf$server1)]
+## Nadal
+gsf$server2[grepl("Nadal", gsf$server1)]
+## Fed
+gsf$server2[grepl("Federer", gsf$server1)]
+```
