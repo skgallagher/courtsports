@@ -48,3 +48,27 @@ gsf$server2[grepl("Nadal", gsf$server1)]
 ## Fed
 gsf$server2[grepl("Federer", gsf$server1)]
 ```
+
+## Looking at ATP (Men's) matches
+
+```{r}
+data(atp_matches)
+
+gs <- atp_matches %>% filter(tourney_level == "Grand Slams" & year >= 2013)
+sort(unique(gs$tourney_name))
+colnames(gs)
+
+## Add new column of points won
+gs <- gs %>% mutate(w_pointswon = w_1stWon + w_2ndWon + l_svpt - l_1stWon - l_2ndWon)
+gs <- gs %>% mutate(l_pointswon = l_1stWon + l_2ndWon + w_svpt - w_1stWon - w_2ndWon)
+gs <- gs %>% mutate(w_morepts = w_pointswon >= l_pointswon)
+n_correct <- sum(gs$w_morepts, na.rm = TRUE)
+na_pt_indices <- which(is.na(gs$w_morepts))
+n_correct / (nrow(gs) - length(na_pt_indices)) # more points won tells us who won >95% of the time
+gs[na_pt_indices,]  ## All NA are straight up retirements so not really NA
+incorrect_inds <- which(!gs$w_morepts)
+table(gs[incorrect_inds, "tourney_name"])
+table(gs[incorrect_inds, "Retirement"])
+```
+	
+Australian Open with most wins with loser winning more points than winner.	Of all the matches where the winners won fewer points than the losers, only 10 were retirements.  Which means you are more likely to quit when you are down (10 night before).
