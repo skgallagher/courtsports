@@ -69,6 +69,48 @@ gs[na_pt_indices,]  ## All NA are straight up retirements so not really NA
 incorrect_inds <- which(!gs$w_morepts)
 table(gs[incorrect_inds, "tourney_name"])
 table(gs[incorrect_inds, "Retirement"])
+
 ```
 	
 Australian Open with most wins with loser winning more points than winner.	Of all the matches where the winners won fewer points than the losers, only 10 were retirements.  Which means you are more likely to quit when you are down (10 night before).
+
+```{r data-cleaning}
+library(forcats)
+library(stringr)
+## Combine US Open
+gs$tournament <- factor(gs$tourney_name)
+gs$tournament <- gs$tournament %>% fct_collapse("US Open" = c("US Open", "Us Open"))
+
+## Extract te number of sets in each match
+no_ret <- gsub(" RET", "", gs$score)
+set_scores <- str_split(no_ret, " ")
+n_sets <- sapply(set_scores, length)
+gs$n_sets <- n_sets
+
+
+
+```
+```{r some-plots}
+library(ggplot2)
+library(reshape2)
+
+g <- ggplot(data = gs, aes(x = w_pointswon)) + geom_histogram()
+g
+
+g2 <- ggplot(data = gs, aes(x = w_pointswon)) +
+    geom_histogram(aes(y=..density..)) +
+    facet_grid(~tournament)
+g2
+
+##
+bp <- ggplot(data = gs, aes(x = n_sets)) +
+    geom_bar(aes(y = ..prop..)) +
+    facet_grid(~tournament)
+bp
+
+g3 <- ggplot(data = gs, aes(x = w_pointswon)) +
+    geom_histogram(aes(y=..density..)) +
+    facet_grid(n_sets~tournament)
+g3
+
+```
