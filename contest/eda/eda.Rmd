@@ -114,3 +114,40 @@ g3 <- ggplot(data = gs, aes(x = w_pointswon)) +
 g3
 
 ```
+```{r}
+## Moving to boxplots
+g2 <- ggplot(data = gs,
+             aes(x = tournament, y= minutes,
+                            group = tournament, col = tournament)) +
+    geom_boxplot(size = 1)  + facet_grid(~n_sets)
+g2
+
+```
+It appears Wimbledon has the shortest matches.
+	## Retirements by court?
+
+```{r}
+## More boxplots
+g2 <- ggplot(data = gs,
+             aes(x = winner_ioc,
+                            group = tournament, fill = tournament)) +
+    geom_bar(aes(y=..prop..), size = 1)  + facet_grid(~tournament) + 
+    theme(axis.text.x = element_text(angle = 90, hjust = 1)) + coord_flip()
+g2
+
+## RG has least amount of double faults
+```
+
++ Find games won and lost
++ Find service games won/lost
++ Look at retirements by court
++ Look at wins by country by court
++ Find number of tiebreaks by court
++ Need to normalize wins by country by n_players in tournament (but both are interesting)
++ Look at gs point by point
++ Need to get French Open 2018 results
++ Get Women's data and combine it
++ Look atGS_point_by_point.  Is it complete?  Is it complete for rafa, serena, fed?
++ Facet by round
++ Do above but instead predict winner games, or winner sets, loser games, or loser sets
++ get hex colors of GS  
