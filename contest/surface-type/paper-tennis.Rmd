@@ -46,9 +46,8 @@ dim(gs)
 
 ```{r data-cleaning, include = FALSE}
 ## Add new columns of winner points won, loser points won, and whether the winner had more points
-gs <- gs %>% mutate(w_pointswon = w_1stWon + w_2ndWon + l_svpt - l_1stWon - l_2ndWon)
-gs <- gs %>% mutate(l_pointswon = l_1stWon + l_2ndWon + w_svpt - w_1stWon - w_2ndWon)
-gs <- gs %>% mutate(w_morepts = w_pointswon >= l_pointswon)
+gs <- gs %>% mutate(w_pointswon = w_1stWon + w_2ndWon + l_svpt - l_1stWon - l_2ndWon,
+                    l_pointswon = l_1stWon + l_2ndWon + w_svpt - w_1stWon - w_2ndWon)
 
 ## Extract number of sets in each match
 no_ret <- gsub(" RET", "", gs$score)
@@ -89,6 +88,26 @@ gs$w_bplost <- gs$w_bpFaced - gs$w_bpSaved
 gs$l_bplost <- gs$l_bpFaced - gs$l_bpSaved
 ```
 
+
+```{r}
+remove_from_loser <- names(gs)[grep("^w|^W", names(gs))] %>%
+  .[-which(. == "winner_rank")]
+
+remove_from_winner <- names(gs)[grep("^l|^L", names(gs))] %>%
+  .[-which(. %in% c("loser_rank", "league"))]
+
+gs_l <- dplyr::select(gs, -remove_from_loser) %>%
+  rename(opponent_rank = winner_rank)
+gs_w <- dplyr::select(gs, -remove_from_winner)  %>%
+  rename(opponent_rank = loser_rank)
+
+names(gs_w) <- gsub("^winner_|^W|^w_", "", names(gs_w))
+names(gs_l) <- gsub("^loser_|^L|^l_", "", names(gs_l))
+
+player_gs <- bind_rows(gs_w, gs_l)
+
+# saveRDS(player_gs, "../../data/player_gs.rda")
+```
 
 ## Introduction
 Example reference[@cdc-measles2018]
