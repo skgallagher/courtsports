@@ -1,0 +1,96 @@
+---
+title: "Analyzing the Effect of Surface in Tennis Grand Slams"
+author: "Kayla Frisoli, Shannon Gallagher, and Amanda Luby"
+date: "September 7, 2018"
+output: pdf_document
+bibliography: master.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(cache = TRUE)
+library(deuce)
+library(dplyr)
+library(ggplot2)
+library(forcats)
+library(stringr)
+```
+
+
+```{r data-load, include = FALSE}
+## Load WTA and ATP matches from deuce package
+data(atp_matches)
+data(wta_matches)
+wta_matches$league <- "WTA"
+atp_matches$league <- "ATP"
+
+## Combining WTA and ATP
+combined_tennis <- rbind(wta_matches, atp_matches)
+
+## Subsetting from 2013 through 2017 inclusive, all the grand slams
+gs <- combined_tennis %>% filter(tourney_level == "Grand Slams" & year >= 2013 & year <= 2017)
+## Get rid of women's qualifiers
+gs <- gs %>% filter(!(round %in% c("Q1", "Q2", "Q3", "Q4")))
+dim(gs)
+
+saveRDS(gs, "../../data/gs_2013_2017.rda")
+
+```
+
+```{r data-cleaning, include = FALSE}
+## Add new columns of winner points won, loser points won, and whether the winner had more points
+gs <- gs %>% mutate(w_pointswon = w_1stWon + w_2ndWon + l_svpt - l_1stWon - l_2ndWon)
+gs <- gs %>% mutate(l_pointswon = l_1stWon + l_2ndWon + w_svpt - w_1stWon - w_2ndWon)
+gs <- gs %>% mutate(w_morepts = w_pointswon >= l_pointswon)
+
+## Extract number of sets in each match
+no_ret <- gsub(" RET", "", gs$score)
+set_scores <- str_split(no_ret, " ")
+n_sets <- sapply(set_scores, length)
+gs$n_sets <- n_sets
+
+## Data cleaning the tournament names
+gs$tournament <- factor(gs$tourney_name)
+gs$tournament <- gs$tournament %>% fct_collapse("US Open" = c("US Open", "Us Open"), 
+                                                "French Open" = c("French Open", "Roland Garros"))
+```
+
+```{r games-won, include = FALSE, warning = FALSE}
+## Extract games won for winner and loser
+score_list <- strsplit(gs$score, " ")
+games_won <- sapply(score_list, strsplit, split = "-|\\(")
+gs$w_gameswon <- sapply(games_won, function(list){
+  sum(as.integer(sapply(list, "[", 1)), na.rm = TRUE)
+})
+gs$l_gameswon <- sapply(games_won, function(list){
+  sum(as.integer(sapply(list, "[", 2)), na.rm = TRUE)
+})
+
+```
+
+```{r sets, include = FALSE, warning = FALSE}
+## Extract number of sets for each match
+no_ret <- gsub(" RET", "", gs$score)
+set_scores <- str_split(no_ret, " ")
+n_sets <- sapply(set_scores, length)
+gs$n_sets <- n_sets
+
+```
+
+```{r bp-lost, include = FALSE}
+gs$w_bplost <- gs$w_bpFaced - gs$w_bpSaved
+gs$l_bplost <- gs$l_bpFaced - gs$l_bpSaved
+```
+
+## Introduction
+Example reference[@cdc-measles2018]
+
+## Data
+
+## Methods
+
+## Results
+
+## Discussion
+
+## References

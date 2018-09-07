@@ -1,0 +1,11 @@
+base
+jsonlite
+dplyr
+stringr
+lubridate
+xml2
+rvest
+deuce
+ggplot2
+forcats
+bindrcpp
