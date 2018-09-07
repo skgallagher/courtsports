@@ -84,6 +84,20 @@
   \postdate{\par}
     \date{September 07, 2018}
 
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage[table]{xcolor}
+\usepackage{wrapfig}
+\usepackage{float}
+\usepackage{colortbl}
+\usepackage{pdflscape}
+\usepackage{tabu}
+\usepackage{threeparttable}
+\usepackage{threeparttablex}
+\usepackage[normalem]{ulem}
+\usepackage{makecell}
 
 \begin{document}
 \maketitle
@@ -120,6 +134,36 @@ Example reference(Centers for Disease Control and Prevention 2018)
 
 \hypertarget{data}{%
 \subsection{Data}\label{data}}
+
+The data consists of 5080 matches split evenly over the four grand slams
+and the two leagues (ATP and WTA). Each match has 82 attributes, many of
+which are redundant. We focus on the following attributes for both the
+winner and loser of the match: games won, points won, retirement, break
+points faced, break points saved, aces, country of origin, and player
+attributes. Additionally, we take into account the number of sets in a
+match, the surface type, minutes played, and round of the tournament. A
+subset of the data is shown in Table \ref{tab:data}.
+
+\rowcolors{2}{gray!6}{white}
+\begin{table}
+
+\caption{\label{tab:tab-data}\label{tab:data}Example of the grand slam data.  It includes winner and loser attributes, match attributes, and tournament attributes.  Not all attributes are shown here.}
+\centering
+\begin{tabular}[t]{lrlrlrrl}
+\hiderowcolors
+\toprule
+Tournament & Year & W. Country & W. Points & Winner & W. Rank & L. Points & Loser\\
+\midrule
+\showrowcolors
+US Open & 2014 & USA & 58 & Serena Williams & 1 & 31 & Taylor Townsend\\
+US Open & 2013 & ESP & 136 & Rafael Nadal & 2 & 112 & Philipp Kohlschreiber\\
+Australian Open & 2015 & ESP & 91 & Rafael Nadal & 3 & 51 & Mikhail Youzhny\\
+US Open & 2013 & USA & 65 & Serena Williams & 1 & 41 & Yaroslava Shvedova\\
+Australian Open & 2017 & USA & 73 & Serena Williams & 2 & 60 & Lucie Safarova\\
+\bottomrule
+\end{tabular}
+\end{table}
+\rowcolors{2}{white}{white}
 
 \hypertarget{methods}{%
 \subsection{Methods}\label{methods}}

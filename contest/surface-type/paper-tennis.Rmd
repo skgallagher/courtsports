@@ -19,6 +19,8 @@ library(dplyr)
 library(ggplot2)
 library(forcats)
 library(stringr)
+library(knitr)
+library(kableExtra)
 ```
 
 
@@ -92,6 +94,18 @@ gs$l_bplost <- gs$l_bpFaced - gs$l_bpSaved
 Example reference[@cdc-measles2018]
 
 ## Data
+The data consists of `r nrow(gs)` matches split evenly over the four grand slams and the two leagues (ATP and WTA).  Each match has `r ncol(gs)` attributes, many of which are redundant.  We focus on the following attributes for both the winner and loser of the match: games won, points won, retirement, break points faced, break points saved, aces, country of origin, and player attributes.  Additionally, we take into account the number of sets in a match, the surface type, minutes played, and round of the tournament.  A subset of the data is shown in Table \ref{tab:data}.
+
+```{r tab-data, include = TRUE, echo = FALSE}
+set.seed(19)
+s_id <- which(gs$winner_name %in% c("Serena Williams", "Roger Federer", "Rafael Nadal"))
+rand_inds <- sample(s_id, 5)
+cols <- c("tourney_name", "year", "winner_ioc", "w_pointswon", "winner_name", "winner_rank", "l_pointswon", "loser_name")
+knitr::kable(gs[rand_inds, cols], format = "latex",
+             row.names = FALSE, col.names = c("Tournament", "Year", "W. Country", "W. Points", "Winner", "W. Rank", "L. Points", "Loser"),
+             caption = "\\label{tab:data}Example of the grand slam data.  It includes winner and loser attributes, match attributes, and tournament attributes.  Not all attributes are shown here.",
+             booktabs = TRUE) %>% kable_styling(latex_options = "striped")
+```
 
 ## Methods
 

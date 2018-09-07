@@ -9,3 +9,5 @@ deuce
 ggplot2
 forcats
 bindrcpp
+knitr
+kableExtra
