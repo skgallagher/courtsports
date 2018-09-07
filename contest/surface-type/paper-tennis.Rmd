@@ -40,7 +40,7 @@ gs <- combined_tennis %>% filter(tourney_level == "Grand Slams" & year >= 2013 &
 gs <- gs %>% filter(!(round %in% c("Q1", "Q2", "Q3", "Q4")))
 dim(gs)
 
-saveRDS(gs, "../../data/gs_2013_2017.rda")
+# saveRDS(gs, "../../data/gs_2013_2017.rda")
 
 ```
 
