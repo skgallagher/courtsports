@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(devtools)
 library(deuce)
 library(knitr)
-devtools::load_all("..") # Loads courtsports package
+#devtools::load_all("..") # Loads courtsports package
 ```
 	
 
