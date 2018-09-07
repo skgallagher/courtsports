@@ -2,19 +2,30 @@
 title: "EDA"
 author: "The Competent Ones"
 date: "August 4, 2018"
-output: html_document
+output: 
+  html_document:
+    toc:  true
+    toc_float:  true
+    code_folding: hide
 ---
 	
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+
 ```
 	
 ```{r libraries}
 library(devtools)
 library(deuce)
 library(knitr)
+<<<<<<< HEAD
 #devtools::load_all("..") # Loads courtsports package
+=======
+# devtools::load_all("..") # Loads courtsports package
+>>>>>>> 416679d042a62d33c651175c1f84c93d78e060bc
 ```
 	
 
@@ -31,6 +42,7 @@ pbp$qual = grepl("Qualifying", pbp$tny_name)
 # Create data for Grand Slam finals
 gsf = filter(pbp, !qual & (wim | french | us | aus))
 ```
+
 ```{r numbers}
 dim(gsf)
 colnames(gsf)
