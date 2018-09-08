@@ -21,93 +21,44 @@ library(forcats)
 library(stringr)
 library(knitr)
 library(kableExtra)
+
+## To change into library(courtsports)
+devtools::load_all("../..")
 ```
 
 
-```{r data-load, include = FALSE}
+```{r data-cleaning, include = FALSE}
 ## Load WTA and ATP matches from deuce package
 data(atp_matches)
 data(wta_matches)
-wta_matches$league <- "WTA"
-atp_matches$league <- "ATP"
 
-## Combining WTA and ATP
-combined_tennis <- rbind(wta_matches, atp_matches)
+## Clean data
+gs <- clean_matches_data(atp_matches = atp_matches,
+                         wta_matches = wta_matches,
+                         start_year = 2013,
+                         end_year = 2017,
+                         include_quals = FALSE,
+                         level = "Grand Slams")
 
-## Subsetting from 2013 through 2017 inclusive, all the grand slams
-gs <- combined_tennis %>% filter(tourney_level == "Grand Slams" & year >= 2013 & year <= 2017)
-## Get rid of women's qualifiers
-gs <- gs %>% filter(!(round %in% c("Q1", "Q2", "Q3", "Q4")))
-dim(gs)
+ 
 
-# saveRDS(gs, "../../data/gs_2013_2017.rda")
+## Extract sets, points, and games
+gs <- extract_sgp(gs)
 
-```
+# devtools::use_data(gs, overwrite = TRUE)
 
-```{r data-cleaning, include = FALSE}
-## Add new columns of winner points won, loser points won, and whether the winner had more points
-gs <- gs %>% mutate(w_pointswon = w_1stWon + w_2ndWon + l_svpt - l_1stWon - l_2ndWon,
-                    l_pointswon = l_1stWon + l_2ndWon + w_svpt - w_1stWon - w_2ndWon)
+## Make into player data
+gs_players <- matches_to_player_data(gs,
+                                     w_opp_vars = "loser_rank",
+                                     l_opp_vars = "winner_rank",
+                                     opp_var_names = "opponent_rank")
 
-## Extract number of sets in each match
-no_ret <- gsub(" RET", "", gs$score)
-set_scores <- str_split(no_ret, " ")
-n_sets <- sapply(set_scores, length)
-gs$n_sets <- n_sets
-
-## Data cleaning the tournament names
-gs$tournament <- factor(gs$tourney_name)
-gs$tournament <- gs$tournament %>% fct_collapse("US Open" = c("US Open", "Us Open"), 
-                                                "French Open" = c("French Open", "Roland Garros"))
-```
-
-```{r games-won, include = FALSE, warning = FALSE}
-## Extract games won for winner and loser
-score_list <- strsplit(gs$score, " ")
-games_won <- sapply(score_list, strsplit, split = "-|\\(")
-gs$w_gameswon <- sapply(games_won, function(list){
-  sum(as.integer(sapply(list, "[", 1)), na.rm = TRUE)
-})
-gs$l_gameswon <- sapply(games_won, function(list){
-  sum(as.integer(sapply(list, "[", 2)), na.rm = TRUE)
-})
+# devtools::use_data(gs_players, overwrite = TRUE)
 
 ```
 
-```{r sets, include = FALSE, warning = FALSE}
-## Extract number of sets for each match
-no_ret <- gsub(" RET", "", gs$score)
-set_scores <- str_split(no_ret, " ")
-n_sets <- sapply(set_scores, length)
-gs$n_sets <- n_sets
-
-```
-
-```{r bp-lost, include = FALSE}
-gs$w_bplost <- gs$w_bpFaced - gs$w_bpSaved
-gs$l_bplost <- gs$l_bpFaced - gs$l_bpSaved
-```
 
 
-```{r}
-remove_from_loser <- names(gs)[grep("^w|^W", names(gs))] %>%
-  .[-which(. == "winner_rank")]
-
-remove_from_winner <- names(gs)[grep("^l|^L", names(gs))] %>%
-  .[-which(. %in% c("loser_rank", "league"))]
-
-gs_l <- dplyr::select(gs, -remove_from_loser) %>%
-  rename(opponent_rank = winner_rank)
-gs_w <- dplyr::select(gs, -remove_from_winner)  %>%
-  rename(opponent_rank = loser_rank)
-
-names(gs_w) <- gsub("^winner_|^W|^w_", "", names(gs_w))
-names(gs_l) <- gsub("^loser_|^L|^l_", "", names(gs_l))
-
-player_gs <- bind_rows(gs_w, gs_l)
-
-# saveRDS(player_gs, "../../data/player_gs.rda")
-```
 
 ## Introduction
 Example reference[@cdc-measles2018]

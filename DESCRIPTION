@@ -10,5 +10,7 @@ License: What license is it under?
 Encoding: UTF-8
 LazyData: true
 Imports: dplyr,
-    ggplot2
+    ggplot2,
+    magrittr
 Suggests: deuce
+RoxygenNote: 6.1.0
