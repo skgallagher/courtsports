@@ -51,7 +51,6 @@ clean_matches_data <- function(atp_matches = NULL, wta_matches = NULL,
 #' @return matches with extra columns w_pointswon, l_pointswon, w_gameswon, l_gameswon, w_setswon, l_setswon
 extract_sgp<- function(matches){
 
-    browser()
     ## Points
 
     matches <- matches %>% dplyr::mutate(
@@ -61,46 +60,35 @@ extract_sgp<- function(matches){
                                           l_2ndWon + w_svpt - w_1stWon - w_2ndWon)
 
     ## Games
-    score_list <- strsplit(matches$score, " ")
-    games_won <- lapply(score_list, strsplit, split = "-|\\(")
-    matches$w_gameswon <- sapply(games_won, function(list){
-      win_list <- lapply(list, "[", 1)
-      win_list <- unlist(win_list)
-      win_list <- gsub("RET|W\\/O", "0", win_list)  ## Walkover or retirement
-      if(any(is.na(win_list)))  win_list <-  0
-      sum(as.integer(win_list))
+    ## Get rid of retirements and walkover, the leading space, and any tiebreaker scores
+    score_no_retire <- gsub("RET|W\\/O| RET| W\\/O|\\([0-9]+\\)", "", matches$score)
+    score_list <- strsplit(score_no_retire, " ")
+    matches$w_gameswon <- sapply(score_list, function(vec){
+      sum(as.integer(gsub("\\-[0-9]+$","", vec)))
     })
 
 
-    matches$l_gameswon <- sapply(games_won, function(list){
-      win_list <- lapply(list, "[", 2)
-      win_list <- unlist(win_list)
-      win_list <- gsub("RET|W\\/O", "0", win_list)  ## Walkover or retirement
-      if(any(is.na(win_list)))  win_list <-  0
-      sum(as.integer(win_list))
+    matches$l_gameswon <- sapply(score_list, function(vec){
+      sum(as.integer(gsub("^[0-9]+\\-","", vec)))
     })
+
     ## Sets
-
     ## a set is won if they scored more games in the set than opponent
-    matches$w_setswon <-  sapply(games_won, function(list){
-        sum(sapply(list, function(vec){
-            if(is.null(dim(vec))){
-               return((as.integer(vec[1]) - as.integer(vec[2])) > 0)
-            } else {
-                return((as.integer(vec[,1]) - as.integer(vec[, 2])) > 0)
-            }
-        }), na.rm = TRUE)
+    matches$w_setswon <-  sapply(score_list, function(vec){
+        bools <- sapply(vec, function(score){
+          eval(parse(text = score)) > 0
+        })
+        bools <- ifelse(is.na(bools), 0, bools)
+        sum(bools)
     })
 
-     matches$l_setswon <-  sapply(games_won, function(list){
-        sum(sapply(list, function(vec){
-            if(is.null(dim(vec))){
-               return((as.integer(vec[1]) - as.integer(vec[2])) < 0)
-            } else {
-                return((as.integer(vec[,1]) - as.integer(vec[, 2])) < 0)
-            }
-        }), na.rm = TRUE)
-    })
+     matches$l_setswon <-  sapply(score_list, function(vec){
+       bools <- sapply(vec, function(score){
+         eval(parse(text = score)) < 0
+       })
+       bools <- ifelse(is.na(bools), 0, bools)
+       sum(bools)
+     })
 
 
 
