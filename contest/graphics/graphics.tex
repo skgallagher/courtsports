@@ -29,6 +29,7 @@
             pdfborder={0 0 0},
             breaklinks=true}
 \urlstyle{same}  % don't use monospace font for urls
+\usepackage{longtable,booktabs}
 \usepackage{graphicx,grffile}
 \makeatletter
 \def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
@@ -101,7 +102,72 @@
 \begin{document}
 \maketitle
 
+\subsection{Is being a winner from Spain independent of
+tournament?}\label{is-being-a-winner-from-spain-independent-of-tournament}
 
+\begin{center}\includegraphics{graphics_files/figure-latex/unnamed-chunk-1-1} \end{center}
+
+\begin{table}[!htb]
+    \begin{minipage}{.5\linewidth}
+      \caption{Actual table}
+      \centering 
+\begin{tabular}{lrr}
+\toprule
+  & Other & Spain\\
+\midrule
+Australian Open & 1163 & 107\\
+French Open & 1110 & 160\\
+US Open & 1162 & 108\\
+Wimbledon & 1182 & 88\\
+\bottomrule
+\end{tabular} \end{minipage}%
+    \begin{minipage}{.5\linewidth}
+      \centering
+        \caption{Expected table} 
+\begin{tabular}{lrr}
+\toprule
+  & Other & Spain\\
+\midrule
+Australian Open & 1154.25 & 115.75\\
+French Open & 1154.25 & 115.75\\
+US Open & 1154.25 & 115.75\\
+Wimbledon & 1154.25 & 115.75\\
+\bottomrule
+\end{tabular} \end{minipage} 
+\end{table}
+
+\begin{longtable}[]{@{}ccc@{}}
+\caption{Pearson's Chi-squared test:
+\texttt{spain\_vs\_tourn}}\tabularnewline
+\toprule
+\begin{minipage}[b]{0.22\columnwidth}\centering\strut
+Test statistic\strut
+\end{minipage} & \begin{minipage}[b]{0.06\columnwidth}\centering\strut
+df\strut
+\end{minipage} & \begin{minipage}[b]{0.22\columnwidth}\centering\strut
+P value\strut
+\end{minipage}\tabularnewline
+\midrule
+\endfirsthead
+\toprule
+\begin{minipage}[b]{0.22\columnwidth}\centering\strut
+Test statistic\strut
+\end{minipage} & \begin{minipage}[b]{0.06\columnwidth}\centering\strut
+df\strut
+\end{minipage} & \begin{minipage}[b]{0.22\columnwidth}\centering\strut
+P value\strut
+\end{minipage}\tabularnewline
+\midrule
+\endhead
+\begin{minipage}[t]{0.22\columnwidth}\centering\strut
+27.23\strut
+\end{minipage} & \begin{minipage}[t]{0.06\columnwidth}\centering\strut
+3\strut
+\end{minipage} & \begin{minipage}[t]{0.22\columnwidth}\centering\strut
+5.265e-06 * * *\strut
+\end{minipage}\tabularnewline
+\bottomrule
+\end{longtable}
 
 
 \end{document}

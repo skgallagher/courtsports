@@ -9,7 +9,7 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
 knitr::opts_chunk$set(cache = TRUE)
 library(deuce)
 library(dplyr)
@@ -18,6 +18,7 @@ library(forcats)
 library(stringr)
 library(knitr)
 library(kableExtra)
+library(pander)
 
 ## To change into library(courtsports)
 devtools::load_all("../..")
@@ -54,16 +55,55 @@ gs_players <- matches_to_player_data(gs,
 ## Is being a winner from Spain independent of tournament? 
 
 
-```{r}
+```{r, fig.height=5, fig.width=8, fig.align='center'}
 
 gs <- mutate(gs, 
-             winner_ioc_spain = ifelse(winner_ioc == "ESP", TRUE, FALSE))
+             winner_ioc_spain = ifelse(winner_ioc == "ESP", "Spain", "Other"))
 
-ggplot(gs) + geom_bar(aes(tournament, fill = winner_ioc_spain))
+props <- gs %>% group_by(tournament, winner_ioc_spain) %>%
+        tally() %>%
+        group_by(tournament) %>%
+        mutate(pct = n / sum(n))
+
+ggplot(props, aes(tournament, pct, fill = winner_ioc_spain)) +
+        geom_bar(stat = "identity") +
+        scale_fill_manual("Country of origin",
+                          values = c( "#FFC400", "#C60B1E")) + 
+  labs(x = " ", y = "Proportion", title = "Spanish players win the French Open more often than other tournaments") + 
+  geom_text(data = filter(props, winner_ioc_spain == "Spain"), 
+            aes(tournament, y = pct + .05, label = paste0(round(pct, 2),"%")),
+                       size=4)
 
 ```
 
+```{r sample, echo=FALSE, results='asis'}
+library(xtable)
 
+spain_vs_tourn <- with(gs, table(tournament, winner_ioc_spain))
+
+t1 <- kable(spain_vs_tourn, format = "latex", booktabs = TRUE)
+t2 <- kable(chisq.test(spain_vs_tourn)$expected, format = "latex", booktabs = TRUE)
+
+cat(c("\\begin{table}[!htb]
+    \\begin{minipage}{.5\\linewidth}
+      \\caption{Actual table}
+      \\centering",
+        t1,
+    "\\end{minipage}%
+    \\begin{minipage}{.5\\linewidth}
+      \\centering
+        \\caption{Expected table}",
+        t2,
+    "\\end{minipage} 
+\\end{table}"
+))  
+```
+
+
+```{r}
+chisq.test(spain_vs_tourn) %>% 
+  pander()
+```
 
 
 
