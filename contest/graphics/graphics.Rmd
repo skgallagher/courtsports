@@ -50,3 +50,34 @@ gs_players <- matches_to_player_data(gs,
 
 ```
 
+
+## Is being a winner from Spain independent of tournament? 
+
+
+```{r}
+
+gs <- mutate(gs, 
+             winner_ioc_spain = ifelse(winner_ioc == "ESP", TRUE, FALSE))
+
+ggplot(gs) + geom_bar(aes(tournament, fill = winner_ioc_spain))
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
