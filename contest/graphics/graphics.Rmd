@@ -1,0 +1,52 @@
+---
+title: "Graphics"
+author: "Kayla Frisoli, Shannon Gallagher, and Amanda Luby"
+output:
+  pdf_document:
+    fig_caption: yes
+    keep_tex: yes
+    number_sections: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(cache = TRUE)
+library(deuce)
+library(dplyr)
+library(ggplot2)
+library(forcats)
+library(stringr)
+library(knitr)
+library(kableExtra)
+
+## To change into library(courtsports)
+devtools::load_all("../..")
+```
+
+
+```{r data-cleaning, include = FALSE}
+## Load WTA and ATP matches from deuce package
+data(atp_matches)
+data(wta_matches)
+
+## Clean data
+gs <- clean_matches_data(atp_matches = atp_matches,
+                         wta_matches = wta_matches,
+                         start_year = 2013,
+                         end_year = 2017,
+                         include_quals = FALSE,
+                         level = "Grand Slams")
+
+ 
+
+## Extract sets, points, and games
+gs <- extract_sgp(gs)
+
+## Make into player data
+gs_players <- matches_to_player_data(gs,
+                                     w_opp_vars = "loser_rank",
+                                     l_opp_vars = "winner_rank",
+                                     opp_var_names = "opponent_rank")
+
+```
+
