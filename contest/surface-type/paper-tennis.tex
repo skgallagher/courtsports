@@ -47,7 +47,7 @@
 \setlength{\emergencystretch}{3em}  % prevent overfull lines
 \providecommand{\tightlist}{%
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
-\setcounter{secnumdepth}{0}
+\setcounter{secnumdepth}{5}
 % Redefines (sub)paragraphs to behave more like sections
 \ifx\paragraph\undefined\else
 \let\oldparagraph\paragraph
@@ -82,7 +82,7 @@
   \postauthor{\par}
       \predate{\centering\large\emph}
   \postdate{\par}
-    \date{September 07, 2018}
+    \date{September 08, 2018}
 
 \usepackage{booktabs}
 \usepackage{longtable}
@@ -127,22 +127,89 @@ examine the effect of court surface. We also provide an in-depth
 analysis of Nadal, Federer, and S. Williams.
 \end{abstract}
 
-\hypertarget{introduction}{%
-\subsection{Introduction}\label{introduction}}
+\hypertarget{sec:iintro}{%
+\section{Introduction}\label{sec:iintro}}
 
-Example reference(Centers for Disease Control and Prevention 2018)
+Rafael Nadal is known as the ``King of Clay'' in tennis, having won 11
+out of his current 17 grand slams titles at the French Open, which is
+played on a clay surface {[}cite{]}. In contrast, his rival Roger
+Federer has won his most grand slam titles (8 out of 20) at Wimbledon,
+which is played on grass. On the women's side, Serena Williams has been
+dominant both on hard court (7 titles at the Australian Open and 6 at US
+Open) and grass (7 at Wimbledon). This trend extends to other top
+players, who seem to have better results at some grand slams than
+others. More broadly, it seems that country of origin has an interaction
+effect with court type. For example, Spanish players seem to excel on
+clay courts and Americans have great success at Wimbledon despite grass
+courts not being of wide use in the USA. It also worth questioning
+whether the US Open and Australian Open should be grouped together as
+hard courts despite having different surface compositions {[}cite{]}. In
+this paper, we analyze the results of grand slam players from 2013-2017,
+and we
 
-\hypertarget{data}{%
-\subsection{Data}\label{data}}
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  Determine if and how court surface effects players by implementation
+  of a series of nested hierarchical models
+\item
+  Examine how Nadal, Federer, and Williams' play differs by surface
+\item
+  Assess whether we can group the two hard court surfaces together.
+\end{enumerate}
+
+As to issue (1) the hiearchical modelling, we use models similar to
+{[}cite{]} and {[}cite{]}. More specifically, we model the players'
+expected points in a match based on the player's own characteristics,
+the court/tournament effects, and the oponent's ranking. We use a
+Bayesian method because in {[}cite,cite{]} they had success in similar
+situations.
+
+For issue (2) the player analysis of Nadal, Federer, and Williams, we
+examine whether our model passes the ``common sense''" tests (e.g.~these
+players should win often when contrasting them to opponents) like in
+{[}ventura something{]} and whether these players do have surface
+apparent effects.
+
+Finally, for issue (3), we use clustering methods {[}cite{]} in order to
+determine which court surface types are more similar to one another.
+
+Readers may object that we are looking at difference between grand
+slams, which each have their own time period, weather conditions, play
+time conditions, and ``home court effects'' instead of differences in
+surfaces alone. However, (1) grand slam data is the most readily
+available and most complete which makes it the best choice for
+modelling, (2) we adjust for these confounders where we can, and (3)
+analyzing the difference in the grand slams is still useful as they are
+considered to be the most prestigious events in tennis.
+
+The rest of this paper is organized as follows. In
+\protect\hyperlink{sec:data}{Section Data} we describe our grand slam
+tennis data. In \protect\hyperlink{sec:eda}{Section Early Data Analysis}
+we examine the data at a high level and use clustering whether to
+determine how the courts differ from one another. In
+\protect\hyperlink{sec:methods}{Section Methods} we describe our
+hierarchical models we use to determine difference in court surfaces. In
+\protect\hyperlink{sec:results}{Section Results} we describe the results
+of our modelling and also examine the play of Nadal, Federer, and
+Williams. Finally in \protect\hyperlink{discussion}{Section Discussion},
+we discuss future work and extensions or our model.
+
+\hypertarget{sec:data-eda}{%
+\section{Data and EDA}\label{sec:data-eda}}
+
+\hypertarget{sec:data}{%
+\subsection{Data}\label{sec:data}}
 
 The data consists of 5080 matches split evenly over the four grand slams
-and the two leagues (ATP and WTA). Each match has 80 attributes, many of
-which are redundant. We focus on the following attributes for both the
-winner and loser of the match: games won, points won, retirement, break
-points faced, break points saved, aces, country of origin, and player
-attributes. Additionally, we take into account the number of sets in a
-match, the surface type, minutes played, and round of the tournament. A
-subset of the data is shown in Table \ref{tab:data}.
+and the two leagues: ATP (men's) and WTA (women's). Each match has 80
+attributes, many of which are redundant. We focus on the following
+attributes for both the winner and loser of the match: games won, points
+won, retirement, break points faced, break points saved, aces, country
+of origin, and player attributes. Additionally, we take into account the
+number of sets in a match, the surface type, minutes played, and round
+of the tournament. A subset of the data is shown in Table
+\ref{tab:data}.
 
 \rowcolors{2}{gray!6}{white}
 \begin{table}
@@ -165,23 +232,28 @@ Australian Open & 2017 & USA & 73 & Serena Williams & 2 & 60 & Lucie Safarova\\
 \end{table}
 \rowcolors{2}{white}{white}
 
-\hypertarget{methods}{%
-\subsection{Methods}\label{methods}}
+The data is obtained from Jeff Sackman's open website {[}cite{]} via the
+\texttt{R} package \texttt{deuce} {[}cite{]}. All steps of our analysis
+from collection to dissemination are freely available online and are
+compiled into an \texttt{R} package
+\url{http://github.com/shannong19/courtsports}. The paper itself may be
+generated from the file
+\url{https://github.com/shannong19/courtsports/blob/master/contest/surface-type/paper-tennis.Rmd}.
 
-\hypertarget{results}{%
-\subsection{Results}\label{results}}
+\hypertarget{sec:eda}{%
+\subsection{Early Data Analysis}\label{sec:eda}}
 
-\hypertarget{discussion}{%
-\subsection{Discussion}\label{discussion}}
+\hypertarget{sec:methods}{%
+\section{Methods}\label{sec:methods}}
 
-\hypertarget{references}{%
-\subsection*{References}\label{references}}
-\addcontentsline{toc}{subsection}{References}
+\hypertarget{sec:results}{%
+\section{Results}\label{sec:results}}
 
-\hypertarget{refs}{}
-\leavevmode\hypertarget{ref-cdc-measles2018}{}%
-Centers for Disease Control and Prevention. 2018. ``Measles History.''
-Available online at \url{https://www.cdc.gov/measles/about}.
+\hypertarget{sec:discussion}{%
+\section{Discussion}\label{sec:discussion}}
+
+\hypertarget{sec:refs}{%
+\section{References}\label{sec:refs}}
 
 
 \end{document}
