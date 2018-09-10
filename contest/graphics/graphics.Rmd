@@ -4,8 +4,8 @@ author: "Kayla Frisoli, Shannon Gallagher, and Amanda Luby"
 output:
   pdf_document:
     fig_caption: yes
-    keep_tex: yes
     number_sections: yes
+    toc: true
 ---
 
 ```{r setup, include=FALSE}
@@ -51,11 +51,12 @@ gs_players <- matches_to_player_data(gs,
 
 ```
 
+# Spain vs. tournament
 
 ## Is being a winner from Spain independent of tournament? 
 
 
-```{r, fig.height=5, fig.width=8, fig.align='center'}
+```{r, fig.height=3.2, fig.width=6, fig.align='center'}
 
 gs <- mutate(gs, 
              winner_ioc_spain = ifelse(winner_ioc == "ESP", "Spain", "Other"))
@@ -69,10 +70,10 @@ ggplot(props, aes(tournament, pct, fill = winner_ioc_spain)) +
         geom_bar(stat = "identity") +
         scale_fill_manual("Country of origin",
                           values = c( "#FFC400", "#C60B1E")) + 
-  labs(x = " ", y = "Proportion", title = "Spanish players win the French Open more often than other tournaments") + 
+  labs(x = " ", y = "Proportion", title = "Spanish players win the French Open\nmore often than other tournaments") + 
   geom_text(data = filter(props, winner_ioc_spain == "Spain"), 
-            aes(tournament, y = pct + .05, label = paste0(round(pct, 2),"%")),
-                       size=4)
+            aes(tournament, y = pct + .05, label = paste0(round(pct*100, 2),"%")),
+                       size=4) + theme_bw() + theme(plot.title = element_text(hjust = 0.5))
 
 ```
 
@@ -80,9 +81,10 @@ ggplot(props, aes(tournament, pct, fill = winner_ioc_spain)) +
 library(xtable)
 
 spain_vs_tourn <- with(gs, table(tournament, winner_ioc_spain))
+spain_vs_tourn_chisq <- chisq.test(spain_vs_tourn)
 
 t1 <- kable(spain_vs_tourn, format = "latex", booktabs = TRUE)
-t2 <- kable(chisq.test(spain_vs_tourn)$expected, format = "latex", booktabs = TRUE)
+t2 <- kable(spain_vs_tourn_chisq$expected, format = "latex", booktabs = TRUE)
 
 cat(c("\\begin{table}[!htb]
     \\begin{minipage}{.5\\linewidth}
@@ -101,20 +103,316 @@ cat(c("\\begin{table}[!htb]
 
 
 ```{r}
-chisq.test(spain_vs_tourn) %>% 
+spain_vs_tourn_chisq %>% 
+  pander()
+```
+
+\newpage
+
+## But do Spaniards enter the French open more than they do other tournaments? 
+
+We look at players in the *first round* of all tournaments. 
+
+
+```{r, fig.height=3.2, fig.width=6, fig.align='center'}
+
+mini.d <- bind_rows(select(filter(gs, round == "R128"), tournament, winner_ioc) %>% rename(ioc = winner_ioc),
+            select(filter(gs, round == "R128"), tournament, loser_ioc) %>% rename(ioc = loser_ioc)) %>%
+  mutate(ioc_spain = ifelse(ioc == "ESP", "Spain", "Other"))
+
+props <- mini.d %>% group_by(tournament, ioc_spain) %>%
+        tally() %>%
+        group_by(tournament) %>%
+        mutate(pct = n / sum(n))
+
+ggplot(props, aes(tournament, pct, fill = ioc_spain)) +
+        geom_bar(stat = "identity") +
+        scale_fill_manual("Country of origin",
+                          values = c( "#FFC400", "#C60B1E")) + 
+  labs(x = " ", y = "Proportion",
+       title = "Spanish players enter the French Open\nmore often than other tournaments") + 
+  geom_text(data = filter(props, ioc_spain == "Spain"), 
+            aes(tournament, y = pct + .05, label = paste0(round(pct*100, 2),"%")),
+                       size=4)  + theme_bw() + theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+```{r}
+with(mini.d, table(tournament, ioc_spain)) %>%
+  chisq.test() %>%
+  pander()
+```
+
+Yes, but not significantly more. 
+
+
+# Home court advantage
+
+## France
+
+```{r, fig.height=3.2, fig.width=6, fig.align='center'}
+
+gs <- mutate(gs, 
+             winner_ioc_france = ifelse(winner_ioc == "FRA", "France", "Other"))
+
+props <- gs %>% group_by(tournament, winner_ioc_france) %>%
+        tally() %>%
+        group_by(tournament) %>%
+        mutate(pct = n / sum(n))
+
+ggplot(props, aes(tournament, pct, fill = factor(winner_ioc_france, levels = c("Other", "France")))) +
+        geom_bar(stat = "identity") +
+        scale_fill_manual("Country of origin",
+                          values = c("#F42A41", "#00209F")) + 
+  labs(x = " ", y = "Proportion", title = "French players win the French Open\nmore often than other tournaments") + 
+  geom_text(data = filter(props, winner_ioc_france == "France"), 
+            aes(tournament, y = pct + .05, label = paste0(round(pct*100, 2),"%")),
+                       size=4)  + theme_bw() + theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+```{r, echo=FALSE, results='asis'}
+library(xtable)
+
+france_vs_tourn <- with(gs, table(tournament, winner_ioc_france))
+
+france_vs_tourn_chisq <- chisq.test(france_vs_tourn)
+
+t1 <- kable(france_vs_tourn, format = "latex", booktabs = TRUE)
+t2 <- kable(france_vs_tourn_chisq$expected, format = "latex", booktabs = TRUE)
+
+cat(c("\\begin{table}[!htb]
+    \\begin{minipage}{.5\\linewidth}
+      \\caption{Actual table}
+      \\centering",
+        t1,
+    "\\end{minipage}%
+    \\begin{minipage}{.5\\linewidth}
+      \\centering
+        \\caption{Expected table}",
+        t2,
+    "\\end{minipage} 
+\\end{table}"
+))  
+```
+
+
+```{r}
+france_vs_tourn_chisq %>% 
+  pander()
+```
+
+
+```{r, fig.height=3.2, fig.width=6, fig.align='center'}
+
+mini.d <- mini.d %>%
+  mutate(ioc_france = ifelse(ioc == "FRA", "France", "Other"))
+
+props <- mini.d %>% group_by(tournament, ioc_france) %>%
+        tally() %>%
+        group_by(tournament) %>%
+        mutate(pct = n / sum(n))
+
+ggplot(props, aes(tournament, pct, fill = factor(ioc_france, levels = c("Other", "France")))) +
+        geom_bar(stat = "identity") +
+        scale_fill_manual("Country of origin",
+                          values = c("#F42A41", "#00209F")) + 
+  labs(x = " ", y = "Proportion",
+       title = "French players enter the French Open\nmore often than other tournaments") + 
+  geom_text(data = filter(props, ioc_france == "France"), 
+            aes(tournament, y = pct + .05, label = paste0(round(pct*100, 2),"%")),
+                       size=4)  + theme_bw() + theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+```{r}
+with(mini.d, table(tournament, ioc_france)) %>%
+  chisq.test() %>%
+  pander()
+```
+
+*Yes, significantly.*
+
+\newpage
+
+## United States
+
+```{r, fig.height=3.2, fig.width=6, fig.align='center'}
+
+gs <- mutate(gs, 
+             winner_ioc_usa = ifelse(winner_ioc == "USA", "USA", "Other"))
+
+props <- gs %>% group_by(tournament, winner_ioc_usa) %>%
+        tally() %>%
+        group_by(tournament) %>%
+        mutate(pct = n / sum(n))
+
+ggplot(props, aes(tournament, pct, fill = factor(winner_ioc_usa, levels = c("Other", "USA")))) +
+        geom_bar(stat = "identity") +
+        scale_fill_manual("Country of origin",
+                          values = c( "#002868", "#BF0A30")) + 
+  labs(x = " ", y = "Proportion", title = "American players win the U.S. Open\nmore often than other tournaments") + 
+  geom_text(data = filter(props, winner_ioc_usa == "USA"), 
+            aes(tournament, y = pct + .05, label = paste0(round(pct*100, 2),"%")),
+                       size=4,
+            color="white")  + theme_bw() + theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+```{r, echo=FALSE, results='asis'}
+usa_vs_tourn <- with(gs, table(tournament, winner_ioc_usa))
+
+usa_vs_tourn_chisq <- chisq.test(usa_vs_tourn)
+
+t1 <- kable(usa_vs_tourn, format = "latex", booktabs = TRUE)
+t2 <- kable(usa_vs_tourn_chisq$expected, format = "latex", booktabs = TRUE)
+
+# cat(c("\\begin{table}[!htb]
+#     \\begin{minipage}{.5\\linewidth}
+#       \\caption{Actual table}
+#       \\centering",
+#         t1,
+#     "\\end{minipage}%
+#     \\begin{minipage}{.5\\linewidth}
+#       \\centering
+#         \\caption{Expected table}",
+#         t2,
+#     "\\end{minipage} 
+# \\end{table}"
+# ))  
+```
+
+
+```{r}
+usa_vs_tourn_chisq %>% 
+  pander()
+```
+
+
+```{r, fig.height=3.2, fig.width=6, fig.align='center'}
+
+mini.d <- mini.d %>%
+  mutate(ioc_usa = ifelse(ioc == "USA", "USA", "Other"))
+
+props <- mini.d %>% group_by(tournament, ioc_usa) %>%
+        tally() %>%
+        group_by(tournament) %>%
+        mutate(pct = n / sum(n))
+
+ggplot(props, aes(tournament, pct, fill = factor(ioc_usa, levels = c("Other", "USA")))) +
+        geom_bar(stat = "identity") +
+        scale_fill_manual("Country of origin",
+                          values = c( "#002868", "#BF0A30")) + 
+  labs(x = " ", y = "Proportion",
+       title = "American players enter the U.S. Open\nmore often than other tournaments") + 
+  geom_text(data = filter(props, ioc_usa == "USA"), 
+            aes(tournament, y = pct + .05, label = paste0(round(pct*100, 2),"%")),
+                       size=4,
+            color="white")  + theme_bw() + theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+```{r}
+with(mini.d, table(tournament, ioc_usa)) %>%
+  chisq.test() %>%
+  pander()
+```
+
+
+
+## Australia
+
+```{r, fig.height=3.2, fig.width=6, fig.align='center'}
+
+gs <- mutate(gs, 
+             winner_ioc_Australia = ifelse(winner_ioc == "AUS", "Australia", "Other"))
+
+props <- gs %>% group_by(tournament, winner_ioc_Australia) %>%
+        tally() %>%
+        group_by(tournament) %>%
+        mutate(pct = n / sum(n))
+
+ggplot(props, aes(tournament, pct, fill = factor(winner_ioc_Australia, levels = c("Other", "Australia")))) +
+        geom_bar(stat = "identity", color="grey") +
+        scale_fill_manual("Country of origin",
+                          values = c("#FFFFFF", "#012169")) + 
+  labs(x = " ", y = "Proportion", title = "Australian players win the Australian Open\nmore often than other tournaments") + 
+  geom_text(data = filter(props, winner_ioc_Australia == "Australia"), 
+            aes(tournament, y = pct + .05, label = paste0(round(pct*100, 2),"%")),
+                       size=4)  + theme_bw() + theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+```{r, echo=FALSE, results='asis'}
+Australia_vs_tourn <- with(gs, table(tournament, winner_ioc_Australia))
+
+Australia_vs_tourn_chisq <- chisq.test(Australia_vs_tourn)
+
+t1 <- kable(Australia_vs_tourn, format = "latex", booktabs = TRUE)
+t2 <- kable(Australia_vs_tourn_chisq$expected, format = "latex", booktabs = TRUE)
+
+cat(c("\\begin{table}[!htb]
+    \\begin{minipage}{.5\\linewidth}
+      \\caption{Actual table}
+      \\centering",
+        t1,
+    "\\end{minipage}%
+    \\begin{minipage}{.5\\linewidth}
+      \\centering
+        \\caption{Expected table}",
+        t2,
+    "\\end{minipage} 
+\\end{table}"
+))  
+```
+
+
+```{r}
+Australia_vs_tourn_chisq %>% 
+  pander()
+```
+
+
+```{r, fig.height=3.2, fig.width=6, fig.align='center'}
+
+mini.d <- mini.d %>%
+  mutate(ioc_Australia = ifelse(ioc == "AUS", "Australia", "Other"))
+
+props <- mini.d %>% group_by(tournament, ioc_Australia) %>%
+        tally() %>%
+        group_by(tournament) %>%
+        mutate(pct = n / sum(n))
+
+ggplot(props, aes(tournament, pct, fill = factor(ioc_Australia, levels = c("Other", "Australia")))) +
+        geom_bar(stat = "identity", color="grey") +
+        scale_fill_manual("Country of origin",
+                          values = c("#FFFFFF", "#012169")) + 
+  labs(x = " ", y = "Proportion",
+       title = "Australian players enter the Australian Open\nmore often than other tournaments") + 
+  geom_text(data = filter(props, ioc_Australia == "Australia"), 
+            aes(tournament, y = pct + .05, label = paste0(round(pct*100, 2),"%")),
+                       size=4)  + theme_bw() + theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+```{r}
+with(mini.d, table(tournament, ioc_Australia)) %>%
+  chisq.test() %>%
   pander()
 ```
 
 
 
 
+# Conclusions
 
+* Spaniards win the French Open more often than they win other tournaments, and this difference is significant. They play in the French Open more often than they play in other tournaments, but not significantly. 
 
+* French win the French Open more often than they win other tournaments, but this difference is (barely) insignificant. They play in the French Open more often than they play in other tournaments, at a significantly higher rate.
 
+* Americans win the US Open more often than they win other tournaments, and this difference is significant. But, they play in the US Open more often than they play in other tournaments, at a significantly higher rate.
 
-
-
-
+* Australians win the US Open more often than they win other tournaments, and this difference is significant. But, they play in the Australian Open more often than they play in other tournaments, at a significantly higher rate.
 
 
 
