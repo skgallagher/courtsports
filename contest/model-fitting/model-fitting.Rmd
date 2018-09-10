@@ -1,0 +1,74 @@
+---
+title: "Model Fitting"
+author: "Amanda Luby, Shannon Gallagher, Kayla Frisoli"
+date: "9/10/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(rstan)
+library(shinystan)
+library(brms)
+```
+
+### Modeling notes:
+
+* Did not include 'height' in models due to missingness in data
+* Used brms package to call Stan (multilevel modeling-specific, uses syntax similar to lme4 if we want to switch to maximum-likelihood based estimation)
+* Each model takes 15-20 minutes to fit (3 models in document)
+
+### Model 1:
+
+No effect for player; fixed effect for IOC, tournament, etc. 
+
+```{r}
+load(file = "../../data/gs_players.rda")
+load("../../data/gs.rda")
+
+gs_players$name_int = as.integer(as.factor(gs_players$name))
+gs_players$hand_fac = as.factor(gs_players$hand)
+gs_players$ioc_fac = as.factor(gs_players$ioc)
+
+basemod = brm(pointswon ~ ioc_fac + hand_fac + tournament + round + rank + opponent_rank + minutes, data = gs_players, family = gaussian())
+```
+
+### Model 2:
+
+Group-level effect and tournament effect for IOC; fixed effect for other vars (still no individual-level effects)
+
+```{r}
+country_mod = brm(pointswon ~ hand_fac + round + rank + opponent_rank + minutes + (1 + tournament |ioc_fac), data = gs_players, family = gaussian())
+```
+
+### Model 2:
+
+Group-level tournament effect for player; fixed effect for IOC, tournament, etc. 
+
+```{r}
+ind_mod = brm(pointswon ~ ioc_fac + hand_fac + round + rank + opponent_rank + minutes + (1 + tournament |name_int), data = gs_players, family = gaussian())
+```
+
+### Model Comparison (stats methods)
+
+(Note: for full MCMC diagnostics, run `launch_shinystan(MOD_NAME))` )
+
+In models that don't include individual effects (basemod and country_mod), the estimated effect of "Wimbledon" on points won is quite high compared to the other models. (Could this be because better players are more likely to play in Wimbledon??) This effect starts to even out after including individual effects. 
+
+```{r}
+plot(marginal_effects(basemod, effects = "tournament"))
+plot(marginal_effects(country_mod, effects = "tournament"))
+plot(marginal_effects(ind_mod, effects = "tournament"))
+```
+
+### Model Comparison (tennis knowledge)
+
+Checks:
+* Serena should be good on hard surface
+* Nadal should be good on clay 
+* Federer should be good on grass 
+
+```{r}
+
+```
