@@ -1,0 +1,165 @@
+---
+title: "EDA"
+author: "The Competent Ones"
+date: "August 4, 2018"
+output: 
+  html_document:
+    toc:  true
+    toc_float:  true
+    code_folding: hide
+---
+	
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+
+```
+	
+```{r libraries}
+library(devtools)
+library(deuce)
+library(knitr)
+<<<<<<< HEAD
+#devtools::load_all("..") # Loads courtsports package
+=======
+# devtools::load_all("..") # Loads courtsports package
+>>>>>>> 416679d042a62d33c651175c1f84c93d78e060bc
+```
+	
+
+	
+```{r data-extraction	}
+data("point_by_point")
+pbp = tbl_df(point_by_point)
+pbp$wim = grepl("Wimbledon", pbp$tny_name)
+pbp$french = grepl("FrenchOpen", pbp$tny_name)
+pbp$aus = grepl("AustralianOpen", pbp$tny_name)
+pbp$us = grepl("USOpen", pbp$tny_name)
+pbp$qual = grepl("Qualifying", pbp$tny_name)
+
+# Create data for Grand Slam finals
+gsf = filter(pbp, !qual & (wim | french | us | aus))
+```
+
+```{r numbers}
+dim(gsf)
+colnames(gsf)
+kable(table(gsf$tny_name))
+
+any(grepl("Serena", gsf$server1))
+any(grepl("Nadal", gsf$server1))
+any(grepl("Federer", gsf$server1))
+
+## Opponents of our 3
+## Serena
+gsf$server2[grepl("Serena", gsf$server1)]
+## Nadal
+gsf$server2[grepl("Nadal", gsf$server1)]
+## Fed
+gsf$server2[grepl("Federer", gsf$server1)]
+```
+
+## Looking at ATP (Men's) matches
+
+```{r}
+data(atp_matches)
+
+gs <- atp_matches %>% filter(tourney_level == "Grand Slams" & year >= 2013)
+sort(unique(gs$tourney_name))
+colnames(gs)
+
+## Add new column of points won
+gs <- gs %>% mutate(w_pointswon = w_1stWon + w_2ndWon + l_svpt - l_1stWon - l_2ndWon)
+gs <- gs %>% mutate(l_pointswon = l_1stWon + l_2ndWon + w_svpt - w_1stWon - w_2ndWon)
+gs <- gs %>% mutate(w_morepts = w_pointswon >= l_pointswon)
+n_correct <- sum(gs$w_morepts, na.rm = TRUE)
+na_pt_indices <- which(is.na(gs$w_morepts))
+n_correct / (nrow(gs) - length(na_pt_indices)) # more points won tells us who won >95% of the time
+gs[na_pt_indices,]  ## All NA are straight up retirements so not really NA
+incorrect_inds <- which(!gs$w_morepts)
+table(gs[incorrect_inds, "tourney_name"])
+table(gs[incorrect_inds, "Retirement"])
+
+```
+	
+Australian Open with most wins with loser winning more points than winner.	Of all the matches where the winners won fewer points than the losers, only 10 were retirements.  Which means you are more likely to quit when you are down (10 night before).
+
+```{r data-cleaning}
+library(forcats)
+library(stringr)
+## Combine US Open
+gs$tournament <- factor(gs$tourney_name)
+gs$tournament <- gs$tournament %>% fct_collapse("US Open" = c("US Open", "Us Open"))
+
+## Extract te number of sets in each match
+no_ret <- gsub(" RET", "", gs$score)
+set_scores <- str_split(no_ret, " ")
+n_sets <- sapply(set_scores, length)
+gs$n_sets <- n_sets
+
+
+
+```
+```{r some-plots}
+library(ggplot2)
+library(reshape2)
+
+g <- ggplot(data = gs, aes(x = w_pointswon)) + geom_histogram()
+g
+
+g2 <- ggplot(data = gs, aes(x = w_pointswon)) +
+    geom_histogram(aes(y=..density..)) +
+    facet_grid(~tournament)
+g2
+
+##
+bp <- ggplot(data = gs, aes(x = n_sets)) +
+    geom_bar(aes(y = ..prop..)) +
+    facet_grid(~tournament)
+bp
+
+g3 <- ggplot(data = gs, aes(x = w_pointswon)) +
+    geom_histogram(aes(y=..density..)) +
+    facet_grid(n_sets~tournament)
+g3
+
+```
+```{r}
+## Moving to boxplots
+g2 <- ggplot(data = gs,
+             aes(x = tournament, y= minutes,
+                            group = tournament, col = tournament)) +
+    geom_boxplot(size = 1)  + facet_grid(~n_sets)
+g2
+
+```
+It appears Wimbledon has the shortest matches.
+	## Retirements by court?
+
+```{r}
+## More boxplots
+g2 <- ggplot(data = gs,
+             aes(x = winner_ioc,
+                            group = tournament, fill = tournament)) +
+    geom_bar(aes(y=..prop..), size = 1)  + facet_grid(~tournament) + 
+    theme(axis.text.x = element_text(angle = 90, hjust = 1)) + coord_flip()
+g2
+
+## RG has least amount of double faults
+```
+
++ Find games won and lost
++ Find service games won/lost
++ Look at retirements by court
++ Look at wins by country by court
++ Find number of tiebreaks by court
++ Need to normalize wins by country by n_players in tournament (but both are interesting)
++ Look at gs point by point
++ Need to get French Open 2018 results
++ Get Women's data and combine it
++ Look atGS_point_by_point.  Is it complete?  Is it complete for rafa, serena, fed?
++ Facet by round
++ Do above but instead predict winner games, or winner sets, loser games, or loser sets
++ get hex colors of GS  
