@@ -115,6 +115,8 @@ matches_to_player_data <- function(matches,
     ## Copy data frames
     matches_l <- matches
     matches_w <- matches
+    matches_l$did_win <- 0 # no did not win
+    matches_w$did_win <- 1 # yes did win
 
     ## Get rid of winner attributes for the loser except for l_opp_vars
     remove_from_loser <- names(matches)[grep("^w|^W", names(matches))] %>%
