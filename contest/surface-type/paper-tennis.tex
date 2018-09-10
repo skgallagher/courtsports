@@ -82,7 +82,7 @@
   \postauthor{\par}
       \predate{\centering\large\emph}
   \postdate{\par}
-    \date{September 08, 2018}
+    \date{September 09, 2018}
 
 \usepackage{booktabs}
 \usepackage{longtable}
@@ -127,8 +127,11 @@ examine the effect of court surface. We also provide an in-depth
 analysis of Nadal, Federer, and S. Williams.
 \end{abstract}
 
-\hypertarget{sec:iintro}{%
-\section{Introduction}\label{sec:iintro}}
+{
+\setcounter{tocdepth}{2}
+\tableofcontents
+}
+\section{Introduction}\label{sec:iintro}
 
 Rafael Nadal is known as the ``King of Clay'' in tennis, having won 11
 out of his current 17 grand slams titles at the French Open, which is
@@ -195,11 +198,9 @@ of our modelling and also examine the play of Nadal, Federer, and
 Williams. Finally in \protect\hyperlink{discussion}{Section Discussion},
 we discuss future work and extensions or our model.
 
-\hypertarget{sec:data-eda}{%
-\section{Data and EDA}\label{sec:data-eda}}
+\section{Data and EDA}\label{sec:data-eda}
 
-\hypertarget{sec:data}{%
-\subsection{Data}\label{sec:data}}
+\hypertarget{sec:data}{\subsection{Data}\label{sec:data}}
 
 The data consists of 5080 matches split evenly over the four grand slams
 and the two leagues: ATP (men's) and WTA (women's). Each match has 80
@@ -212,6 +213,7 @@ of the tournament. A subset of the data is shown in Table
 \ref{tab:data}.
 
 \rowcolors{2}{gray!6}{white}
+
 \begin{table}
 
 \caption{\label{tab:tab-data}\label{tab:data}Example of the grand slam data.  It includes winner and loser attributes, match attributes, and tournament attributes.  Not all attributes are shown here.}
@@ -230,30 +232,24 @@ Australian Open & 2017 & USA & 73 & Serena Williams & 2 & 60 & Lucie Safarova\\
 \bottomrule
 \end{tabular}
 \end{table}
+
 \rowcolors{2}{white}{white}
 
 The data is obtained from Jeff Sackman's open website {[}cite{]} via the
 \texttt{R} package \texttt{deuce} {[}cite{]}. All steps of our analysis
 from collection to dissemination are freely available online and are
 compiled into an \texttt{R} package
-\url{http://github.com/shannong19/courtsports}. The paper itself may be
-generated from the file
-\url{https://github.com/shannong19/courtsports/blob/master/contest/surface-type/paper-tennis.Rmd}.
+\url{http://github.com/shannong19/courtsports}.
 
-\hypertarget{sec:eda}{%
-\subsection{Early Data Analysis}\label{sec:eda}}
+\hypertarget{sec:eda}{\subsection{Early Data Analysis}\label{sec:eda}}
 
-\hypertarget{sec:methods}{%
-\section{Methods}\label{sec:methods}}
+\hypertarget{sec:methods}{\section{Methods}\label{sec:methods}}
 
-\hypertarget{sec:results}{%
-\section{Results}\label{sec:results}}
+\hypertarget{sec:results}{\section{Results}\label{sec:results}}
 
-\hypertarget{sec:discussion}{%
-\section{Discussion}\label{sec:discussion}}
+\section{Discussion}\label{sec:discussion}
 
-\hypertarget{sec:refs}{%
-\section{References}\label{sec:refs}}
+\section{References}\label{sec:refs}
 
 
 \end{document}
