@@ -51,20 +51,12 @@ gs_players <- matches_to_player_data(gs,
 
 ```
 
-<<<<<<< HEAD
-=======
 # Spain vs. tournament
->>>>>>> refs/remotes/origin/master
 
 ## Is being a winner from Spain independent of tournament? 
 
 
-<<<<<<< HEAD
-```{r, fig.height=5, fig.width=8, fig.align='center'}
-=======
 ```{r, fig.height=3.2, fig.width=6, fig.align='center'}
->>>>>>> refs/remotes/origin/master
-
 gs <- mutate(gs, 
              winner_ioc_spain = ifelse(winner_ioc == "ESP", "Spain", "Other"))
 
@@ -77,34 +69,23 @@ ggplot(props, aes(tournament, pct, fill = winner_ioc_spain)) +
         geom_bar(stat = "identity") +
         scale_fill_manual("Country of origin",
                           values = c( "#FFC400", "#C60B1E")) + 
-<<<<<<< HEAD
-  labs(x = " ", y = "Proportion", title = "Spanish players win the French Open more often than other tournaments") + 
-  geom_text(data = filter(props, winner_ioc_spain == "Spain"), 
-            aes(tournament, y = pct + .05, label = paste0(round(pct, 2),"%")),
-                       size=4)
-=======
   labs(x = " ", y = "Proportion", title = "Spanish players win the French Open\nmore often than other tournaments") + 
   geom_text(data = filter(props, winner_ioc_spain == "Spain"), 
             aes(tournament, y = pct + .05, label = paste0(round(pct*100, 2),"%")),
                        size=4) + theme_bw() + theme(plot.title = element_text(hjust = 0.5))
->>>>>>> refs/remotes/origin/master
-
 ```
 
 ```{r sample, echo=FALSE, results='asis'}
 library(xtable)
 
 spain_vs_tourn <- with(gs, table(tournament, winner_ioc_spain))
-<<<<<<< HEAD
 
 t1 <- kable(spain_vs_tourn, format = "latex", booktabs = TRUE)
 t2 <- kable(chisq.test(spain_vs_tourn)$expected, format = "latex", booktabs = TRUE)
-=======
 spain_vs_tourn_chisq <- chisq.test(spain_vs_tourn)
 
 t1 <- kable(spain_vs_tourn, format = "latex", booktabs = TRUE)
 t2 <- kable(spain_vs_tourn_chisq$expected, format = "latex", booktabs = TRUE)
->>>>>>> refs/remotes/origin/master
 
 cat(c("\\begin{table}[!htb]
     \\begin{minipage}{.5\\linewidth}
@@ -123,22 +104,6 @@ cat(c("\\begin{table}[!htb]
 
 
 ```{r}
-<<<<<<< HEAD
-chisq.test(spain_vs_tourn) %>% 
-  pander()
-```
-
-
-
-
-
-
-
-
-
-
-
-=======
 spain_vs_tourn_chisq %>% 
   pander()
 ```
@@ -438,8 +403,6 @@ with(mini.d, table(tournament, ioc_Australia)) %>%
 ```
 
 
-
-
 # Conclusions
 
 * Spaniards win the French Open more often than they win other tournaments, and this difference is significant. They play in the French Open more often than they play in other tournaments, but not significantly. 
@@ -449,10 +412,5 @@ with(mini.d, table(tournament, ioc_Australia)) %>%
 * Americans win the US Open more often than they win other tournaments, and this difference is significant. But, they play in the US Open more often than they play in other tournaments, at a significantly higher rate.
 
 * Australians win the US Open more often than they win other tournaments, and this difference is significant. But, they play in the Australian Open more often than they play in other tournaments, at a significantly higher rate.
->>>>>>> refs/remotes/origin/master
-
-
-
-
 
 
