@@ -1,15 +1,17 @@
 ---
 title: "Graphics"
-author: "Kayla Frisoli, Shannon Gallagher, and Amanda Luby"
+author: "We have no names"
 output:
   pdf_document:
     fig_caption: yes
     keep_tex: yes
-    number_sections: yes
+    number_sections: no
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(warning=FALSE)
+knitr::opts_chunk$set(message = FALSE)
 knitr::opts_chunk$set(cache = TRUE)
 library(deuce)
 library(dplyr)
@@ -19,6 +21,7 @@ library(stringr)
 library(knitr)
 library(kableExtra)
 library(pander)
+library(gridExtra)
 
 ## To change into library(courtsports)
 devtools::load_all("../..")
@@ -50,6 +53,78 @@ gs_players <- matches_to_player_data(gs,
                                      opp_var_names = "opponent_rank")
 
 ```
+
+# Univariate distributions
+
+## Points won 
+
+
+```{r, fig.height=4, fig.width=12}
+p1 <- ggplot(gs_players) + geom_histogram(aes(pointswon), bins=40) + 
+  labs(x = "Winner points")
+
+p2 <- ggplot(gs_players) + geom_density(aes(pointswon, color = tournament)) + 
+  labs(x = "Winner points")
+
+p3 <- ggplot(gs_players) + geom_density(aes(pointswon, color = league))+ 
+  labs(x = "Winner points")
+
+grid.arrange(p1, p2, p3, ncol=3, widths=c(.25, .41, .34))
+
+```
+
+```{r, fig.height=3.5, fig.width=10, fig.align='center'}
+
+p1 <- ggplot(gs) + geom_point(aes(w_pointswon, l_pointswon)) + 
+  geom_abline(slope=1, intercept=0, color="red") + 
+  labs(x = "Winner points", y = "Loser points")
+
+p2 <- ggplot(gs) + geom_point(aes(w_pointswon, l_pointswon, color = league), alpha=.3) + 
+    scale_color_manual(values=c("#339966", "#336699")) +
+  geom_abline(slope=1, intercept=0, color="red") + 
+  geom_smooth(aes(w_pointswon, l_pointswon, color = league), method='lm') + 
+  labs(x = "Winner points", y = "Loser points")
+
+grid.arrange(p1, p2, ncol=2, widths=c(.48, .52))
+
+```
+
+
+
+## Games won
+
+```{r, fig.height=4, fig.width=10}
+
+p1 <- ggplot(gs_players) + geom_histogram(aes(gameswon), bins=30)+ 
+  labs(x = "Winner games")
+
+p2 <- ggplot(gs_players) + geom_density(aes(gameswon, color = tournament))+ 
+  labs(x = "Winner games")
+
+p3 <- ggplot(gs_players) + geom_density(aes(gameswon, color = league))+ 
+  labs(x = "Winner games")
+
+grid.arrange(p1, p2, p3, ncol=3, widths=c(.25, .41, .34))
+
+```
+
+```{r, fig.height=4, fig.width=8, fig.align='center'}
+
+p1 <- ggplot(gs) + geom_point(aes(w_gameswon, l_gameswon)) + 
+  geom_abline(slope=1, intercept=0, color="red") + 
+  labs(x = "Winner games", y = "Loser games")
+
+
+p2 <- ggplot(gs) + geom_point(aes(w_gameswon, l_gameswon, color = league), alpha=.3) + 
+    scale_color_manual(values=c("#339966", "#336699")) +
+  geom_abline(slope=1, intercept=0, color="red") + 
+  geom_smooth(aes(w_gameswon, l_gameswon, color = league), method='lm')  + 
+  labs(x = "Winner games", y = "Loser games")
+
+grid.arrange(p1, p2, ncol=2, widths=c(.48, .52))
+
+```
+
 
 # Spain vs. tournament
 
@@ -412,5 +487,25 @@ with(mini.d, table(tournament, ioc_Australia)) %>%
 * Americans win the US Open more often than they win other tournaments, and this difference is significant. But, they play in the US Open more often than they play in other tournaments, at a significantly higher rate.
 
 * Australians win the US Open more often than they win other tournaments, and this difference is significant. But, they play in the Australian Open more often than they play in other tournaments, at a significantly higher rate.
+
+
+
+# MDS 
+
+```{r}
+gs_num <- select(gs, w_ace, w_df, w_svpt, w_1stIn, w_1stWon, w_2ndWon,
+                w_bpSaved, w_bpFaced) %>%
+na.omit()
+
+mds <- cmdscale(dist(scale(gs_num)), k = 2) %>%
+  as.data.frame()  # default column names will be V1, V2
+
+mds$tournament <- select(gs, w_ace, w_df, w_svpt, w_1stIn, w_1stWon, w_2ndWon,
+                w_bpSaved, w_bpFaced, tournament) %>%
+na.omit() %>% pull( tournament)
+
+ggplot(mds, aes(V1, V2, label = tournament, color=tournament)) + geom_text()
+```
+
 
 
