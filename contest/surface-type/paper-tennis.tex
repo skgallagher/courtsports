@@ -82,7 +82,7 @@
   \postauthor{\par}
       \predate{\centering\large\emph}
   \postdate{\par}
-    \date{September 09, 2018}
+    \date{September 10, 2018}
 
 \usepackage{booktabs}
 \usepackage{longtable}
@@ -98,6 +98,8 @@
 \usepackage{threeparttablex}
 \usepackage[normalem]{ulem}
 \usepackage{makecell}
+
+\usepackage{hyperref}
 
 \begin{document}
 \maketitle
@@ -127,15 +129,12 @@ examine the effect of court surface. We also provide an in-depth
 analysis of Nadal, Federer, and S. Williams.
 \end{abstract}
 
-{
-\setcounter{tocdepth}{2}
-\tableofcontents
-}
-\section{Introduction}\label{sec:iintro}
+\hypertarget{sec:iintro}{%
+\section{Introduction}\label{sec:iintro}}
 
 Rafael Nadal is known as the ``King of Clay'' in tennis, having won 11
 out of his current 17 grand slams titles at the French Open, which is
-played on a clay surface {[}cite{]}. In contrast, his rival Roger
+played on a clay surface (Jurejko 2018). In contrast, his rival Roger
 Federer has won his most grand slam titles (8 out of 20) at Wimbledon,
 which is played on grass. On the women's side, Serena Williams has been
 dominant both on hard court (7 titles at the Australian Open and 6 at US
@@ -146,9 +145,9 @@ effect with court type. For example, Spanish players seem to excel on
 clay courts and Americans have great success at Wimbledon despite grass
 courts not being of wide use in the USA. It also worth questioning
 whether the US Open and Australian Open should be grouped together as
-hard courts despite having different surface compositions {[}cite{]}. In
-this paper, we analyze the results of grand slam players from 2013-2017,
-and we
+hard courts despite having different surface compositions (Paxinos
+2007). In this paper, we analyze the results of grand slam players from
+2013-2017, and we
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
@@ -161,18 +160,34 @@ and we
   Assess whether we can group the two hard court surfaces together.
 \end{enumerate}
 
-As to issue (1) the hiearchical modelling, we use models similar to
-{[}cite{]} and {[}cite{]}. More specifically, we model the players'
-expected points in a match based on the player's own characteristics,
-the court/tournament effects, and the oponent's ranking. We use a
-Bayesian method because in {[}cite,cite{]} they had success in similar
-situations.
+As to issue (1) quantifying the effect of court surface on players,
+there has not been much written about with regards to tennis. There are
+materials available in the literature for forecasting the outcome of
+tennis matches (Klaassen and Magnus 2003; Newton and Keller 2005; McHale
+and Morton 2011) or for assessing whether points within a match are
+independent and identically distributed (Klaassen and Magnus 2001).
+(Knottenbelt, Spanias, and Madurska 2012) do take into account surface
+in their model but do not compare the results of one surface to another.
+Other sports analyses do take into account surface type such as grass
+vs.~turf in soccer and football. Results from these studies show that
+surface type does have an effect on the game, either directly or
+indirectly {[}Andersson, Ekblom, and Krustrup (2008); Gains et al.
+(2010);{]}.
 
-For issue (2) the player analysis of Nadal, Federer, and Williams, we
-examine whether our model passes the ``common sense''" tests (e.g.~these
-players should win often when contrasting them to opponents) like in
-{[}ventura something{]} and whether these players do have surface
-apparent effects.
+We use models that take into account both individual and group effects
+such as in the Gaussian-process player production basketball model or
+predicting individual soccer performance (Page, Barney, and McGuire
+2013; Egidi and Gabry 2018). Both of those models had success using
+hierarhcical Bayesian models, which we employ in our own models. More
+specifically, we model the players' expected points in a match based on
+the player's own characteristics, the court/tournament effects, and the
+oponent's ranking.
+
+HERE For issue (2) the player analysis of Nadal, Federer, and Williams,
+we examine whether our model passes the ``common sense'' tests
+(e.g.~these players should win often when contrasting them to opponents)
+like in {[}ventura something{]} and whether these players do have
+surface apparent effects. START HERE GOAT (Kovalchik 2016)
 
 Finally, for issue (3), we use clustering methods {[}cite{]} in order to
 determine which court surface types are more similar to one another.
@@ -198,9 +213,11 @@ of our modelling and also examine the play of Nadal, Federer, and
 Williams. Finally in \protect\hyperlink{discussion}{Section Discussion},
 we discuss future work and extensions or our model.
 
-\section{Data and EDA}\label{sec:data-eda}
+\hypertarget{sec:data-eda}{%
+\section{Data and EDA}\label{sec:data-eda}}
 
-\hypertarget{sec:data}{\subsection{Data}\label{sec:data}}
+\hypertarget{sec:data}{%
+\subsection{Data}\label{sec:data}}
 
 The data consists of 5080 matches split evenly over the four grand slams
 and the two leagues: ATP (men's) and WTA (women's). Each match has 80
@@ -213,7 +230,6 @@ of the tournament. A subset of the data is shown in Table
 \ref{tab:data}.
 
 \rowcolors{2}{gray!6}{white}
-
 \begin{table}
 
 \caption{\label{tab:tab-data}\label{tab:data}Example of the grand slam data.  It includes winner and loser attributes, match attributes, and tournament attributes.  Not all attributes are shown here.}
@@ -232,7 +248,6 @@ Australian Open & 2017 & USA & 73 & Serena Williams & 2 & 60 & Lucie Safarova\\
 \bottomrule
 \end{tabular}
 \end{table}
-
 \rowcolors{2}{white}{white}
 
 The data is obtained from Jeff Sackman's open website {[}cite{]} via the
@@ -241,15 +256,90 @@ from collection to dissemination are freely available online and are
 compiled into an \texttt{R} package
 \url{http://github.com/shannong19/courtsports}.
 
-\hypertarget{sec:eda}{\subsection{Early Data Analysis}\label{sec:eda}}
+\hypertarget{sec:eda}{%
+\subsection{Early Data Analysis}\label{sec:eda}}
 
-\hypertarget{sec:methods}{\section{Methods}\label{sec:methods}}
+\hypertarget{sec:methods}{%
+\section{Methods}\label{sec:methods}}
 
-\hypertarget{sec:results}{\section{Results}\label{sec:results}}
+\hypertarget{sec:results}{%
+\section{Results}\label{sec:results}}
 
-\section{Discussion}\label{sec:discussion}
+\hypertarget{sec:discussion}{%
+\section{Discussion}\label{sec:discussion}}
 
-\section{References}\label{sec:refs}
+\hypertarget{sec:refs}{%
+\section*{References}\label{sec:refs}}
+\addcontentsline{toc}{section}{References}
+
+\hypertarget{refs}{}
+\leavevmode\hypertarget{ref-andersson2008}{}%
+Andersson, Helena, Björn Ekblom, and Peter Krustrup. 2008. ``Elite
+Football on Artificial Turf Versus Natural Grass: Movement Patterns,
+Technical Standards, and Player Impressions'' 26 (February): 113--22.
+
+\leavevmode\hypertarget{ref-egidi2018}{}%
+Egidi, Leonardo, and Jonah Gabry. 2018. ``Bayesian Hierarchical Models
+for Predicting Individual Performance in Soccer.'' \emph{Journal of
+Quantitative Analysis in Sports} 14 (3). De Gruyter: 143--57.
+
+\leavevmode\hypertarget{ref-gains2010}{}%
+Gains, Graydon L, Andy N Swedenhjelm, Jerry L Mayhew, H Michael Bird,
+and Jeremy J Houser. 2010. ``Comparison of Speed and Agility Performance
+of College Football Players on Field Turf and Natural Grass.'' \emph{The
+Journal of Strength \& Conditioning Research} 24 (10). LWW: 2613--7.
+
+\leavevmode\hypertarget{ref-bbc2018}{}%
+Jurejko, Jonathan. 2018. ``French Open 2018: Why does 'King of Clay'
+Rafael Nadal reign supreme?'' Edited by BBC Sport at Roland Garros.
+\url{https://www.bbc.com/sport/tennis/44385223}.
+
+\leavevmode\hypertarget{ref-klaassen2003}{}%
+Klaassen, Franc J.G.M., and Jan R. Magnus. 2003. ``Forecasting the
+Winner of a Tennis Match.'' \emph{European Journal of Operational
+Research} 148 (2): 257--67.
+\url{https://doi.org/https://doi.org/10.1016/S0377-2217(02)00682-3}.
+
+\leavevmode\hypertarget{ref-klaassen2001}{}%
+Klaassen, Franc J.G.M., and Jan R Magnus. 2001. ``Are Points in Tennis
+Independent and Identically Distributed? Evidence from a Dynamic Binary
+Panel Data Model.'' \emph{Journal of the American Statistical
+Association} 96 (454). Taylor \& Francis: 500--509.
+\url{https://doi.org/10.1198/016214501753168217}.
+
+\leavevmode\hypertarget{ref-knottenbelt2012}{}%
+Knottenbelt, William J., Demetris Spanias, and Agnieszka M. Madurska.
+2012. ``A Common-Opponent Stochastic Model for Predicting the Outcome of
+Professional Tennis Matches.'' \emph{Computers \& Mathematics with
+Applications} 64 (12): 3820--7.
+\url{https://doi.org/https://doi.org/10.1016/j.camwa.2012.03.005}.
+
+\leavevmode\hypertarget{ref-kovalchik2016}{}%
+Kovalchik, Stephanie Ann. 2016. ``Searching for the Goat of Tennis Win
+Prediction.'' \emph{Journal of Quantitative Analysis in Sports} 12 (3).
+De Gruyter: 127--38.
+
+\leavevmode\hypertarget{ref-mchale2011}{}%
+McHale, Ian, and Alex Morton. 2011. ``A Bradley-Terry Type Model for
+Forecasting Tennis Match Results.'' \emph{International Journal of
+Forecasting} 27 (2): 619--30.
+\url{https://doi.org/https://doi.org/10.1016/j.ijforecast.2010.04.004}.
+
+\leavevmode\hypertarget{ref-newton2005}{}%
+Newton, Paul K, and Joseph B Keller. 2005. ``Probability of Winning at
+Tennis I. Theory and Data.'' \emph{Studies in Applied Mathematics} 114
+(3). Wiley Online Library: 241--69.
+
+\leavevmode\hypertarget{ref-page2013}{}%
+Page, Garritt L, Bradley J Barney, and Aaron T McGuire. 2013. ``Effect
+of Position, Usage Rate, and Per Game Minutes Played on Nba Player
+Production Curves.'' \emph{Journal of Quantitative Analysis in Sports} 9
+(4). De Gruyter: 337--45.
+
+\leavevmode\hypertarget{ref-theage2007}{}%
+Paxinos, Stathi. 2007. ``Australian Open court surface is speeding up.''
+Edited by The Age.
+\url{https://www.theage.com.au/sport/tennis/australian-open-court-surface-is-speeding-up-20071120-ge6chj.html}.
 
 
 \end{document}

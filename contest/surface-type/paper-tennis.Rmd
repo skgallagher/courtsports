@@ -7,6 +7,8 @@ output:
     fig_caption: yes
     keep_tex: yes
     number_sections: yes
+header-includes:
+  - \usepackage{hyperref}
 abstract: "Tennis grand slams consist of the Australian Open, French Open, Wimbledon, and US Open, which are played on hard (Plexicushion), clay, grass, and hard (DecoTurf) courts, respectively.  The surface type may substantially impact ball speed, height, and spin as well as player speed and agility.  It is also believed that play style and practice habits may contribute to different results across surface types.  For example, Rafael Nadal is thought to be the best clay court player of all time whereas Roger Federer is particularly known for dominance at Wimbledon.  On the women's side, Serena Williams once struggled on clay courts but has seemingly transformed her style to perform better on clay courts, but has perhaps suffered on grass as a consequence.  In this analysis, we examine the result of the top 100 players in grand slams from 2013-2017 across the four different surfaces.  We create a hierarchical model with fixed and random effects to predict the number of points won in a match.  We take into consideration player-specific effects, nationality (which is thought to have an effect on play style), sex, ranking, ELO, and game statistics.   We assess the fit of our model using standard statistical techniques (e.g. MSE, AIC, BIC, residual diagnostics) in addition to `common knowledge' factors (for instance, Rafael Nadal should be indicated as a superior clay court player by the model).  We compare the results of top 100 players across grand slams to examine the effect of court surface. We also provide an in-depth analysis of Nadal, Federer, and S. Williams."
 bibliography: master.bib
 ---
@@ -62,7 +64,7 @@ gs_players <- matches_to_player_data(gs,
 
 
 # Introduction {#sec:iintro}
-Rafael Nadal is known as the "King of Clay" in tennis, having won 11 out of his current 17 grand slams titles at the French Open, which is played on a clay surface [cite].  In contrast, his rival Roger Federer has won his most grand slam titles (8 out of 20) at Wimbledon, which is played on grass.  On the women's side, Serena Williams has been dominant both on hard court (7 titles at the Australian Open and 6 at US Open) and grass (7 at Wimbledon).  This trend extends to other top players, who seem to have better results at some grand slams than others.  More broadly, it seems that country of origin has an interaction effect with court type.  For example, Spanish players seem to excel on clay courts and Americans have great success at Wimbledon despite grass courts not being of wide use in the USA.  It also worth questioning whether the US Open and Australian Open should be grouped together as hard courts despite having different surface compositions [cite].  In this paper, we analyze the results of grand slam players from 2013-2017,  and we 
+Rafael Nadal is known as the "King of Clay" in tennis, having won 11 out of his current 17 grand slams titles at the French Open, which is played on a clay surface [@bbc2018].  In contrast, his rival Roger Federer has won his most grand slam titles (8 out of 20) at Wimbledon, which is played on grass.  On the women's side, Serena Williams has been dominant both on hard court (7 titles at the Australian Open and 6 at US Open) and grass (7 at Wimbledon).  This trend extends to other top players, who seem to have better results at some grand slams than others.  More broadly, it seems that country of origin has an interaction effect with court type.  For example, Spanish players seem to excel on clay courts and Americans have great success at Wimbledon despite grass courts not being of wide use in the USA.  It also worth questioning whether the US Open and Australian Open should be grouped together as hard courts despite having different surface compositions [@theage2007].  In this paper, we analyze the results of grand slam players from 2013-2017,  and we 
 
 1. Determine if and how court surface effects players by implementation of a series of nested hierarchical models
 
@@ -70,9 +72,13 @@ Rafael Nadal is known as the "King of Clay" in tennis, having won 11 out of his 
 
 3. Assess whether we can group the two hard court surfaces together.
 
-As to issue (1) the hiearchical modelling, we use models similar to [cite] and [cite].  More specifically, we model the players' expected points in a match based on the player's own characteristics, the court/tournament effects, and the oponent's ranking.  We use a Bayesian method because in [cite,cite] they had success in similar situations.
+As to issue (1) quantifying the effect of court surface on players, there has not been much written about with regards to tennis.  There are materials available in the literature for forecasting the outcome of tennis matches [@klaassen2003; @newton2005; @mchale2011] or for assessing whether points within a match are independent and identically distributed [@klaassen2001].   [@knottenbelt2012] do take into account surface in their model but do not compare the results of one surface to another.  Other sports analyses do take into account surface type such as grass vs. turf in soccer and football.  Results from these studies show that surface type does have an effect on the game, either directly or indirectly [@andersson2008; @gains2010;].
 
-For issue (2) the player analysis of Nadal, Federer, and Williams, we examine whether our model passes the "common sense"" tests (e.g. these players should win often when contrasting them to opponents) like in [ventura something] and whether these players do have surface apparent effects.
+We use models that take into account both individual and group effects such as in the Gaussian-process player production basketball model or predicting individual soccer performance  [@page2013; @egidi2018].  Both of those models had success using hierarhcical Bayesian models, which we employ in our own models. More specifically, we model the players' expected points in a match based on the player's own characteristics, the court/tournament effects, and the oponent's ranking.
+
+
+HERE
+For issue (2) the player analysis of Nadal, Federer, and Williams, we examine whether our model passes the "common sense" tests (e.g. these players should win often when contrasting them to opponents) like in [ventura something] and whether these players do have surface apparent effects. START HERE GOAT [@kovalchik2016]
 
 Finally, for issue (3), we use clustering methods [cite] in order to determine which court surface types are more similar to one another.
 
