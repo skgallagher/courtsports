@@ -1,0 +1,69 @@
+---
+title: "Model Comparisons"
+author: "Amanda Luby, Shannon Gallagher, Kayla Frisoli"
+date: "9/10/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(lme4)
+library(dplyr)
+load("stan-model-fits.RData")
+load(file = "../../data/gs_players.rda")
+load("../../data/gs.rda")
+
+gs_players$name_int = as.integer(as.factor(gs_players$name))
+gs_players$hand_fac = as.factor(gs_players$hand)
+gs_players$ioc_fac = as.factor(gs_players$ioc)
+gs_players$atp = gs_players$league == "ATP"
+gs_players$year_fac = as.factor(gs_players$year)
+```
+
+### Model Fit
+
+* Took minutes out because it was disproportionately missing for women players (and missing data gets thrown out)
+* Individual effects for tournament don't really seem to make a difference - mostly wrapped up in other variables
+
+```{r}
+linmod = lm(pointswon ~ ioc_fac +  tournament + round + rank + opponent_rank + year_fac + atp, data = gs_players)
+country_effects = lmer(pointswon ~ round + rank + opponent_rank + year_fac + atp + (0 + tournament |ioc_fac), data = gs_players)
+ind_effects = lmer(pointswon ~  ioc_fac + round + rank + opponent_rank + year_fac + atp + (0 + tournament |name_int), data = gs_players)
+
+par(mfrow=c(1,3))
+plot(residuals(linmod)~fitted(linmod), pch =19, cex = .5, main = "Model 1",
+     xlab = "Fitted", ylab = "Residuals")
+plot(residuals(country_effects) ~ fitted(country_effects), pch =19, cex = .5, main = "Model 2",
+     xlab = "Fitted", ylab = "Residuals")
+plot(residuals(ind_effects) ~ fitted(ind_effects), pch =19, cex = .5, main = "Model 3",
+     xlab = "Fitted", ylab = "Residuals")
+
+```
+
+```{r}
+extractAIC(linmod)
+extractAIC(country_effects)
+extractAIC(ind_effects)
+```
+
+### Model Comparison (tennis knowledge)
+
+```{r}
+superstars = gs_players %>% 
+  filter(., name == "Serena Williams" | name == "Rafael Nadal" | name == "Roger Federer")
+
+par(mfrow = c(1,3))
+plot(predict(linmod, newdata = superstars) ~ superstars$pointswon, col = as.factor(superstars$name))
+plot(predict(country_effects, newdata = superstars) ~ superstars$pointswon, col = as.factor(superstars$name))
+plot(predict(ind_effects, newdata = superstars) ~ superstars$pointswon, col = as.factor(superstars$name))
+```
+
+Sanity Checks:
+
+* Serena should be good on hard surface
+* Nadal should be good on clay 
+* Federer should be good on grass 
+
+```{r}
+
+```

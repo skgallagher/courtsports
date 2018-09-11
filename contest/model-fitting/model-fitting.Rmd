@@ -48,6 +48,7 @@ Group-level tournament effect for player; fixed effect for IOC, tournament, etc.
 
 ```{r}
 ind_mod = brm(pointswon ~ ioc_fac + hand_fac + round + rank + opponent_rank + minutes + (1 + tournament |name_int), data = gs_players, family = gaussian())
+ind_lmer = lmer(pointswon ~ ioc_fac + hand_fac + round + rank + opponent_rank + minutes + (1 + tournament |name_int), data = gs_players)
 ```
 
 ### Model Comparison (stats methods)
@@ -57,18 +58,10 @@ ind_mod = brm(pointswon ~ ioc_fac + hand_fac + round + rank + opponent_rank + mi
 In models that don't include individual effects (basemod and country_mod), the estimated effect of "Wimbledon" on points won is quite high compared to the other models. (Could this be because better players are more likely to play in Wimbledon??) This effect starts to even out after including individual effects. 
 
 ```{r}
+
+save(basemod, country_mod, ind_mod, file = "stan-model-fits.RData")
 plot(marginal_effects(basemod, effects = "tournament"))
 plot(marginal_effects(country_mod, effects = "tournament"))
 plot(marginal_effects(ind_mod, effects = "tournament"))
 ```
 
-### Model Comparison (tennis knowledge)
-
-Checks:
-* Serena should be good on hard surface
-* Nadal should be good on clay 
-* Federer should be good on grass 
-
-```{r}
-
-```
