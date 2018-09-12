@@ -93,7 +93,7 @@ grid.arrange(p1, p2, ncol=2, widths=c(.48, .52))
 
 ## Games won
 
-```{r, fig.height=4, fig.width=10}
+```{r, fig.height=4, fig.width=12}
 
 p1 <- ggplot(gs_players) + geom_histogram(aes(gameswon), bins=30)+ 
   labs(x = "Winner games")
@@ -108,7 +108,7 @@ grid.arrange(p1, p2, p3, ncol=3, widths=c(.25, .41, .34))
 
 ```
 
-```{r, fig.height=4, fig.width=8, fig.align='center'}
+```{r, fig.height=3.5, fig.width=10, fig.align='center'}
 
 p1 <- ggplot(gs) + geom_point(aes(w_gameswon, l_gameswon)) + 
   geom_abline(slope=1, intercept=0, color="red") + 
@@ -490,6 +490,28 @@ with(mini.d, table(tournament, ioc_Australia)) %>%
 
 
 
+# Pairs
+
+```{r, fig.height=12, fig.width=12}
+library(GGally)
+
+vars <- c("ht", "age", "rank", "opponent_rank", "ace", "df", "svpt", "1stIn", "SvGms", "bpSaved",
+          "bpFaced", "pointswon", "gameswon")
+
+ggpairs(gs_players,
+        columns = which(names(gs_players) %in% vars),
+        mapping=ggplot2::aes(colour = factor(did_win)))
+
+```
+
+
+## Follow-up
+
+```{r, fig.height=3, fig.width=4}
+ggplot(gs_players) + geom_point(aes(log(ht+1), log(ace+1), color = factor(did_win)))
+```
+
+
 # MDS 
 
 ```{r}
@@ -507,5 +529,20 @@ na.omit() %>% pull( tournament)
 ggplot(mds, aes(V1, V2, label = tournament, color=tournament)) + geom_text()
 ```
 
+
+```{r}
+gs_num <- select(gs, w_ace, w_df, w_svpt, w_1stIn,
+                w_bpSaved, w_bpFaced) %>%
+na.omit()
+
+mds <- cmdscale(dist(scale(gs_num)), k = 2) %>%
+  as.data.frame()  # default column names will be V1, V2
+
+mds$tournament <- select(gs, w_ace, w_df, w_svpt, w_1stIn,
+                w_bpSaved, w_bpFaced, tournament) %>%
+na.omit() %>% pull( tournament)
+
+ggplot(mds, aes(V1, V2, label = tournament, color=tournament)) + geom_text()
+```
 
 
