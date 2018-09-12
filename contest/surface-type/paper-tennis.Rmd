@@ -72,17 +72,16 @@ Rafael Nadal is known as the "King of Clay" in tennis, having won 11 out of his 
 
 3. Assess whether we can group the two hard court surfaces together.
 
-As to issue (1) quantifying the effect of court surface on players, there has not been much written about with regards to tennis.  There are materials available in the literature for forecasting the outcome of tennis matches [@klaassen2003; @newton2005; @mchale2011] or for assessing whether points within a match are independent and identically distributed [@klaassen2001].   [@knottenbelt2012] do take into account surface in their model but do not compare the results of one surface to another.  Other sports analyses do take into account surface type such as grass vs. turf in soccer and football.  Results from these studies show that surface type does have an effect on the game, either directly or indirectly [@andersson2008; @gains2010;].
+As to issue (1) quantifying the effect of court surface on players, there has not been much written about with regards to tennis.  There are materials available in the literature for forecasting the outcome of tennis matches [@klaassen2003; @newton2005; @mchale2011; @kovalchik2016]] or for assessing whether points within a match are independent and identically distributed [@klaassen2001].   [@knottenbelt2012] do take into account surface in their model but do not compare the results of one surface to another.  Other sports analyses do take into account surface type such as grass vs. turf in soccer and football.  Results from these studies show that surface type does have an effect on the game, either directly or indirectly [@andersson2008; @gains2010;].
 
 We use models that take into account both individual and group effects such as in the Gaussian-process player production basketball model or predicting individual soccer performance  [@page2013; @egidi2018].  Both of those models had success using hierarhcical Bayesian models, which we employ in our own models. More specifically, we model the players' expected points in a match based on the player's own characteristics, the court/tournament effects, and the oponent's ranking.
 
 
-HERE
-For issue (2) the player analysis of Nadal, Federer, and Williams, we examine whether our model passes the "common sense" tests (e.g. these players should win often when contrasting them to opponents) like in [ventura something] and whether these players do have surface apparent effects. START HERE GOAT [@kovalchik2016]
+For issue (2) the player analysis of Nadal, Federer, and Williams, we examine whether our model passes the "common sense" tests  like how the models in [thomas2013] show that commonly well known hockey players also have high status in the model.  We also examine whether these players do have surface apparent effects. Few academic papers have been written about Nadal, Federer, or Williams.  One paper studies Federer's odds of winning when Nadal suddenly withdrew from Wimbledon showed that Federer was too heavily favored by bookmakers [@leitner2009].  One analysis of Williams shows how she has gotten better with age, even past the point when other greats began to decline, but the study does not look at surface type [@five2015].
 
 Finally, for issue (3), we use clustering methods [cite] in order to determine which court surface types are more similar to one another.
 
-Readers may object that we are looking at difference between grand slams, which each have their own time period, weather conditions, play time conditions, and "home court effects" instead of differences in surfaces alone.  However, (1) grand slam data is the most readily available and most complete which makes it the best choice for modelling, (2) we adjust for these confounders where we can, and (3) analyzing the difference in the grand slams is still useful as they are considered to be the most prestigious events in tennis.
+Readers may object that we are looking at differences between grand slams, which each have their own time period, weather conditions, play time conditions, and "home court effects" instead of differences in surfaces alone.  However, (1) grand slam data is the most readily available and most complete which makes it the best choice at the moment for modelling, (2) we adjust for these confounders where we can, and (3) analyzing the difference in the grand slams is still useful as they are considered to be the most prestigious events in tennis.
 
 The rest of this paper is organized as follows. In [Section Data](#sec:data) we describe our grand slam tennis data.  In [Section Early Data Analysis](#sec:eda) we examine the data at a high level and use clustering whether to determine how the courts differ from one another.  In [Section Methods](#sec:methods) we describe our hierarchical models we use to determine difference in court surfaces.  In [Section Results](#sec:results) we describe the results of our modelling and also examine the play of Nadal, Federer, and Williams.  Finally in [Section Discussion](#discussion), we discuss future work and extensions or our model. 
 
@@ -94,12 +93,13 @@ The rest of this paper is organized as follows. In [Section Data](#sec:data) we 
 The data consists of `r nrow(gs)` matches split evenly over the four grand slams and the two leagues: ATP (men's) and WTA (women's).  Each match has `r ncol(gs)` attributes, many of which are redundant.  We focus on the following attributes for both the winner and loser of the match: games won, points won, retirement, break points faced, break points saved, aces, country of origin, and player attributes.  Additionally, we take into account the number of sets in a match, the surface type, minutes played, and round of the tournament.  A subset of the data is shown in Table \ref{tab:data}.
 
 ```{r tab-data, include = TRUE, echo = FALSE}
-set.seed(19)
+w_id <- which(gs$winner_name == "Serena Williams")[1:2]
+f_id <- which(gs$winner_name == "Roger Federer")[1:2]
+n_id <- which(gs$winner_name == "Rafael Nadal")[1:2]
 s_id <- which(gs$winner_name %in% c("Serena Williams", "Roger Federer", "Rafael Nadal"))
-rand_inds <- sample(s_id, 5)
-cols <- c("tourney_name", "year", "winner_ioc", "w_pointswon", "winner_name", "winner_rank", "l_pointswon", "loser_name")
-knitr::kable(gs[rand_inds, cols], format = "latex",
-             row.names = FALSE, col.names = c("Tournament", "Year", "W. Country", "W. Points", "Winner", "W. Rank", "L. Points", "Loser"),
+cols <- c("winner_name", "tourney_name", "year", "winner_ioc", "w_pointswon", "winner_rank", "l_pointswon", "loser_rank")
+knitr::kable(gs[c(w_id, f_id, n_id), cols], format = "latex",
+             row.names = FALSE, col.names = c("Winner", "Tournament", "Year", "W. IOC", "W. Points",  "W. Rank", "L. Points", "L. Rank"),
              caption = "\\label{tab:data}Example of the grand slam data.  It includes winner and loser attributes, match attributes, and tournament attributes.  Not all attributes are shown here.",
              booktabs = TRUE) %>% kable_styling(latex_options = "striped")
 ```
