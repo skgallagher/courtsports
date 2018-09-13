@@ -64,7 +64,7 @@ gs_players <- matches_to_player_data(gs,
 
 
 # Introduction {#sec:iintro}
-Rafael Nadal is known as the "King of Clay" in tennis, having won 11 out of his current 17 grand slams titles at the French Open, which is played on a clay surface [@bbc2018].  In contrast, his rival Roger Federer has won his most grand slam titles (8 out of 20) at Wimbledon, which is played on grass.  On the women's side, Serena Williams has been dominant both on hard court (7 titles at the Australian Open and 6 at US Open) and grass (7 at Wimbledon).  This trend extends to other top players, who seem to have better results at some grand slams than others.  More broadly, it seems that country of origin has an interaction effect with court type.  For example, Spanish players seem to excel on clay courts and Americans have great success at Wimbledon despite grass courts not being of wide use in the USA.  It also worth questioning whether the US Open and Australian Open should be grouped together as hard courts despite having different surface compositions [@theage2007].  In this paper, we analyze the results of grand slam players from 2013-2017,  and we 
+Rafael Nadal is known as the "King of Clay" in tennis, having won 11 out of his current 17 grand slams titles at the French Open, which is played on a clay surface [@bbc2018].  In contrast, his rival Roger Federer has won his most grand slam titles (8 out of 20) at Wimbledon, which is played on grass.  On the women's side, Serena Williams, winner of 24 grand slam titles, has been dominant both on hard court (7 titles at the Australian Open and 6 at US Open) and grass (7 at Wimbledon).  This trend extends to other top players, who seem to have better results at some grand slams than others.  More broadly, it seems that country of origin has an interaction effect with court type.  For example, Spanish players seem to excel on clay courts and Americans have great success at Wimbledon despite grass courts not being of wide use in the USA.  It also worth questioning whether the US Open and Australian Open should be grouped together as hard courts despite having different surface compositions [@theage2007].  In this paper, we analyze the results of grand slam players from 2013-2017,  and we 
 
 1. Determine if and how court surface effects players by implementation of a series of nested hierarchical models
 
@@ -77,9 +77,9 @@ As to issue (1) quantifying the effect of court surface on players, there has no
 We use models that take into account both individual and group effects such as in the Gaussian-process player production basketball model or predicting individual soccer performance  [@page2013; @egidi2018].  Both of those models had success using hierarhcical Bayesian models, which we employ in our own models. More specifically, we model the players' expected points in a match based on the player's own characteristics, the court/tournament effects, and the oponent's ranking.
 
 
-For issue (2) the player analysis of Nadal, Federer, and Williams, we examine whether our model passes the "common sense" tests  like how the models in [thomas2013] show that commonly well known hockey players also have high status in the model.  We also examine whether these players do have surface apparent effects. Few academic papers have been written about Nadal, Federer, or Williams.  One paper studies Federer's odds of winning when Nadal suddenly withdrew from Wimbledon showed that Federer was too heavily favored by bookmakers [@leitner2009].  One analysis of Williams shows how she has gotten better with age, even past the point when other greats began to decline, but the study does not look at surface type [@five2015].
+For issue (2) the player analysis of Nadal, Federer, and Williams, we examine whether our model passes the "common sense" tests  like how the models in [@thomas2013] show that commonly well known hockey players also have high status in the model.  We also examine whether these players do have surface apparent effects. Few academic papers have been written about Nadal, Federer, or Williams.  One paper studies Federer's odds of winning when Nadal suddenly withdrew from Wimbledon showed that Federer was too heavily favored by bookmakers [@leitner2009].  One analysis of Williams shows how she has gotten better with age, even past the point when other greats began to decline, but the study does not look at surface type [@five2015].
 
-Finally, for issue (3), we use clustering methods [cite] in order to determine which court surface types are more similar to one another.
+Finally, for issue (3), we use clustering methods in order to determine which court surface types are more similar to one another.
 
 Readers may object that we are looking at differences between grand slams, which each have their own time period, weather conditions, play time conditions, and "home court effects" instead of differences in surfaces alone.  However, (1) grand slam data is the most readily available and most complete which makes it the best choice at the moment for modelling, (2) we adjust for these confounders where we can, and (3) analyzing the difference in the grand slams is still useful as they are considered to be the most prestigious events in tennis.
 
@@ -90,7 +90,9 @@ The rest of this paper is organized as follows. In [Section Data](#sec:data) we 
 # Data and EDA {#sec:data-eda}
 
 ## Data {#sec:data}
-The data consists of `r nrow(gs)` matches split evenly over the four grand slams and the two leagues: ATP (men's) and WTA (women's).  Each match has `r ncol(gs)` attributes, many of which are redundant.  We focus on the following attributes for both the winner and loser of the match: games won, points won, retirement, break points faced, break points saved, aces, country of origin, and player attributes.  Additionally, we take into account the number of sets in a match, the surface type, minutes played, and round of the tournament.  A subset of the data is shown in Table \ref{tab:data}.
+The data consists of `r nrow(gs)` matches split evenly over the four grand slams and the two leagues: ATP (men's) and WTA (women's).  Each match has `r ncol(gs)` attributes, many of which are redundant.  We focus on the following attributes for both the winner and loser of the match: games won, points won, retirement, break points faced, break points saved, aces, country of origin, and player attributes.  Additionally, we take into account the number of sets in a match, the surface type, and round of the tournament.  A subset of the data is shown in Table \ref{tab:data}.
+
+
 
 ```{r tab-data, include = TRUE, echo = FALSE}
 w_id <- which(gs$winner_name == "Serena Williams")[1:2]
@@ -104,7 +106,7 @@ knitr::kable(gs[c(w_id, f_id, n_id), cols], format = "latex",
              booktabs = TRUE) %>% kable_styling(latex_options = "striped")
 ```
 
-The data is obtained from Jeff Sackman's open website [cite] via the `R` package `deuce` [cite].  All steps of our analysis from collection to dissemination are freely available online and are compiled into an `R` package \url{http://github.com/shannong19/courtsports}. 
+The data is obtained from Jeff Sackmann's open website via the `R` package `deuce` [@sackmann2018; @deuce2017].  All steps of our analysis from collection to dissemination are freely available online.
 
 ## Early Data Analysis {#sec:eda}
 
@@ -115,3 +117,5 @@ The data is obtained from Jeff Sackman's open website [cite] via the `R` package
 # Discussion {#sec:discussion}
 
 # References {#sec:refs}
+
+\footnotesize

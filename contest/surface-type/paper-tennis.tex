@@ -136,18 +136,18 @@ Rafael Nadal is known as the ``King of Clay'' in tennis, having won 11
 out of his current 17 grand slams titles at the French Open, which is
 played on a clay surface (Jurejko 2018). In contrast, his rival Roger
 Federer has won his most grand slam titles (8 out of 20) at Wimbledon,
-which is played on grass. On the women's side, Serena Williams has been
-dominant both on hard court (7 titles at the Australian Open and 6 at US
-Open) and grass (7 at Wimbledon). This trend extends to other top
-players, who seem to have better results at some grand slams than
-others. More broadly, it seems that country of origin has an interaction
-effect with court type. For example, Spanish players seem to excel on
-clay courts and Americans have great success at Wimbledon despite grass
-courts not being of wide use in the USA. It also worth questioning
-whether the US Open and Australian Open should be grouped together as
-hard courts despite having different surface compositions (Paxinos
-2007). In this paper, we analyze the results of grand slam players from
-2013-2017, and we
+which is played on grass. On the women's side, Serena Williams, winner
+of 24 grand slam titles, has been dominant both on hard court (7 titles
+at the Australian Open and 6 at US Open) and grass (7 at Wimbledon).
+This trend extends to other top players, who seem to have better results
+at some grand slams than others. More broadly, it seems that country of
+origin has an interaction effect with court type. For example, Spanish
+players seem to excel on clay courts and Americans have great success at
+Wimbledon despite grass courts not being of wide use in the USA. It also
+worth questioning whether the US Open and Australian Open should be
+grouped together as hard courts despite having different surface
+compositions (Paxinos 2007). In this paper, we analyze the results of
+grand slam players from 2013-2017, and we
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
@@ -185,18 +185,18 @@ oponent's ranking.
 
 For issue (2) the player analysis of Nadal, Federer, and Williams, we
 examine whether our model passes the ``common sense'' tests like how the
-models in {[}thomas2013{]} show that commonly well known hockey players
-also have high status in the model. We also examine whether these
-players do have surface apparent effects. Few academic papers have been
-written about Nadal, Federer, or Williams. One paper studies Federer's
-odds of winning when Nadal suddenly withdrew from Wimbledon showed that
-Federer was too heavily favored by bookmakers (Leitner, Zeileis, and
-Hornik 2009). One analysis of Williams shows how she has gotten better
-with age, even past the point when other greats began to decline, but
-the study does not look at surface type (Morris 2015).
+models in (Thomas et al. 2013) show that commonly well known hockey
+players also have high status in the model. We also examine whether
+these players do have surface apparent effects. Few academic papers have
+been written about Nadal, Federer, or Williams. One paper studies
+Federer's odds of winning when Nadal suddenly withdrew from Wimbledon
+showed that Federer was too heavily favored by bookmakers (Leitner,
+Zeileis, and Hornik 2009). One analysis of Williams shows how she has
+gotten better with age, even past the point when other greats began to
+decline, but the study does not look at surface type (Morris 2015).
 
-Finally, for issue (3), we use clustering methods {[}cite{]} in order to
-determine which court surface types are more similar to one another.
+Finally, for issue (3), we use clustering methods in order to determine
+which court surface types are more similar to one another.
 
 Readers may object that we are looking at differences between grand
 slams, which each have their own time period, weather conditions, play
@@ -257,11 +257,10 @@ Rafael Nadal & Roland Garros & 2013 & ESP & 113 & 4 & 90 & 35\\
 \end{table}
 \rowcolors{2}{white}{white}
 
-The data is obtained from Jeff Sackman's open website {[}cite{]} via the
-\texttt{R} package \texttt{deuce} {[}cite{]}. All steps of our analysis
-from collection to dissemination are freely available online and are
-compiled into an \texttt{R} package
-\url{http://github.com/shannong19/courtsports}.
+The data is obtained from Jeff Sackmann's open website via the
+\texttt{R} package \texttt{deuce} (Sackmann 2018; Kovalchik 2017). All
+steps of our analysis from collection to dissemination are freely
+available online.
 
 \hypertarget{sec:eda}{%
 \subsection{Early Data Analysis}\label{sec:eda}}
@@ -276,8 +275,9 @@ compiled into an \texttt{R} package
 \section{Discussion}\label{sec:discussion}}
 
 \hypertarget{sec:refs}{%
-\section*{References}\label{sec:refs}}
-\addcontentsline{toc}{section}{References}
+\section{References}\label{sec:refs}}
+
+\footnotesize
 
 \hypertarget{refs}{}
 \leavevmode\hypertarget{ref-andersson2008}{}%
@@ -321,6 +321,10 @@ Professional Tennis Matches.'' \emph{Computers \& Mathematics with
 Applications} 64 (12): 3820--7.
 \url{https://doi.org/https://doi.org/10.1016/j.camwa.2012.03.005}.
 
+\leavevmode\hypertarget{ref-deuce2017}{}%
+Kovalchik, Stephanie. 2017. \emph{Deuce: Resources for Analysis of
+Professional Tennis Data}.
+
 \leavevmode\hypertarget{ref-kovalchik2016}{}%
 Kovalchik, Stephanie Ann. 2016. ``Searching for the Goat of Tennis Win
 Prediction.'' \emph{Journal of Quantitative Analysis in Sports} 12 (3).
@@ -358,6 +362,17 @@ Production Curves.'' \emph{Journal of Quantitative Analysis in Sports} 9
 Paxinos, Stathi. 2007. ``Australian Open court surface is speeding up.''
 Edited by The Age.
 \url{https://www.theage.com.au/sport/tennis/australian-open-court-surface-is-speeding-up-20071120-ge6chj.html}.
+
+\leavevmode\hypertarget{ref-sackmann2018}{}%
+Sackmann, Jeff. 2018. ``Tennis Data Repositories.''
+\url{https://github.com/JeffSackmann}.
+
+\leavevmode\hypertarget{ref-thomas2013}{}%
+Thomas, A. C., Samuel L. Ventura, Shane T. Jensen, and Stephen Ma. 2013.
+``COMPETING Process Hazard Function Models for Player Ratings in Ice
+Hockey.'' \emph{The Annals of Applied Statistics} 7 (3). Institute of
+Mathematical Statistics: 1497--1524.
+\url{http://www.jstor.org/stable/23566482}.
 
 
 \end{document}
