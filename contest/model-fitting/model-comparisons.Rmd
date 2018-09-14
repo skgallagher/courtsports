@@ -23,7 +23,8 @@ gs_players$ioc_fac = as.factor(gs_players$ioc)
 gs_players$atp = gs_players$league == "ATP"
 gs_players$year_fac = as.factor(gs_players$year)
 gs_players$late_round = gs_players$round >= "R16"
-
+gs_players$seeded = gs_players$rank <= 32
+gs_players$opponent_seeded = gs_players$opponent_rank <= 32
 ```
 
 ### Model Fit
@@ -54,11 +55,12 @@ Models considered:
     + `country_logistic`: $\text{logit}(\pi_i) = \beta X + \beta_{T[i]}T$, $\beta_{T[i]} = \alpha_i C_i$
 * Player-level effect
     + `ind_logistic`: $\text{logit}(\pi_i) = \beta X + \beta_{T[i]}T$, $\beta_{T[i]} = \alpha_i P_i$
-    + `ind_logistic_noioc`: $\text{logit}(\pi_i) = \beta X + \beta_{T[i]}T$, where $X$ does not include IOC, $\beta_{T[i]} = \alpha_i P_i$
+    + `ind_logistic_noioc`: $\text{logit}(\pi_i) = \beta X + \beta_{T[i]}T$, where $X$ does not include IOC and $T$ represents indicators for tournament, $\beta_{T[i]} = \alpha_i P_i$
     + `ind_int_noioc`: $\text{logit}(\pi_i) = \beta X + \beta_{0[i]}$, where $X$ does not include IOC, $\beta_{0[i]} = \alpha_i$
-    + `ind_year_logistic`: $\text{logit}(\pi_i) = \beta X + \beta_{Y[i]}$, where $X$ does not include IOC, $\beta_{Y[i]} = \alpha_i Y_i$
+    + `ind_year_logistic`: $\text{logit}(\pi_i) = \beta X + \beta_{D[i]}$, where $X$ does not include IOC and $D$ represents indicators for years, $\beta_{Y[i]} = \alpha_i Y_i$
 
 ```{r, cache = TRUE}
+set.seed(091418)
 nocourt_logistic = glm(did_win ~ ioc_fac + late_round + log(rank) + log(opponent_rank) + year_fac + atp, data = gs_players, family = "binomial")
 base_logistic = glm(did_win ~ ioc_fac +  tournament + late_round + log(rank) + log(opponent_rank) + year_fac + atp, data = gs_players, family = "binomial")
 country_logistic = glmer(did_win ~ late_round + log(rank) + log(opponent_rank) + year_fac + atp + (0 + tournament |ioc_fac), data = gs_players, family = "binomial")
@@ -66,7 +68,10 @@ ind_logistic = glmer(did_win ~  ioc_fac + late_round + log(rank) + log(opponent_
 ind_logistic_noioc = glmer(did_win ~ late_round + log(rank) + log(opponent_rank) + year_fac + atp + (0 + tournament |name_int), data = gs_players, family = "binomial")
 ind_int_logistic = glmer(did_win ~ late_round + log(rank) + log(opponent_rank) + year_fac + atp + tournament + (1|name_int), data = gs_players, family = "binomial")
 ind_year_logistic = glmer(did_win ~ late_round + log(rank) + log(opponent_rank) + atp + tournament + (0+year_fac|name_int), data = gs_players, family = "binomial")
+ind_noioc_rank = glmer(did_win ~ late_round + seeded + opponent_seeded + year_fac + atp + (0 + tournament |name_int), data = gs_players, family = "binomial")
+```
 
+```{r}
 model_names = c("nocourt_logistic", "base_logistic", "country_logistic", "ind_logistic", 
                 "ind_logistic_noioc", "ind_int_logistic", "ind_year_logistic")
 model.sums = data.frame(model = model_names, aic = rep(NA, length(model_names)), edf = rep(NA,length(model_names)))
@@ -90,6 +95,7 @@ kable(model.sums)
 
 Based on AIC, the `ind_logistic_noioc` model performed best after accounting for the number of variables in the model. 
 
+
 ```{r}
 fixed.effects.plot = model.ests %>%
   filter(., !grepl("ioc", term)) %>%
@@ -105,17 +111,6 @@ fixed.effects.plot = model.ests %>%
 ```{r}
 ran_tourn = rbind(ranef(ind_logistic)$name_int, ranef(ind_logistic_noioc)$name_int)
 ran_tourn$model = c(rep("ind_logistic", nrow(ranef(ind_logistic)$name_int)), rep("ind_logistic_noioc", nrow(ranef(ind_logistic)$name_int)))
-
-# 486, 504, 526
-indices = c(486, 504, 526)
-superstars = data.frame(
-  name = rep(c("Serena", "Nadal", "Federer"), 2),
-  model = c(rep("ind_logistic", 3), rep("ind_logistic_noioc",3)),
-  `Australian Open` = c(ranef(ind_logistic)$name_int[indices,1], ranef(ind_logistic_noioc)$name_int[indices,1]),
-  `French Open` = c(ranef(ind_logistic)$name_int[indices,2], ranef(ind_logistic_noioc)$name_int[indices,2]),
-  `US Open` = c(ranef(ind_logistic)$name_int[indices,3], ranef(ind_logistic_noioc)$name_int[indices,3]),
-  `Wimbledon` = c(ranef(ind_logistic)$name_int[indices,4], ranef(ind_logistic_noioc)$name_int[indices,4])
-)
 
 superstars = superstars %>%
   gather(., tournament, effect, -c("name", "model"))
@@ -150,7 +145,69 @@ as.data.frame(ranef(ind_logistic_noioc, condVar = TRUE)) %>%
   filter(., name == "Serena Williams" | name == "Rafael Nadal" | name == "Roger Federer") %>%
   ggplot(., aes(y = name, x = condval, xmin = condval- 2*condsd, xmax = condval + 2*condsd)) +
   facet_wrap(~tournament, scales = "free_x") + 
-  geom_errorbarh(height = .5)
+  geom_errorbarh(height = .5) + 
+  xlab("Random Effect") + 
+  ylab("")
+```
+
+Rank and opponent's rank clearly have the largest effect on predicting the winner. Looking at the individual effects for Serena, Nadal, and Federer; they actually fall near the average for all four grand slams. Including rank as an indicator (seeded/not-seeded) substantially decreases the fit of the model, even when individual effects are included. We now look at a similar model, but instead of using `win' as the outcome variable, we'll look at game statistics that may be more sensitive to court surface -- aces, winners, and net points won -- and see if individual differences are detectable. 
+
+
+
+
+```{r}
+load("../../data/gs_partial_players.rda")
+gs_partial_players$atp = gs_partial_players$Tour == "atp"
+gs_partial_players$year_fac = as.factor(gs_partial_players$year)
+gs_partial_players$late_round = gs_partial_players$round >= "R16"
+gs_partial_players$seeded = gs_partial_players$rank <= 32
+gs_partial_players$opponent_seeded = gs_partial_players$opponent_rank <= 32
+n_aces_mod = lmer(n_aces ~ late_round + log(rank) + log(opponent_rank) + year_fac + atp + (0 + tournament |name), data = gs_partial_players)
+n_winners_mod = lmer(n_winners ~ late_round + log(rank) + log(opponent_rank) + year_fac + atp + (0 + tournament |name), data = gs_partial_players)
+n_net_mod = lmer(n_netpt_w ~ late_round + log(rank) + log(opponent_rank) + year_fac + atp + (0 + tournament |name), data = gs_partial_players)
+n_ue_mod = lmer(n_ue ~ late_round + log(rank) + log(opponent_rank) + year_fac + atp + (0 + tournament |name), data = gs_partial_players)
+
+aces_ranef = as.data.frame(ranef(n_aces_mod, condVar = TRUE)) %>%
+  mutate(tournament = gsub("tournament", "", term)) %>%
+  filter(., grp == "Serena Williams" | grp == "Rafael Nadal" | grp == "Roger Federer") %>%
+  ggplot(., aes(y = grp, x = condval, xmin = condval- 2*condsd, xmax = condval + 2*condsd)) +
+  facet_wrap(~tournament) + 
+  geom_errorbarh(height = .5) +
+  xlab("Random Effect") + 
+  ylab("") +
+  ggtitle("Aces")
+
+winners_ranef = as.data.frame(ranef(n_winners_mod, condVar = TRUE)) %>%
+  mutate(tournament = gsub("tournament", "", term)) %>%
+  filter(., grp == "Serena Williams" | grp == "Rafael Nadal" | grp == "Roger Federer") %>%
+  ggplot(., aes(y = grp, x = condval, xmin = condval- 2*condsd, xmax = condval + 2*condsd)) +
+  facet_wrap(~tournament) + 
+  geom_errorbarh(height = .5) +
+  xlab("Random Effect") + 
+  ylab("") +
+  ggtitle("Winners")
+
+nets_ranef = as.data.frame(ranef(n_net_mod, condVar = TRUE)) %>%
+  mutate(tournament = gsub("tournament", "", term)) %>%
+  filter(., grp == "Serena Williams" | grp == "Rafael Nadal" | grp == "Roger Federer") %>%
+  ggplot(., aes(y = grp, x = condval, xmin = condval- 2*condsd, xmax = condval + 2*condsd)) +
+  facet_wrap(~tournament) + 
+  geom_errorbarh(height = .5) +
+  xlab("Random Effect") + 
+  ylab("") +
+  ggtitle("Net Points Won")
+
+ue_ranef = as.data.frame(ranef(n_ue_mod, condVar = TRUE)) %>%
+  mutate(tournament = gsub("tournament", "", term)) %>%
+  filter(., grp == "Serena Williams" | grp == "Rafael Nadal" | grp == "Roger Federer") %>%
+  ggplot(., aes(y = grp, x = condval, xmin = condval- 2*condsd, xmax = condval + 2*condsd)) +
+  facet_wrap(~tournament) + 
+  geom_errorbarh(height = .5) +
+  xlab("Random Effect") + 
+  ylab("") +
+  ggtitle("Unforced Errors")
+
+plot_grid(aces_ranef, winners_ranef, nets_ranef, ue_ranef)
 ```
 
 Sanity Checks:
