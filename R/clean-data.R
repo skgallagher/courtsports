@@ -112,6 +112,7 @@ matches_to_player_data <- function(matches,
                                    l_opp_vars = "winner_rank",
                                    opp_var_names = "opponent_rank"){
 
+
     ## Copy data frames
     matches_l <- matches
     matches_w <- matches
@@ -120,19 +121,19 @@ matches_to_player_data <- function(matches,
 
     ## Get rid of winner attributes for the loser except for l_opp_vars
     remove_from_loser <- names(matches)[grep("^w|^W", names(matches))]
-    remove_from_loser <- which(remove_from_loser == l_opp_vars)
+    remove_from_loser <- remove_from_loser[-which(remove_from_loser == l_opp_vars)]
     rename_w_inds <- which(names(matches) %in% l_opp_vars)
     names(matches_l)[rename_w_inds] <- opp_var_names
 
     ## Get rid of loser attributes for the winner except for w_opp_vars
-    remove_from_winner <- names(matches)[grep("^l|^L", names(matches))] 
-    remove_from_winner <- which(remove_from_winner %in% c(w_opp_vars, "league"))
+    remove_from_winner <- names(matches)[grep("^l|^L", names(matches))]
+    remove_from_winner <- remove_from_winner[-which(remove_from_winner %in% c(w_opp_vars, "league"))]
     rename_l_inds <- which(names(matches) %in% w_opp_vars)
     names(matches_w)[rename_l_inds] <- opp_var_names
 
     ## Filter and rename variables
-    matches_l <- matches_l[, -remove_from_loser]
-    matches_w <- matches_w[,-remove_from_winner]
+    matches_l <- matches_l %>% dplyr::select(-remove_from_loser)
+    matches_w <- matches_w %>% dplyr::select(-remove_from_winner)
     names(matches_w) <- gsub("^winner_|^W|^w_", "", names(matches_w))
     names(matches_l) <- gsub("^loser_|^L|^l_", "", names(matches_l))
 
@@ -160,7 +161,7 @@ summarize_pbp <- function(pbp,
         filter(year >= start_year& year <= end_year)
 
     ## Change tournament to match the names of gs data
-    pbp$tournament <- factor(pbp$slam) %>% 
+    pbp$tournament <- factor(pbp$slam) %>%
         forcats::fct_collapse(
                      "US Open" = c("usopen"),
                      "French Open" = c("frenchopen"),
@@ -169,7 +170,7 @@ summarize_pbp <- function(pbp,
 
 
     ## Group by unique matches
-    pbp_matches <- pbp %>% group_by(match_id, player1, player2, Tour,  
+    pbp_matches <- pbp %>% group_by(match_id, player1, player2, Tour,
                                     slam, year, tournament) %>%
         dplyr::summarize(ave_serve_speed_p1 = mean(Speed_MPH[PointServer == 1]),
                          ave_serve_speed_p2 = mean(Speed_MPH[PointServer == 2]),
@@ -178,12 +179,12 @@ summarize_pbp <- function(pbp,
                          n_winners_p1 = sum(P1Winner),
                          n_winners_p2 = sum(P2Winner),
                          n_netpt_w_p1 = sum(P1NetPointWon),
-                         n_netpt_p1 = sum(P1NetPoint),
                          n_netpt_w_p2 = sum(P1NetPointWon),
+                         n_netpt_p1 = sum(P1NetPoint),
                          n_netpt_p2 =  sum(P1NetPoint),
                          n_bp_w_p1 = sum(P1BreakPointWon),
-                         n_bp_p1 =  sum(P1BreakPoint),
                          n_bp_w_p2 = sum(P2BreakPointWon),
+                         n_bp_p1 =  sum(P1BreakPoint),
                          n_bp_p2 = sum(P2BreakPoint),
                          n_ue_p1 = sum(P1UnfErr),
                          n_ue_p2 = sum(P2UnfErr),
@@ -227,7 +228,7 @@ join_gs_pbp <- function(gs_pbp, gs){
                           "Week 2" = c("R16", "QF", "SF", "F"))
 
     return(gs_join)
-                         
+
 }
 
 #' Combine fields to have easier access
@@ -252,7 +253,7 @@ combine_fields <- function(gs_join){
             df[jj, 2 * ii - 1] <- ifelse(gs_join$player1[jj] == gs_join$winner_name[jj],
                                        gs_join[jj, paste0(col_name, "_p1")],
                                        gs_join[jj, paste0(col_name, "_p2")])
-            
+
             ## Loser column
             df[jj, 2 * ii] <- ifelse(gs_join$player1[jj] == gs_join$winner_name[jj],
                                    gs_join[jj, paste0(col_name, "_p2")],
@@ -264,5 +265,5 @@ combine_fields <- function(gs_join){
     }
     out <- dplyr::bind_cols(gs_join[, -player_inds], df)
     return(out)
-    
+
 }

@@ -5,7 +5,7 @@
 ## 3. gs_pbp.rda
 ## 4. gs_partial.rda
 
-devtools::load_all("../") ## Load court sports functions 
+devtools::load_all("../") ## Load court sports functions
 library(deuce)
 library(dplyr)
 
@@ -22,7 +22,7 @@ gs <- clean_matches_data(atp_matches = atp_matches,
                          include_quals = FALSE,
                          level = "Grand Slams")
 
- 
+
 
 ## Extract sets, points, and games
 gs <- extract_sgp(gs)
@@ -44,9 +44,9 @@ data(gs_point_by_point)
 
 
 
-gs_pbp <- summarize_pbp(gs_point_by_point,
+gs_pbp <- as.data.frame(summarize_pbp(gs_point_by_point,
                         start_year = 2013,
-                        end_year = 2017)
+                        end_year = 2017))
 
 devtools::use_data(gs_pbp, overwrite = TRUE)
 
@@ -56,7 +56,7 @@ data(gs)
 
 gs_join <- join_gs_pbp(gs_pbp, gs)
 
-gs_partial <- combine_fields(gs_join)
+gs_partial <- as.data.frame(combine_fields(gs_join))
 
 
 head(gs_partial[, c("winner_name", "loser_name", "player1", "player2", "w_n_sv")])
