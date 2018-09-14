@@ -65,7 +65,7 @@ Rafael Nadal is known as the "King of Clay" in tennis, having won 11 out of his 
 
 As to issue (1) quantifying the effect of court surface on players, there has not been much written about with regards to tennis.  There are materials available in the literature for forecasting the outcome of tennis matches [@klaassen2003; @newton2005; @mchale2011; @kovalchik2016]] or for assessing whether points within a match are independent and identically distributed [@klaassen2001].   [@knottenbelt2012] do take into account surface in their model but do not compare the results of one surface to another.  Other sports analyses do take into account surface type such as grass vs. turf in soccer and football.  Results from these studies show that surface type does have an effect on the game, either directly or indirectly [@andersson2008; @gains2010;].
 
-We use models that take into account both individual and group effects such as in the Gaussian-process player production basketball model or predicting individual soccer performance  [@page2013; @egidi2018].  Both of those models had success using hierarhcical Bayesian models, which we employ in our own models. More specifically, we model the players' expected points in a match based on the player's own characteristics, the court/tournament effects, and the oponent's ranking.
+We use models that take into account both individual and group effects such as in the Gaussian-process player production basketball model or predicting individual soccer performance  [@page2013; @egidi2018].  Both of those models had success using hierarchical Bayesian models, which we employ in our own models. More specifically, we model the players' expected points in a match based on the player's own characteristics, the court/tournament effects, and the opponent's ranking.
 
 
 For issue (2) the player analysis of Nadal, Federer, and Williams, we examine whether our model passes the "common sense" tests  like how the models in [@thomas2013] show that commonly well known hockey players also have high status in the model.  We also examine whether these players do have surface apparent effects. Few academic papers have been written about Nadal, Federer, or Williams.  One paper studies Federer's odds of winning when Nadal suddenly withdrew from Wimbledon showed that Federer was too heavily favored by bookmakers [@leitner2009].  One analysis of Williams shows how she has gotten better with age, even past the point when other greats began to decline, but the study does not look at surface type [@five2015].
@@ -103,7 +103,7 @@ The data is obtained from Jeff Sackmann's open website via the `R` package `deuc
 
 ### Examining the distribution of points earned
 
-We first examine the distibution of points earned per match. We find that the distribution is similar across tournament, with Wimbledon differing slightly from the other grand slams. As expected, there are more points earned in the WTA than the ATP due to the differing numbers of games played. Also unsuprisingly, the winners of the match tended to earn more points than the losers.   
+We first examine the distribution of points earned per match. We find that the distribution is similar across tournament, with Wimbledon differing slightly from the other grand slams. As expected, there are more points earned in the WTA than the ATP due to the differing numbers of games played. Also unsurprisingly, the winners of the match tended to earn more points than the losers.   
 
 ```{r, fig.height=5, fig.width=12}
 
@@ -197,7 +197,7 @@ grid.arrange(p1,p2, p3, nrow=1, widths = c(.29, .29, .42),
 
 ## Spaniards on clay
 
-It is also commonly thought that Spaniards play better on clay. We are intersted in whether Spaniards win the French Open more than they win in other tournaments. It does appear that Spaniards are winning the French Open more than they are winning other tournaments. But, this result is not significant. In addition, the ranking of Spaniards in the French Open is, on average, higher than other tournmanents, which may help explain this common misconseption, although this result is not significant either. 
+It is also commonly thought that Spaniards play better on clay. We are interested in whether Spaniards win the French Open more than they win in other tournaments. It does appear that Spaniards are winning the French Open more than they are winning other tournaments. But, this result is not significant. In addition, the ranking of Spaniards in the French Open is, on average, higher than other tournaments, which may help explain this common misconception, although this result is not significant either. 
 
 ```{r, fig.height=5, fig.width=12}
 
