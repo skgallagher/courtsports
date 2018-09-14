@@ -14,7 +14,9 @@ bibliography: master.bib
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(warning=FALSE)
+knitr::opts_chunk$set(message = FALSE)
 knitr::opts_chunk$set(cache = TRUE)
 library(deuce)
 library(dplyr)
@@ -23,6 +25,8 @@ library(forcats)
 library(stringr)
 library(knitr)
 library(kableExtra)
+library(gridExtra)
+library(grid)
 
 ## To change into library(courtsports)
 devtools::load_all("../..")
@@ -37,7 +41,17 @@ data(gs_partial_players)
 
 ```
 
+```{r graphing-parameters, include = FALSE}
+my_theme <-  theme_bw() + # White background, black and white theme
+  theme(axis.text = element_text(size = 12),
+        text = element_text(size = 14,
+        family="serif"),
+        plot.title = element_text(hjust = 0.5, size=16))
 
+tournament_colors <- c("#0297DB", "#b06835", "#0C2340", "#54008b")
+league_colors <- c("#0C2340", "#902BA3")
+win_colors <- c("#336699", "#339966")
+```
 
 
 # Introduction {#sec:iintro}
@@ -86,6 +100,99 @@ knitr::kable(gs[c(w_id, f_id, n_id), cols], format = "latex",
 The data is obtained from Jeff Sackmann's open website via the `R` package `deuce` [@sackmann2018; @deuce2017].  All steps of our analysis from collection to dissemination are freely available online.
 
 ## Early Data Analysis {#sec:eda}
+
+### Examining the distribution of points earned
+
+We first examine the distibution of points earned per match. We find that the distribution is similar across tournament, with Wimbledon differing slightly from the other grand slams. As expected, there are more points earned in the WTA than the ATP due to the differing numbers of games played. Also unsuprisingly, the winners of the match tended to earn more points than the losers.   
+
+```{r, fig.height=5, fig.width=12}
+
+# grid.arrange(p1, p2, p3, ncol=3, widths=c(.25, .41, .34))
+
+
+p2 <- ggplot(gs_players) + geom_density(aes(pointswon, color = tournament)) + 
+  labs(x = "Points") + my_theme +
+  scale_color_manual("Tournament", values=tournament_colors)
+
+p3 <- ggplot(gs_players) + geom_density(aes(pointswon, color = league))+ 
+  labs(x = "Points") +
+  scale_color_manual("League", values=league_colors) +
+  my_theme
+
+
+# grid.arrange( p2, p3, ncol=2,
+#              top = textGrob("Winning points by tournament and league",
+#                             gp=gpar(fontsize=20)))
+
+p1 <- ggplot(gs_players) + geom_density(aes(pointswon, color = factor(did_win))) + 
+  labs(x = "Points") +
+  scale_color_manual("Winner?", values=win_colors) +
+  my_theme +
+  facet_wrap(~league, ncol=1)
+
+grid.arrange(p1, p2, ncol=2,
+             top = textGrob("Distribution of points per match",
+                            gp=gpar(fontsize=20, fontfamily="serif")),
+              layout_matrix = rbind(c(NA, 1),
+                                    c(2, 1),
+                                    c(NA, 1)),
+             heights=c(1, 3, 1))
+
+```
+
+
+### Home court advantage 
+
+It is commonly thought that there is a home court advantage in grand slam games (SOURCE). In our data we find this to be true (i.e. French players win the French open more than French players win other slams). But, we also know that the home team is given preference for wild card bids (SOURCE) so potentially citizens of a particular country play in "their" tournament more often than they play in other tournaments. We also find this to be true in our data for France, The United States, and Australia (i.e. the proportion of French players in the French Open is greater than the proportion of French players in other slams). 
+
+Therefore, we want to see how the proportion of wins for the home country changes across the different tournaments. If there was really a home court advantage, the proportion of French wins each round would be higher at the French Open than the Australian Open, the US Open, and Wimbledon. The same would be true for Australia and the US. But, we see that this isn't the case. After accounting for the number of players from each country, we don't find a home court advantage in the grand slam. 
+
+```{r, fig.height=4, fig.width=12}
+france_wins <- filter(gs_players, ioc == "FRA", round < "QF") %>% 
+  group_by(tournament, round) %>% 
+  summarise(win_prop = mean(did_win),
+            win_prop_se = sqrt(win_prop*(1-win_prop)/n()))
+
+us_wins <- filter(gs_players, ioc == "USA", round < "QF") %>% 
+  group_by(tournament, round) %>% 
+  summarise(win_prop = mean(did_win),
+            win_prop_se = sqrt(win_prop*(1-win_prop)/n()))
+
+aus_wins <- filter(gs_players, ioc == "AUS", round < "QF") %>% 
+  group_by(tournament, round) %>% 
+  summarise(win_prop = mean(did_win),
+            win_prop_se = sqrt(win_prop*(1-win_prop)/n()))
+
+p1<- ggplot(france_wins, aes(round, win_prop, color=tournament, group=tournament)) + 
+  geom_line() + 
+  # geom_point() +
+  labs(title = "French players",
+       x = "", y = "Win proportion") + 
+  scale_color_manual(guide=FALSE, values=tournament_colors) + my_theme
+
+p2 <- ggplot(us_wins, aes(round, win_prop, color=tournament, group=tournament)) + 
+  geom_line() + 
+  # geom_point() +
+  labs(title = "American players",
+       x = "", y = "Win proportion") +  
+  scale_color_manual(guide=FALSE, values=tournament_colors)  + my_theme
+
+p3 <- ggplot(aus_wins, aes(round, win_prop, color=tournament, group=tournament)) + 
+  geom_line() + 
+  # geom_point() +
+  labs(title = "Australian players",
+       x = "", y = "Win proportion") + 
+  scale_color_manual(" ", values=tournament_colors) + my_theme
+
+grid.arrange(p1,p2, p3, nrow=1, widths = c(.29, .29, .42),
+             top = textGrob("Home court advantage debunked: win proportion by country",
+                            gp=gpar(fontsize=20, fontfamily="serif")),
+             bottom = textGrob("Note: we only look at the first 4 rounds due to decreasing sample size as the tournament goes on",
+                           # x = 0,
+                           # y = 0.5,
+                           just = "left"))
+
+```
 
 # Methods {#sec:methods}
 
