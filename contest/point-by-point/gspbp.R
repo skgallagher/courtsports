@@ -160,4 +160,41 @@ table(gs_partial_pbp$year, gs_partial_pbp$round,
 ## 1 mens us open, 1 aus 2014, 2013
 
 ###
-nadal <- gs_partial_pbp %>% 
+nadal_wins <- gs_partial_pbp %>% filter(winner_name == "Rafael Nadal")  %>%
+    group_by(tournament) %>%
+    summarize(n_wins = sum(winner_name == "Rafael Nadal"),
+              n_matches = length(winner_name),
+              n_retire = sum(Retirement),
+              ave_sets = mean(w_setswon + l_setswon),
+              ave_aces = mean(n_aces_p1 + n_aces_p2),
+              ave_ue = mean(n_ue_p1 + n_ue_p2),
+              ave_winners = mean(n_winners_p1 + n_winners_p2),
+              med_rank = median(c(loser_rank, winner_rank)),
+              n_obs = length(loser_rank)
+              )
+nadal_wins$did_win <- 1
+
+nadal_losses <- gs_partial_pbp %>% filter(loser_name == "Rafael Nadal")  %>%
+    group_by(tournament) %>%
+    summarize(n_wins = sum(winner_name == "Rafael Nadal"),
+              n_matches = length(winner_name),
+              n_retire = sum(Retirement),
+              ave_sets = mean(w_setswon + l_setswon),
+              ave_aces = mean(n_aces_p1 + n_aces_p2),
+              ave_ue = mean(n_ue_p1 + n_ue_p2),
+              ave_winners = mean(n_winners_p1 + n_winners_p2),
+              med_rank = median(c(loser_rank, winner_rank)),
+              n_obs = length(loser_rank)
+              )
+head(nadal)
+
+
+## How to combine winner_name and loser_name with player_1 and player2
+## if (player_1 == winner_name)
+## new columns:
+## {variable_name_w = variable_name_p1}
+## variable_name_l = variable_name_p2
+## else
+## variable_name_w = variable_name_p2
+## variable_name_l = variable_name_p1
+

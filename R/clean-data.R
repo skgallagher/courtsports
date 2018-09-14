@@ -119,20 +119,20 @@ matches_to_player_data <- function(matches,
     matches_w$did_win <- 1 # yes did win
 
     ## Get rid of winner attributes for the loser except for l_opp_vars
-    remove_from_loser <- names(matches)[grep("^w|^W", names(matches))] %>%
-        .[-which(. == l_opp_vars)]
+    remove_from_loser <- names(matches)[grep("^w|^W", names(matches))]
+    remove_from_loser <- which(remove_from_loser == l_opp_vars)
     rename_w_inds <- which(names(matches) %in% l_opp_vars)
     names(matches_l)[rename_w_inds] <- opp_var_names
 
     ## Get rid of loser attributes for the winner except for w_opp_vars
-    remove_from_winner <- names(matches)[grep("^l|^L", names(matches))] %>%
-        .[-which(. %in% c(w_opp_vars, "league"))]
+    remove_from_winner <- names(matches)[grep("^l|^L", names(matches))] 
+    remove_from_winner <- which(remove_from_winner %in% c(w_opp_vars, "league"))
     rename_l_inds <- which(names(matches) %in% w_opp_vars)
     names(matches_w)[rename_l_inds] <- opp_var_names
 
     ## Filter and rename variables
-    matches_l <- dplyr::select(matches_l, -remove_from_loser)
-    matches_w <- dplyr::select(matches_w, -remove_from_winner)
+    matches_l <- matches_l[, -remove_from_loser]
+    matches_w <- matches_w[,-remove_from_winner]
     names(matches_w) <- gsub("^winner_|^W|^w_", "", names(matches_w))
     names(matches_l) <- gsub("^loser_|^L|^l_", "", names(matches_l))
 
@@ -142,4 +142,127 @@ matches_to_player_data <- function(matches,
     return(player_matches)
 
 
+}
+
+
+#' Summarize the point by point data
+#'
+#' @param pbp point by point data from deuce package
+#' @return summary of point by point data in terms of unique matches
+#' @importFrom magrittr %>%
+summarize_pbp <- function(pbp,
+                          start_year = 2013, end_year = 2017){
+
+    ## Omit non-complete columns
+    na_col_inds <- colSums(is.na(pbp))
+    complete_cols <- which(na_col_inds == 0)
+    pbp <- pbp %>% dplyr::select(names(pbp[complete_cols])) %>%
+        filter(year >= start_year& year <= end_year)
+
+    ## Change tournament to match the names of gs data
+    pbp$tournament <- factor(pbp$slam) %>% 
+        forcats::fct_collapse(
+                     "US Open" = c("usopen"),
+                     "French Open" = c("frenchopen"),
+                     "Wimbledon" = c("wimbledon"),
+                     "Australian Open" = c("ausopen"))
+
+
+    ## Group by unique matches
+    pbp_matches <- pbp %>% group_by(match_id, player1, player2, Tour,  
+                                    slam, year, tournament) %>%
+        dplyr::summarize(ave_serve_speed_p1 = mean(Speed_MPH[PointServer == 1]),
+                         ave_serve_speed_p2 = mean(Speed_MPH[PointServer == 2]),
+                         n_aces_p1 = sum(P1Ace),
+                         n_aces_p2 = sum(P2Ace),
+                         n_winners_p1 = sum(P1Winner),
+                         n_winners_p2 = sum(P2Winner),
+                         n_netpt_w_p1 = sum(P1NetPointWon),
+                         n_netpt_p1 = sum(P1NetPoint),
+                         n_netpt_w_p2 = sum(P1NetPointWon),
+                         n_netpt_p2 =  sum(P1NetPoint),
+                         n_bp_w_p1 = sum(P1BreakPointWon),
+                         n_bp_p1 =  sum(P1BreakPoint),
+                         n_bp_w_p2 = sum(P2BreakPointWon),
+                         n_bp_p2 = sum(P2BreakPoint),
+                         n_ue_p1 = sum(P1UnfErr),
+                         n_ue_p2 = sum(P2UnfErr),
+                         n_sv_w_p1 = sum((PointServer == 1) * (PointWinner == 1 )),
+                         n_sv_w_p2 = sum((PointServer == 2) * (PointWinner == 2 )),
+                         n_sv_p1 =   sum(PointServer == 1),
+                         n_sv_p2 =   sum(PointServer == 2),
+                         a1 = sort(c(player1, player2))[1],
+                         a2 = sort(c(player1, player2), decreasing = TRUE)[1]
+                         )
+    return(pbp_matches)
+
+
+}
+
+
+#' Join gs and gs_pbp together
+#'
+#' @param gs subsetted gs object
+#' @param gs_pbp point by point summarized by matches
+#' @return joined data frame by tournament, year, and players, and added a week column
+#' @importFrom magrittr %>%
+join_gs_pbp <- function(gs_pbp, gs){
+
+
+    ## Subset gs
+    gs_sub <- gs %>% group_by(match_id, tournament, year, winner_name, loser_name, winner_rank,
+                              loser_rank, winner_age, winner_ioc, Retirement,
+                              w_pointswon, w_gameswon, w_setswon,
+                              l_pointswon, l_gameswon, l_setswon,
+                              round) %>%
+        summarize(a1 = sort(c(winner_name, loser_name))[1],
+                  a2 = sort(c(winner_name, loser_name), decreasing = TRUE)[1])
+
+
+    gs_join <- na.omit(left_join(gs_sub, gs_pbp, by = c("tournament", "year", "a1", "a2")))
+
+    ## Add week variable
+    gs_join$week <- gs_join$round %>%
+    forcats::fct_collapse("Week 1" = c("R128","R32", "R64" ),
+                          "Week 2" = c("R16", "QF", "SF", "F"))
+
+    return(gs_join)
+                         
+}
+
+#' Combine fields to have easier access
+#'
+#' @param gs_joint result from join_gs_pbp
+#' @return combined fields
+combine_fields <- function(gs_join){
+
+
+    player_inds <- grep("_p[0-9]$", colnames(gs_join), value = TRUE)
+    player_inds
+
+    player_inds <- grep("_p[0-9]$", colnames(gs_join))
+    mat <- matrix(0, nrow = nrow(gs_join), ncol = length(player_inds))
+    df <- data.frame(mat)
+    unique_col_names <- gsub("_p[0-9]$", "", colnames(gs_join)[player_inds])
+    colnames(df) <- paste0(rep(c("w","l"), length(player_inds) / 2), "_", unique_col_names)
+    for(ii in 1:(ncol(df)/2)){
+        for(jj in 1:nrow(df)){
+            col_name <- unique_col_names[2 * ii]
+            ## Winner column
+            df[jj, 2 * ii - 1] <- ifelse(gs_join$player1[jj] == gs_join$winner_name[jj],
+                                       gs_join[jj, paste0(col_name, "_p1")],
+                                       gs_join[jj, paste0(col_name, "_p2")])
+            
+            ## Loser column
+            df[jj, 2 * ii] <- ifelse(gs_join$player1[jj] == gs_join$winner_name[jj],
+                                   gs_join[jj, paste0(col_name, "_p2")],
+                                   gs_join[jj, paste0(col_name, "_p1")])
+
+
+        }
+
+    }
+    out <- dplyr::bind_cols(gs_join[, -player_inds], df)
+    return(out)
+    
 }
