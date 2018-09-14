@@ -1,6 +1,6 @@
 ---
 title: "Analyzing the Effect of Surface in Tennis Grand Slams"
-author: "Kayla Frisoli, Shannon Gallagher, and Amanda Luby"
+author: "###########"
 date: '`r format(Sys.time(), "%B %d, %Y")`'
 output:
   pdf_document:
@@ -103,7 +103,7 @@ The data is obtained from Jeff Sackmann's open website via the `R` package `deuc
 
 ### Examining the distribution of points earned
 
-We first examine the distribution of points earned per match. We find that the distribution is similar across tournament, with Wimbledon differing slightly from the other grand slams. As expected, there are more points earned in the WTA than the ATP due to the differing numbers of games played. Also unsurprisingly, the winners of the match tended to earn more points than the losers.   
+We first examine the distribution of points earned per match to assess normality. The distribution of points earned is approximately normal. This distribution is similar across tournament, with Wimbledon differing slightly from the other grand slams. As expected, there are more points earned in the WTA than the ATP due to the differing numbers of games played. Also unsurprisingly, the winners of the match tended to earn more points than the losers.   
 
 ```{r, fig.height=5, fig.width=12}
 
@@ -147,7 +147,7 @@ It is commonly thought that there is a home court advantage in grand slam games 
 
 Therefore, we want to see how the proportion of wins for the home country changes across the different tournaments. If there was really a home court advantage, the proportion of French wins each round would be higher at the French Open than the Australian Open, the US Open, and Wimbledon. The same would be true for Australia and the US. But, we see that this isn't the case. After accounting for the number of players from each country, we don't find a home court advantage in the grand slam. 
 
-```{r, fig.height=4, fig.width=12}
+```{r, fig.height=4, fig.width=14, fig.align='center'}
 france_wins <- filter(gs_players, ioc == "FRA", round < "QF") %>% 
   group_by(tournament, round) %>% 
   summarise(win_prop = mean(did_win),
@@ -159,6 +159,11 @@ us_wins <- filter(gs_players, ioc == "USA", round < "QF") %>%
             win_prop_se = sqrt(win_prop*(1-win_prop)/n()))
 
 aus_wins <- filter(gs_players, ioc == "AUS", round < "QF") %>% 
+  group_by(tournament, round) %>% 
+  summarise(win_prop = mean(did_win),
+            win_prop_se = sqrt(win_prop*(1-win_prop)/n()))
+
+gbr_wins <- filter(gs_players, ioc == "GBR", round < "QF") %>% 
   group_by(tournament, round) %>% 
   summarise(win_prop = mean(did_win),
             win_prop_se = sqrt(win_prop*(1-win_prop)/n()))
@@ -182,15 +187,24 @@ p3 <- ggplot(aus_wins, aes(round, win_prop, color=tournament, group=tournament))
   # geom_point() +
   labs(title = "Australian players",
        x = "", y = "Win proportion") + 
+  scale_color_manual(guide=FALSE, values=tournament_colors) + my_theme
+
+
+p4 <- ggplot(gbr_wins, aes(round, win_prop, color=tournament, group=tournament)) + 
+  geom_line() + 
+  # geom_point() +
+  labs(title = "British players",
+       x = "", y = "Win proportion") + 
   scale_color_manual(" ", values=tournament_colors) + my_theme
 
-grid.arrange(p1,p2, p3, nrow=1, widths = c(.29, .29, .42),
-             top = textGrob("Home court advantage debunked: win proportion by country",
+grid.arrange(p3, p1, p2,  p4, nrow=1, widths = c(.22, .22, .22, .34),
+             top = textGrob("Home court advantage: debunked",
                             gp=gpar(fontsize=20, fontfamily="serif")),
-             bottom = textGrob("Note: we only look at the first 4 rounds due to decreasing sample size as the tournament goes on",
+             bottom = textGrob("Note: we only look at the first 4 rounds due to decreasing sample size",
                            # x = 0,
                            # y = 0.5,
-                           just = "left"))
+                           just = "left",
+                           gp=gpar(fontfamily="serif")))
 
 ```
 
@@ -199,7 +213,7 @@ grid.arrange(p1,p2, p3, nrow=1, widths = c(.29, .29, .42),
 
 It is also commonly thought that Spaniards play better on clay. We are interested in whether Spaniards win the French Open more than they win in other tournaments. It does appear that Spaniards are winning the French Open more than they are winning other tournaments. But, this result is not significant. In addition, the ranking of Spaniards in the French Open is, on average, higher than other tournaments, which may help explain this common misconception, although this result is not significant either. 
 
-```{r, fig.height=5, fig.width=12}
+```{r, fig.height=4, fig.width=12, fig.align='center'}
 
 spain_wins <- filter(gs_players, ioc == "ESP", round < "QF") %>% 
   group_by(tournament, round) %>% 
@@ -214,12 +228,6 @@ p1 <- ggplot(spain_wins, aes(round, win_prop, color=tournament, group=tournament
        # caption = "Note: we only look at the first 4 rounds due to decreasing sample size",
        x = "", y = "Win proportion") + 
   scale_color_manual(guide=FALSE, values=tournament_colors) + my_theme  
-  # geom_point() + 
-  # labs(title = "Proportion of wins among Spaniards") +
-  # geom_errorbar(aes(ymin = win_prop - win_prop_se,
-  #                   ymax = win_prop + win_prop_se),
-  #               width=.2,
-  #                position=position_dodge(0.05))
 
 p2 <- ggplot(spain_wins, aes(round, avg_ranking, color=tournament, group=tournament)) + 
   geom_line() + 
@@ -233,9 +241,9 @@ p2 <- ggplot(spain_wins, aes(round, avg_ranking, color=tournament, group=tournam
 #                 width=.2,
 #                  position=position_dodge(0.05))
 
-grid.arrange(p1,p2, nrow=1, widths = c(.44, .56),
+grid.arrange(p1, p2, nrow=1, widths = c(.44, .56),
              top = textGrob("Spaniards perform better on Clay: debunked",
-                            gp=gpar(fontsize=20)),
+                            gp=gpar(fontsize=20, fontfamily="serif")),
              bottom = textGrob("Note: we only look at the first 4 rounds due to decreasing sample size",
                            # x = 0,
                            # y = 0.5,
