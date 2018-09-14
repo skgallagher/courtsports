@@ -6,6 +6,7 @@
 library(deuce)
 library(dplyr)
 library(forcats)
+library(ggplot2)
 
 data(gs_point_by_point)
 
@@ -93,6 +94,70 @@ gs_join <- left_join(gs_sub, match_stats, by = c("tournament", "year", "a1", "a2
 head(gs_join[, c("player1", "winner_name", "player2", "loser_name")])
 gs_partial_pbp <- na.omit(gs_join)
 
+gs_partial_pbp$Week <- gs_partial_pbp$round %>%
+    forcats::fct_collapse("Week 1" = c("R128","R32", "R64" ),
+                          "Week 2" = c("R16", "QF", "SF", "F"))
+
 dim(gs_partial_pbp)
 
 devtools::use_data(gs_partial_pbp, overwrite = TRUE)
+
+
+
+
+## get court
+
+court <- gs_partial_pbp %>% group_by(tournament, Tour, year,
+                                     week) %>%
+    summarize(n_retire = sum(Retirement),
+              ave_sets = mean(w_setswon + l_setswon),
+              ave_aces = mean(n_aces_p1 + n_aces_p2),
+              ave_ue = mean(n_ue_p1 + n_ue_p2),
+              ave_winners = mean(n_winners_p1 + n_winners_p2),
+              med_rank = median(c(loser_rank, winner_rank)),
+              n_obs = length(loser_rank)
+)
+
+
+
+
+ggplot(court, aes(y=ave_sets, group = tournament, col = tournament)) +
+              geom_boxplot() + 
+    facet_grid(week~Tour)
+
+ggplot(court, aes(y=ave_aces, group = tournament, col = tournament)) +
+              geom_boxplot() + 
+              facet_grid(~Tour)
+
+ggplot(court, aes(y=ave_ue, group = tournament, col = tournament)) +
+              geom_boxplot() + 
+              facet_grid(~Tour)
+
+ggplot(court, aes(y=ave_ue / ave_sets, group = tournament,
+                  col = tournament)) +
+    geom_boxplot() + 
+    facet_grid(~Tour)
+
+ggplot(court, aes(y=n_retire, group = tournament,
+                  col = tournament)) +
+    geom_boxplot() + 
+    facet_grid(~Tour)
+
+ggplot(court, aes(x = year,y=ave_sets, col = tournament)) +
+    geom_point() + facet_grid(~Tour)
+
+
+## Completely missing 2015 WTA data
+table(gs_partial_pbp$year)
+
+## Shows data from PBP to year to year
+table(gs_partial_pbp$year, gs_partial_pbp$round) /
+    table(gs$year, gs$round)
+
+table(gs_partial_pbp$year, gs_partial_pbp$round,
+      gs_partial_pbp$Tour, gs_partial_pbp$tournament)
+## Missing 3 women wimbledon finals, 2 women us open, 1 fo, 1 aus (2015 has zero womens recorded matches)
+## 1 mens us open, 1 aus 2014, 2013
+
+###
+nadal <- gs_partial_pbp %>% 
