@@ -9,7 +9,8 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 library(lme4)
 library(dplyr)
-load("stan-model-fits.RData")
+library(kableExtra)
+#load("stan-model-fits.RData")
 load(file = "../../data/gs_players.rda")
 load("../../data/gs.rda")
 
@@ -18,33 +19,60 @@ gs_players$hand_fac = as.factor(gs_players$hand)
 gs_players$ioc_fac = as.factor(gs_players$ioc)
 gs_players$atp = gs_players$league == "ATP"
 gs_players$year_fac = as.factor(gs_players$year)
+gs_players$late_round = gs_players$round >= "R16"
+
 ```
 
 ### Model Fit
 
 * Took minutes out because it was disproportionately missing for women players (and missing data gets thrown out)
-* Individual effects for tournament don't really seem to make a difference - mostly wrapped up in other variables
+* Initially began by modeling points won in the match, but found that this was not the best approach because more points won does not necessarily correspond to a better performance. 
+
+Variables considered as predictors:
+
+* `ioc_fac`: Country that the player represents
+* `tournament`: Which Grand Slam the match was played at
+* `late_round`: Indicator for whether the match occured in Round of 16 or later
+* `rank`: Rank of player at the time of the match
+    + Included on log scale 
+* `opponent_rank`: Rank of opponent at the time of the match
+    + Included on log scale
+* `year`: Factor variable with a level for each year included in the dataset (2013-2017)
+* `atp`: Indicator that the match was played in the ATP league instead of the WTF league
+
+Models considered:
+
+* No mixed effects
+    + `nocourt_logistic`: $\text{logit}(\pi_i) = \beta X$, $X$ does not include `tournament`
+        + If this model fits well, court surface does not have an effect on winning probability
+    + `base_logistic`: $\text{logit}(\pi_i) = \beta X$
+        + If this model fits better than the mixed-effects models, performance does not depend on individual-level or IOC-level 
+* IOC-level effect
+    + `country_logistic`: $\text{logit}(\pi_i) = \beta X + \beta_{T[i]}T$, $beta_{T[i]} = \alpha_i C_i$
 
 ```{r}
-linmod = lm(pointswon ~ ioc_fac +  tournament + round + rank + opponent_rank + year_fac + atp, data = gs_players)
-country_effects = lmer(pointswon ~ round + rank + opponent_rank + year_fac + atp + (0 + tournament |ioc_fac), data = gs_players)
-ind_effects = lmer(pointswon ~  ioc_fac + round + rank + opponent_rank + year_fac + atp + (0 + tournament |name_int), data = gs_players)
+nocourt_logistic = glm(did_win ~ ioc_fac + late_round + log(rank) + log(opponent_rank) + year_fac + atp, data = gs_players, family = "binomial")
+base_logistic = glm(did_win ~ ioc_fac +  tournament + late_round + log(rank) + log(opponent_rank) + year_fac + atp, data = gs_players, family = "binomial")
+country_logistic = glmer(did_win ~ late_round + log(rank) + log(opponent_rank) + year_fac + atp + (0 + tournament |ioc_fac), data = gs_players, family = "binomial")
+ind_logistic = glmer(did_win ~  ioc_fac + late_round + log(rank) + log(opponent_rank) + year_fac + atp + (0 + tournament |name_int), data = gs_players, family = "binomial")
+ind_logistic_noioc = glmer(did_win ~ late_round + log(rank) + log(opponent_rank) + year_fac + atp + (0 + tournament |name_int), data = gs_players, family = "binomial")
+ind_int_logistic = glmer(did_win ~ late_round + log(rank) + log(opponent_rank) + year_fac + atp + tournament + (1|name_int), data = gs_players, family = "binomial")
+ind_year_logistic = glmer(did_win ~ late_round + log(rank) + log(opponent_rank) + atp + tournament + (0+year_fac|name_int), data = gs_players, family = "binomial")
 
-par(mfrow=c(1,3))
-plot(residuals(linmod)~fitted(linmod), pch =19, cex = .5, main = "Model 1",
-     xlab = "Fitted", ylab = "Residuals")
-plot(residuals(country_effects) ~ fitted(country_effects), pch =19, cex = .5, main = "Model 2",
-     xlab = "Fitted", ylab = "Residuals")
-plot(residuals(ind_effects) ~ fitted(ind_effects), pch =19, cex = .5, main = "Model 3",
-     xlab = "Fitted", ylab = "Residuals")
+model_names = c("nocourt_logistic", "base_logistic", "country_logistic", "ind_logistic", 
+                "ind_logistic_noioc", "ind_int_logistic", "ind_year_logistic")
+model.sums = data.frame(model = model_names, aic = rep(NA, length(model_names)), edf = rep(NA,length(model_names)))
 
+for(mod in 1:nrow(model.sums)){
+  name = model_names[mod]
+  model.sums$aic[mod] = extractAIC(get(name))[2]
+  model.sums$edf[mod] = extractAIC(get(name))[1]
+}
+
+kable(model.sums)
 ```
 
-```{r}
-extractAIC(linmod)
-extractAIC(country_effects)
-extractAIC(ind_effects)
-```
+Based on AIC, the `ind_logistic_noioc` model performed best after accounting for the number of variables in the model. 
 
 ### Model Comparison (tennis knowledge)
 
@@ -63,7 +91,3 @@ Sanity Checks:
 * Serena should be good on hard surface
 * Nadal should be good on clay 
 * Federer should be good on grass 
-
-```{r}
-
-```
