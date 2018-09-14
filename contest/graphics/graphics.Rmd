@@ -22,6 +22,7 @@ library(knitr)
 library(kableExtra)
 library(pander)
 library(gridExtra)
+library(grid)
 
 ## To change into library(courtsports)
 devtools::load_all("../..")
@@ -29,49 +30,156 @@ devtools::load_all("../..")
 
 
 ```{r data-cleaning, include = FALSE}
-## Load WTA and ATP matches from deuce package
-data(atp_matches)
-data(wta_matches)
+data("gs")
+data("gs_players")
+data("gs_partial_pbp")
 
-## Clean data
-gs <- clean_matches_data(atp_matches = atp_matches,
-                         wta_matches = wta_matches,
-                         start_year = 2013,
-                         end_year = 2017,
-                         include_quals = FALSE,
-                         level = "Grand Slams")
+my_theme <-  theme_bw() + # White background, black and white theme
+  theme(axis.text = element_text(size = 12),
+        text = element_text(size = 14,
+        family="serif"),
+        plot.title = element_text(hjust = 0.5, size=16))
 
- 
+tournament_colors <- c("#0297DB", "#b06835", "#0C2340", "#54008b")
 
-## Extract sets, points, and games
-gs <- extract_sgp(gs)
+league_colors <- c("#0C2340", "#902BA3")
 
-## Make into player data
-gs_players <- matches_to_player_data(gs,
-                                     w_opp_vars = "loser_rank",
-                                     l_opp_vars = "winner_rank",
-                                     opp_var_names = "opponent_rank")
+win_colors <- c("#336699", "#339966")
 
 ```
 
-# Univariate distributions
 
-## Points won 
+## Examining the distribution of points earned
+
+We first examine the distibution of points earned per match. We find that the distribution is similar across tournament, with Wimbledon differing slightly from the other grand slams. As expected, there are more points earned in the WTA than the ATP due to the differing numbers of games played. Also unsuprisingly, the winners of the match tended to earn more points than the losers.   
+
+```{r, fig.height=5, fig.width=12}
+
+# grid.arrange(p1, p2, p3, ncol=3, widths=c(.25, .41, .34))
+
+
+p2 <- ggplot(gs_players) + geom_density(aes(pointswon, color = tournament)) + 
+  labs(x = "Points") + my_theme +
+  scale_color_manual("Tournament", values=tournament_colors)
+
+p3 <- ggplot(gs_players) + geom_density(aes(pointswon, color = league))+ 
+  labs(x = "Points") +
+  scale_color_manual("League", values=league_colors) +
+  my_theme
+
+
+# grid.arrange( p2, p3, ncol=2,
+#              top = textGrob("Winning points by tournament and league",
+#                             gp=gpar(fontsize=20)))
+
+p1 <- ggplot(gs_players) + geom_density(aes(pointswon, color = factor(did_win))) + 
+  labs(x = "Points") +
+  scale_color_manual("Winner?", values=win_colors) +
+  my_theme +
+  facet_wrap(~league, ncol=1)
+
+grid.arrange(p1, p2, ncol=2,
+             top = textGrob("Distribution of points per match",
+                            gp=gpar(fontsize=20, fontfamily="serif")),
+              layout_matrix = rbind(c(NA, 1),
+                                    c(2, 1),
+                                    c(NA, 1)),
+             heights=c(1, 3, 1))
+
+```
+
+
+## Home court advantage 
+
+It is commonly thought that there is a home court advantage in grand slam games (SOURCE). In our data we find this to be true (i.e. French players win the French open more than French players win other slams). But, we also know that the home team is given preference for wild card bids (SOURCE) so potentially citizens of a particular country play in "their" tournament more often than they play in other tournaments. We also find this to be true in our data for France, The United States, and Australia (i.e. the proportion of French players in the French Open is greater than the proportion of French players in other slams). 
+
+Therefore, we want to see how the proportion of wins for the home country changes across the different tournaments. If there was really a home court advantage, the proportion of French wins each round would be higher at the French Open than the Australian Open, the US Open, and Wimbledon. The same would be true for Australia and the US. But, we see that this isn't the case. After accounting for the number of players from each country, we don't find a home court advantage in the grand slam. 
+
 
 
 ```{r, fig.height=4, fig.width=12}
-p1 <- ggplot(gs_players) + geom_histogram(aes(pointswon), bins=40) + 
-  labs(x = "Winner points")
+france_wins <- filter(gs_players, ioc == "FRA", round < "QF") %>% 
+  group_by(tournament, round) %>% 
+  summarise(win_prop = mean(did_win),
+            win_prop_se = sqrt(win_prop*(1-win_prop)/n()))
 
-p2 <- ggplot(gs_players) + geom_density(aes(pointswon, color = tournament)) + 
-  labs(x = "Winner points")
+us_wins <- filter(gs_players, ioc == "USA", round < "QF") %>% 
+  group_by(tournament, round) %>% 
+  summarise(win_prop = mean(did_win),
+            win_prop_se = sqrt(win_prop*(1-win_prop)/n()))
 
-p3 <- ggplot(gs_players) + geom_density(aes(pointswon, color = league))+ 
-  labs(x = "Winner points")
+aus_wins <- filter(gs_players, ioc == "AUS", round < "QF") %>% 
+  group_by(tournament, round) %>% 
+  summarise(win_prop = mean(did_win),
+            win_prop_se = sqrt(win_prop*(1-win_prop)/n()))
 
-grid.arrange(p1, p2, p3, ncol=3, widths=c(.25, .41, .34))
+p1<- ggplot(france_wins, aes(round, win_prop, color=tournament, group=tournament)) + 
+  geom_line() + 
+  # geom_point() +
+  labs(title = "French players",
+       x = "", y = "Win proportion") + 
+  scale_color_manual(guide=FALSE, values=tournament_colors) + my_theme
+
+p2 <- ggplot(us_wins, aes(round, win_prop, color=tournament, group=tournament)) + 
+  geom_line() + 
+  # geom_point() +
+  labs(title = "American players",
+       x = "", y = "Win proportion") +  
+  scale_color_manual(guide=FALSE, values=tournament_colors)  + my_theme
+
+p3 <- ggplot(aus_wins, aes(round, win_prop, color=tournament, group=tournament)) + 
+  geom_line() + 
+  # geom_point() +
+  labs(title = "Australian players",
+       x = "", y = "Win proportion") + 
+  scale_color_manual(" ", values=tournament_colors) + my_theme
+
+grid.arrange(p1,p2, p3, nrow=1, widths = c(.29, .29, .42),
+             top = textGrob("Home court advantage debunked: win proportion by country",
+                            gp=gpar(fontsize=20)),
+             bottom = textGrob("Note: we only look at the first 4 rounds due to decreasing sample size",
+                           # x = 0,
+                           # y = 0.5,
+                           just = "left"))
 
 ```
+
+## Spaniards on clay
+
+```{r}
+filter(gs_players, round == "R128", ioc == "ESP") %>% 
+  group_by(tournament) %>% 
+  summarise(avg_ranking = mean(rank))
+
+spain_ranks <- filter(gs_players, ioc == "ESP") %>% 
+  group_by(tournament, round) %>% 
+  summarise(avg_ranking = mean(rank))
+
+ggplot(spain_ranks) + 
+  geom_line(aes(round, avg_ranking, color=tournament, group=tournament)) + 
+  labs(title = "Average ranking among Spaniards")
+
+
+```
+
+
+# Points won 
+
+```{r, fig.height=4, fig.width=12}
+p2 <- ggplot(gs_players) + geom_density(aes(pointswon, color = tournament)) + 
+  labs(x = "Winner points") + my_theme +
+  scale_color_manual("Tournament", values=tournament_colors)
+
+p3 <- ggplot(gs_players) + geom_density(aes(pointswon, color = league))+ 
+  labs(x = "Winner points") +
+  scale_color_manual("League", values=league_colors) +
+  my_theme
+
+# grid.arrange( p2, p3, ncol=2,
+#              top = textGrob("Winning points by tournament and league",
+#                             gp=gpar(fontsize=20)))
+```
+
 
 ```{r, fig.height=3.5, fig.width=10, fig.align='center'}
 
@@ -86,6 +194,20 @@ p2 <- ggplot(gs) + geom_point(aes(w_pointswon, l_pointswon, color = league), alp
   labs(x = "Winner points", y = "Loser points")
 
 grid.arrange(p1, p2, ncol=2, widths=c(.48, .52))
+
+```
+
+
+```{r, fig.height=4, fig.width=12}
+ggplot(filter(gs_players, league == "WTA", round == "R128")) + 
+  geom_point(aes(rank, pointswon, color=factor(did_win)), alpha=.5) + 
+  labs(x = "Rank", y = "Points", title="Round 128")
+
+```
+
+```{r, fig.height=4, fig.width=12}
+ggplot(filter(gs)) + 
+  geom_point(aes(loser_rank, winner_rank))
 
 ```
 
@@ -220,6 +342,44 @@ with(mini.d, table(tournament, ioc_spain)) %>%
 ```
 
 Yes, but not significantly more. 
+
+## Spain proportion of wins across the tournaments
+
+```{r}
+spain_wins <- filter(gs_players, ioc == "ESP") %>% 
+  group_by(tournament, round) %>% 
+  summarise(win_prop = mean(did_win),
+            win_prop_se = sqrt(win_prop*(1-win_prop)/n()))
+
+ggplot(spain_wins, aes(round, win_prop, color=tournament, group=tournament)) + 
+  geom_line(cex=2) + 
+  geom_point() +
+  labs(title = "Proportion of wins among Spaniards") +
+  geom_errorbar(aes(ymin = win_prop - 2*win_prop_se,
+                    ymax = win_prop + 2*win_prop_se),
+                width=.2,
+                 position=position_dodge(0.05))
+
+```
+
+
+# Player rankings over time
+
+```{r}
+
+# filter(gs_players, round == "R128") %>%
+#   select(tourney_start_date, rank, )
+#   ggplot(aes(x = tourney_start_date, y = rank)) + geom_line(group = name)
+#   
+filter(gs_players, round == "R128") %>%
+  rename(player_name = name) %>%
+  ggplot(aes(x = tourney_start_date, y = rank, color=player_name)) + 
+  geom_line(aes(group = factor(player_name))) + guides(color=FALSE, group=FALSE)
+
+```
+
+
+
 
 
 # Home court advantage
@@ -492,7 +652,7 @@ with(mini.d, table(tournament, ioc_Australia)) %>%
 
 # Pairs
 
-```{r, fig.height=12, fig.width=12}
+```{r, fig.height=12, fig.width=12, eval=FALSE}
 library(GGally)
 
 vars <- c("ht", "age", "rank", "opponent_rank", "ace", "df", "svpt", "1stIn", "SvGms", "bpSaved",
@@ -514,7 +674,7 @@ ggplot(gs_players) + geom_point(aes(log(ht+1), log(ace+1), color = factor(did_wi
 
 # MDS 
 
-```{r}
+```{r, eval=FALSE}
 gs_num <- select(gs, w_ace, w_df, w_svpt, w_1stIn, w_1stWon, w_2ndWon,
                 w_bpSaved, w_bpFaced) %>%
 na.omit()
@@ -527,10 +687,53 @@ mds$tournament <- select(gs, w_ace, w_df, w_svpt, w_1stIn, w_1stWon, w_2ndWon,
 na.omit() %>% pull( tournament)
 
 ggplot(mds, aes(V1, V2, label = tournament, color=tournament)) + geom_text()
+
+
+
+gs_num <- select(gs, w_ace, w_df, w_svpt, w_1stIn, w_1stWon, w_2ndWon,
+                w_bpSaved, w_bpFaced, winner_rank) %>%
+na.omit()
+
+mds <- cmdscale(dist(scale(gs_num)), k = 2) %>%
+  as.data.frame()  # default column names will be V1, V2
+
+mds$tournament <- select(gs, w_ace, w_df, w_svpt, w_1stIn, w_1stWon, w_2ndWon,
+                w_bpSaved, w_bpFaced, winner_rank, tournament) %>%
+na.omit() %>% pull( tournament)
+
+ggplot(mds, aes(V1, V2, label = tournament, color=tournament)) + geom_text()
+
+```
+
+```{r, eval=FALSE}
+gs_num <- select(gs, w_ace, w_df, w_svpt, w_1stIn, w_1stWon, w_2ndWon,
+                w_bpSaved, w_bpFaced) %>%
+na.omit()
+
+hclust_results <- hclust(dist(scale(gs_num)))
+
+# plot(hclust_results)
+
+colors_to_use <- select(gs, w_ace, w_df, w_svpt, w_1stIn, w_1stWon, w_2ndWon,
+                w_bpSaved, w_bpFaced, tournament) %>%
+  na.omit() %>% pull(tournament) %>% as.numeric()
+
+library(dendextend)
+dend <- as.dendrogram(hclust_results)
+colors_to_use <- colors_to_use[order.dendrogram(dend)]
+
+labels_colors(dend) <- colors_to_use
+plot(dend, main = "A color for every tournament")
+
+mds$tournament <- select(gs, w_ace, w_df, w_svpt, w_1stIn, w_1stWon, w_2ndWon,
+                w_bpSaved, w_bpFaced, tournament) %>%
+na.omit() %>% pull( tournament)
+
+ggplot(mds, aes(V1, V2, label = tournament, color=tournament)) + geom_text()
 ```
 
 
-```{r}
+```{r, eval=FALSE}
 gs_num <- select(gs, w_ace, w_df, w_svpt, w_1stIn,
                 w_bpSaved, w_bpFaced) %>%
 na.omit()
@@ -543,6 +746,82 @@ mds$tournament <- select(gs, w_ace, w_df, w_svpt, w_1stIn,
 na.omit() %>% pull( tournament)
 
 ggplot(mds, aes(V1, V2, label = tournament, color=tournament)) + geom_text()
+```
+
+# MDS 
+
+
+```{r, eval=FALSE}
+# winner_rank, loser_rank, 
+gs_num <- select(ungroup(gs_partial_pbp), winner_age,
+                 w_pointswon, w_gameswon, w_setswon, l_pointswon, l_gameswon,
+                 l_setswon, ave_serve_speed_p1,
+                 ave_serve_speed_p2, n_aces_p1, n_aces_p2, n_winners_p1, n_winners_p2,
+                 n_netpt_wpct_p1, n_netpt_wpct_p2, n_bp_wpct_p1, n_ue_p1, n_ue_p2,
+                 n_sv_wpct_p1, n_sv_wpct_p2) %>% 
+  na.omit()
+
+mds <- cmdscale(dist(scale(gs_num)), k = 2) %>%
+  as.data.frame()  # default column names will be V1, V2
+
+mds$tournament <- select(ungroup(gs_partial_pbp), winner_age,
+                 w_pointswon, w_gameswon, w_setswon, l_pointswon, l_gameswon,
+                 l_setswon, ave_serve_speed_p1,
+                 ave_serve_speed_p2, n_aces_p1, n_aces_p2, n_winners_p1, n_winners_p2,
+                 n_netpt_wpct_p1, n_netpt_wpct_p2, n_bp_wpct_p1, n_ue_p1, n_ue_p2,
+                 n_sv_wpct_p1, n_sv_wpct_p2, tournament) %>% 
+  na.omit() %>% pull( tournament)
+
+ggplot(mds, aes(V1, V2, label = tournament, color=tournament)) + geom_text()
+
+
+
+gs_num <- select(ungroup(gs_partial_pbp), ave_serve_speed_p1,
+                 ave_serve_speed_p2, n_aces_p1, n_aces_p2, n_winners_p1, n_winners_p2,
+                 n_netpt_wpct_p1, n_netpt_wpct_p2, n_bp_wpct_p1, n_ue_p1, n_ue_p2,
+                 n_sv_wpct_p1, n_sv_wpct_p2) %>% 
+  na.omit()
+
+mds <- cmdscale(dist(scale(gs_num)), k = 2) %>%
+  as.data.frame()  # default column names will be V1, V2
+
+mds$tournament <- select(ungroup(gs_partial_pbp), ave_serve_speed_p1,
+                 ave_serve_speed_p2, n_aces_p1, n_aces_p2, n_winners_p1, n_winners_p2,
+                 n_netpt_wpct_p1, n_netpt_wpct_p2, n_bp_wpct_p1, n_ue_p1, n_ue_p2,
+                 n_sv_wpct_p1, n_sv_wpct_p2, tournament) %>% 
+  na.omit() %>% pull( tournament)
+
+ggplot(mds, aes(V1, V2, label = tournament, color=tournament)) + geom_text()
+
+
+gs_num <- ungroup(filter(gs_partial_pbp, Tour == "atp")) %>%
+    mutate(aces = n_aces_p1 + n_aces_p2) %>%
+  select(n_winners_p1, n_winners_p2, n_ue_p1, n_ue_p2, aces) %>%
+  na.omit()
+
+mds <- cmdscale(scale(dist(gs_num)), k = 2) %>%
+  as.data.frame()  # default column names will be V1, V2
+
+mds$tournament <- ungroup(filter(gs_partial_pbp, Tour == "atp")) %>%
+    mutate(aces = n_aces_p1 + n_aces_p2) %>%
+  select(n_winners_p1, n_winners_p2, n_ue_p1, n_ue_p2, aces, tournament) %>% 
+  na.omit() %>% pull( tournament)
+
+
+mds2 <- bind_cols(mds, ungroup(filter(gs_partial_pbp, Tour == "atp")))
+
+# mds$tournament[mds$tournament == "US Open"] <- "Australian Open"
+
+ggplot(mds, aes(V1, V2, label = tournament, color=tournament)) + geom_point()
+
+filter(mds2, V1 > 5)
+
+filter(mds2, V2 > 2)
+
+
+
+```
+
 ```
 
 
