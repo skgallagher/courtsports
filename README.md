@@ -24,6 +24,7 @@ To reproduce our paper for the sports analytics conference
 2. Open the file in `RStudio` and knit it OR
 
 3. Open an `R` session
+
   a. Change the directory to where you downloaded the file
   b. Run the command `rmarkdown::render(<my-file.Rmd>)`
   c. Open and view `<my-file.pdf>` which should appear in the directory of the downloaded file
@@ -62,7 +63,7 @@ Our hierarchical model is computationally intensive for all possible implementat
 1. Use the most recent version and packages in `R`
 
 2. Make sure you have the following `R` packages installed (regular CRAN installation unless otherwise specified)
- + `deuce` (`r install_github("skoval/deuce"`)
+ + `deuce` (`install_github("skoval/deuce"`)
  + `dplyr`
  + `forcats`
  + `ggplot2`

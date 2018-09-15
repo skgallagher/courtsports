@@ -86,7 +86,8 @@ The rest of this paper is organized as follows. In [Section Data](#sec:data) we 
 # Data and EDA {#sec:data-eda}
 
 ## Data {#sec:data}
-The data consists of `r nrow(gs)` matches split evenly over the four grand slams and the two leagues: ATP (men's) and WTA (women's).  Each match has `r ncol(gs)` attributes, many of which are redundant.  We focus on the following attributes for both the winner and loser of the match: games won, points won, retirement, break points faced, break points saved, aces, country of origin, and player attributes.  Additionally, we take into account the number of sets in a match, the surface type, and round of the tournament.  A subset of the data is shown in Table \ref{tab:data}.
+
+The primary data consists of `r nrow(gs)` matches split evenly over the four grand slams and the two leagues: ATP (men's) and WTA (women's).  Each match has `r ncol(gs)` attributes, many of which are redundant.  We focus on the following attributes for both the winner and loser of the match: games won, points won, retirement, break points faced, break points saved, aces, country of origin, and player attributes.  Additionally, we take into account the number of sets in a match, the surface type, and round of the tournament.  A subset of the data is shown in Table \ref{tab:data}.
 
 
 
@@ -102,7 +103,13 @@ knitr::kable(gs[c(w_id, f_id, n_id), cols], format = "latex",
              booktabs = TRUE) %>% kable_styling(latex_options = "striped", "hold_position")
 ```
 
-The data is obtained from Jeff Sackmann's open website via the `R` package `deuce` [@sackmann2018; @deuce2017].  All steps of our analysis from collection to dissemination are freely available online.
+The secondary data point by point data for grand slam matches.  In this data set, each row is a point in a match with details on who won the point, whether a player had a forced or unforced error, winner, ace, or net point win, and serve speed.  There is also tournament info such as court, year, and time start.  Additional attributes include rally length, winner and final score of the match, retirement, and minutes played.  However, these additional attributes are only available for about 1/10 of the data.  
+
+We aggregate the point by point data into match data, summing the total number of errors, winners, aces, net points, and taking the average service speed for each player in the match.  We then join the point by point match data with the grand slam data to find the score of the match.  We do this by matching on tournament, year, player one, and player two.  This final data set consists of 3066 observations (compared to the 5080 in the original grand slams).  The median rank of the winners for the original data is `r median(gs$winner_rank, na.rm = TRUE)` and the median rank for the winners of the partial data is `r median(gs_partial$winner_rank)`.  The same trend is true for the loser rank.  This means that it is more likely for better players to have court by court data, which may effect our analysis.  Additionally, we found that no women's point by point data was recorded for 2015.
+
+All data is obtained from Jeff Sackmann's open website via the `R` package `deuce` [@sackmann2018; @deuce2017].  All steps of our analysis from collection to dissemination are freely available online.
+
+
 
 ## Early Data Analysis {#sec:eda}
 

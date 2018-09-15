@@ -227,14 +227,15 @@ we discuss future work and extensions or our model.
 \hypertarget{sec:data}{%
 \subsection{Data}\label{sec:data}}
 
-The data consists of 5080 matches split evenly over the four grand slams
-and the two leagues: ATP (men's) and WTA (women's). Each match has 80
-attributes, many of which are redundant. We focus on the following
-attributes for both the winner and loser of the match: games won, points
-won, retirement, break points faced, break points saved, aces, country
-of origin, and player attributes. Additionally, we take into account the
-number of sets in a match, the surface type, and round of the
-tournament. A subset of the data is shown in Table \ref{tab:data}.
+The primary data consists of 5080 matches split evenly over the four
+grand slams and the two leagues: ATP (men's) and WTA (women's). Each
+match has 80 attributes, many of which are redundant. We focus on the
+following attributes for both the winner and loser of the match: games
+won, points won, retirement, break points faced, break points saved,
+aces, country of origin, and player attributes. Additionally, we take
+into account the number of sets in a match, the surface type, and round
+of the tournament. A subset of the data is shown in Table
+\ref{tab:data}.
 
 \rowcolors{2}{gray!6}{white}
 \begin{table}
@@ -258,7 +259,29 @@ Rafael Nadal & Roland Garros & 2013 & ESP & 113 & 4 & 90 & 35\\
 \end{table}
 \rowcolors{2}{white}{white}
 
-The data is obtained from Jeff Sackmann's open website via the
+The secondary data point by point data for grand slam matches. In this
+data set, each row is a point in a match with details on who won the
+point, whether a player had a forced or unforced error, winner, ace, or
+net point win, and serve speed. There is also tournament info such as
+court, year, and time start. Additional attributes include rally length,
+winner and final score of the match, retirement, and minutes played.
+However, these additional attributes are only available for about 1/10
+of the data.
+
+We aggregate the point by point data into match data, summing the total
+number of errors, winners, aces, net points, and taking the average
+service speed for each player in the match. We then join the point by
+point match data with the grand slam data to find the score of the
+match. We do this by matching on tournament, year, player one, and
+player two. This final data set consists of 3066 observations (compared
+to the 5080 in the original grand slams). The median rank of the winners
+for the original data is 28 and the median rank for the winners of the
+partial data is 21. The same trend is true for the loser rank. This
+means that it is more likely for better players to have court by court
+data, which may effect our analysis. Additionally, we found that no
+women's point by point data was recorded for 2015.
+
+All data is obtained from Jeff Sackmann's open website via the
 \texttt{R} package \texttt{deuce} (Sackmann 2018; Kovalchik 2017). All
 steps of our analysis from collection to dissemination are freely
 available online.
@@ -475,6 +498,84 @@ compared to the other courts. Rather, she has good results on all the
 courts. Her significant interaction effects show that if she focuses on
 acing her opponent and capitalizing on breakpoints, then she has a
 better chance at winning more points than at the Australian Open.
+
+\hypertarget{mixed-effects-models-for-all-grand-slams}{%
+\subsection{Mixed-effects models for all grand
+slams}\label{mixed-effects-models-for-all-grand-slams}}
+
+\hypertarget{logistic-regression-for-wins}{%
+\subsubsection{Logistic regression for
+wins}\label{logistic-regression-for-wins}}
+
+We will use a multilevel logistic regression framework. This allows us
+to include fixed effects, which remain the same for each player, as well
+as include player-level effects. Since players appear multiple times in
+the data, the observations are not independent and including a
+player-level effect allows us to account for this dependence. It also
+provides a way to examine individual player effects and assess, for
+instance, whether Federer is more likely to win at Wimbledon after
+accounting for other variables.
+
+We initially planned to use points won by an individual as our outcome
+variable, but found that it may not be an ideal measure of player
+performance. For instance, players may score few points in a match due
+to a poor performance, but they may also score few (relative) points if
+they win a short match. Modeling the number of points won is also
+complicated by the difference between length of matches for men (best of
+5 sets) and women (best of 3 sets). For these reasons, we chose to model
+whether a player won the match, with the following predictors:
+
+\begin{itemize}
+\tightlist
+\item
+  \texttt{ioc\_fac}: Country that the player represents
+\item
+  \texttt{tournament}: Which Grand Slam the match was played at
+\item
+  \texttt{late\_round}: Indicator for whether the match occured in Round
+  of 16 or later
+\item
+  \texttt{rank}: Rank of player at the time of the match
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Included on log scale
+  \end{itemize}
+\item
+  \texttt{opponent\_rank}: Rank of opponent at the time of the match
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Included on log scale
+  \end{itemize}
+\item
+  \texttt{year}: Factor variable with a level for each year included in
+  the dataset (2013-2017)
+\item
+  \texttt{atp}: Indicator that the match was played in the ATP league
+  instead of the WTF league.
+\end{itemize}
+
+(short discussion of models fit, show plots for final model)
+
+\hypertarget{linear-regression-for-other-stats}{%
+\subsubsection{Linear regression for other
+stats}\label{linear-regression-for-other-stats}}
+
+Rank and opponent's rank clearly have the largest effect on predicting
+the winner. Looking at the individual effects for Serena, Nadal, and
+Federer; they actually fall near the average for all four grand slams.
+Including rank as an indicator (seeded/not-seeded) substantially
+decreases the fit of the model, even when individual effects are
+included. We now look at a similar model, but instead of using `win' as
+the outcome variable, we'll look at game statistics that may be more
+sensitive to court surface -- aces, winners, and net points won -- and
+see if individual differences are detectable.
+
+(some plots that show a) Serena/Federer are stronger servers, b) Federer
+makes fewer unforced errors at Wimbledon, c) something about Nadal)
 
 \hypertarget{sec:discussion}{%
 \section{Discussion}\label{sec:discussion}}
