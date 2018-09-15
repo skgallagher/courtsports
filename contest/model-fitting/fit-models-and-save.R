@@ -1,5 +1,15 @@
 load("gs_players.rda")
 load("gs_partial_players.rda")
+
+gs_players$name_int = as.integer(as.factor(gs_players$name))
+gs_players$hand_fac = as.factor(gs_players$hand)
+gs_players$ioc_fac = as.factor(gs_players$ioc)
+gs_players$atp = gs_players$league == "ATP"
+gs_players$year_fac = as.factor(gs_players$year)
+gs_players$late_round = gs_players$round >= "R16"
+gs_players$seeded = gs_players$rank <= 32
+gs_players$opponent_seeded = gs_players$opponent_rank <= 32
+
 set.seed(091418)
 nocourt_logistic = glm(did_win ~ ioc_fac + late_round + log(rank) + log(opponent_rank) + year_fac + atp, data = gs_players, family = "binomial")
 base_logistic = glm(did_win ~ ioc_fac +  tournament + late_round + log(rank) + log(opponent_rank) + year_fac + atp, data = gs_players, family = "binomial")
