@@ -1,12 +1,13 @@
 ---
 title: "Analyzing the Effect of Surface in Tennis Grand Slams"
-author: "Kayla Frisoli, Shannon Gallagher, and Amanda Luby"
+author: "###########"
 date: '`r format(Sys.time(), "%B %d, %Y")`'
 output:
   pdf_document:
     fig_caption: yes
     keep_tex: yes
     number_sections: yes
+    toc: true
 header-includes:
   - \usepackage{hyperref}
 abstract: "Tennis grand slams consist of the Australian Open, French Open, Wimbledon, and US Open, which are played on hard (Plexicushion), clay, grass, and hard (DecoTurf) courts, respectively.  The surface type may substantially impact ball speed, height, and spin as well as player speed and agility.  It is also believed that play style and practice habits may contribute to different results across surface types.  For example, Rafael Nadal is thought to be the best clay court player of all time whereas Roger Federer is particularly known for dominance at Wimbledon.  On the women's side, Serena Williams once struggled on clay courts but has seemingly transformed her style to perform better on clay courts, but has perhaps suffered on grass as a consequence.  In this analysis, we examine the result of the top 100 players in grand slams from 2013-2017 across the four different surfaces.  We create a hierarchical model with fixed and random effects to predict the number of points won in a match.  We take into consideration player-specific effects, nationality (which is thought to have an effect on play style), sex, ranking, ELO, and game statistics.   We assess the fit of our model using standard statistical techniques (e.g. MSE, AIC, BIC, residual diagnostics) in addition to `common knowledge' factors (for instance, Rafael Nadal should be indicated as a superior clay court player by the model).  We compare the results of top 100 players across grand slams to examine the effect of court surface. We also provide an in-depth analysis of Nadal, Federer, and S. Williams."
@@ -29,6 +30,9 @@ library(kableExtra)
 library(gridExtra)
 library(grid)
 library(MASS)
+library(ggrepel)
+
+
 ## To change into library(courtsports)
 devtools::load_all("../..")
 
@@ -105,7 +109,7 @@ The data is obtained from Jeff Sackmann's open website via the `R` package `deuc
 
 ### Examining the distribution of points earned
 
-We first examine the distribution of points earned per match. We find that the distribution is similar across tournament, with Wimbledon differing slightly from the other grand slams. As expected, there are more points earned in the WTA than the ATP due to the differing numbers of games played. Also unsurprisingly, the winners of the match tended to earn more points than the losers.   
+We first examine the distribution of points earned per match to assess normality. The distribution of points earned is approximately normal. This distribution is similar across tournament, with Wimbledon differing slightly from the other grand slams. As expected, there are more points earned in the WTA than the ATP due to the differing numbers of games played. Also unsurprisingly, the winners of the match tended to earn more points than the losers.   
 
 ```{r, fig.height=5, fig.width=12}
 
@@ -149,7 +153,7 @@ It is commonly thought that there is a home court advantage in grand slam games 
 
 Therefore, we want to see how the proportion of wins for the home country changes across the different tournaments. If there was really a home court advantage, the proportion of French wins each round would be higher at the French Open than the Australian Open, the US Open, and Wimbledon. The same would be true for Australia and the US. But, we see that this isn't the case. After accounting for the number of players from each country, we don't find a home court advantage in the grand slam. 
 
-```{r, fig.height=4, fig.width=12}
+```{r, fig.height=4, fig.width=14, fig.align='center'}
 france_wins <- filter(gs_players, ioc == "FRA", round < "QF") %>% 
   group_by(tournament, round) %>% 
   summarise(win_prop = mean(did_win),
@@ -161,6 +165,11 @@ us_wins <- filter(gs_players, ioc == "USA", round < "QF") %>%
             win_prop_se = sqrt(win_prop*(1-win_prop)/n()))
 
 aus_wins <- filter(gs_players, ioc == "AUS", round < "QF") %>% 
+  group_by(tournament, round) %>% 
+  summarise(win_prop = mean(did_win),
+            win_prop_se = sqrt(win_prop*(1-win_prop)/n()))
+
+gbr_wins <- filter(gs_players, ioc == "GBR", round < "QF") %>% 
   group_by(tournament, round) %>% 
   summarise(win_prop = mean(did_win),
             win_prop_se = sqrt(win_prop*(1-win_prop)/n()))
@@ -184,15 +193,24 @@ p3 <- ggplot(aus_wins, aes(round, win_prop, color=tournament, group=tournament))
   # geom_point() +
   labs(title = "Australian players",
        x = "", y = "Win proportion") + 
+  scale_color_manual(guide=FALSE, values=tournament_colors) + my_theme
+
+
+p4 <- ggplot(gbr_wins, aes(round, win_prop, color=tournament, group=tournament)) + 
+  geom_line() + 
+  # geom_point() +
+  labs(title = "British players",
+       x = "", y = "Win proportion") + 
   scale_color_manual(" ", values=tournament_colors) + my_theme
 
-grid.arrange(p1,p2, p3, nrow=1, widths = c(.29, .29, .42),
-             top = textGrob("Home court advantage debunked: win proportion by country",
+grid.arrange(p3, p1, p2,  p4, nrow=1, widths = c(.22, .22, .22, .34),
+             top = textGrob("Home court advantage: debunked",
                             gp=gpar(fontsize=20, fontfamily="serif")),
-             bottom = textGrob("Note: we only look at the first 4 rounds due to decreasing sample size as the tournament goes on",
+             bottom = textGrob("Note: we only look at the first 4 rounds due to decreasing sample size",
                            # x = 0,
                            # y = 0.5,
-                           just = "left"))
+                           just = "left",
+                           gp=gpar(fontfamily="serif")))
 
 ```
 
@@ -201,7 +219,7 @@ grid.arrange(p1,p2, p3, nrow=1, widths = c(.29, .29, .42),
 
 It is also commonly thought that Spaniards play better on clay. We are interested in whether Spaniards win the French Open more than they win in other tournaments. It does appear that Spaniards are winning the French Open more than they are winning other tournaments. But, this result is not significant. In addition, the ranking of Spaniards in the French Open is, on average, higher than other tournaments, which may help explain this common misconception, although this result is not significant either. 
 
-```{r, fig.height=5, fig.width=12}
+```{r, fig.height=4, fig.width=12, fig.align='center'}
 
 spain_wins <- filter(gs_players, ioc == "ESP", round < "QF") %>% 
   group_by(tournament, round) %>% 
@@ -216,12 +234,6 @@ p1 <- ggplot(spain_wins, aes(round, win_prop, color=tournament, group=tournament
        # caption = "Note: we only look at the first 4 rounds due to decreasing sample size",
        x = "", y = "Win proportion") + 
   scale_color_manual(guide=FALSE, values=tournament_colors) + my_theme  
-  # geom_point() + 
-  # labs(title = "Proportion of wins among Spaniards") +
-  # geom_errorbar(aes(ymin = win_prop - win_prop_se,
-  #                   ymax = win_prop + win_prop_se),
-  #               width=.2,
-  #                position=position_dodge(0.05))
 
 p2 <- ggplot(spain_wins, aes(round, avg_ranking, color=tournament, group=tournament)) + 
   geom_line() + 
@@ -235,9 +247,9 @@ p2 <- ggplot(spain_wins, aes(round, avg_ranking, color=tournament, group=tournam
 #                 width=.2,
 #                  position=position_dodge(0.05))
 
-grid.arrange(p1,p2, nrow=1, widths = c(.44, .56),
+grid.arrange(p1, p2, nrow=1, widths = c(.44, .56),
              top = textGrob("Spaniards perform better on Clay: debunked",
-                            gp=gpar(fontsize=20)),
+                            gp=gpar(fontsize=20, fontfamily="serif")),
              bottom = textGrob("Note: we only look at the first 4 rounds due to decreasing sample size",
                            # x = 0,
                            # y = 0.5,
@@ -245,6 +257,63 @@ grid.arrange(p1,p2, nrow=1, widths = c(.44, .56),
                            gp=gpar(fontfamily="serif")))
 
 ```
+
+## Tall players and aces
+
+Why the actual EFF won't fig.width work? 
+
+
+```{r, fig.width=10, fig.height=8, fig.align='center'}
+p_atp <- gs_players %>% filter(league == "ATP") %>%
+ggplot( aes(log(ht+1), log(ace+1), color = factor(did_win))) + 
+  geom_jitter() + 
+  scale_color_manual(guide=FALSE, values = win_colors, labels = c("No", "Yes")) + 
+  geom_smooth(method = "lm") + 
+  geom_label_repel(data=subset(filter(gs_players, league == "ATP"),
+                               (log(ht+1) > 5.25 & log(ace+1) > 3.9) |
+                                (log(ht+1) > 5.28 & log(ace+1) < 1) | 
+                                (log(ht+1) < 5.2 & log(ace+1) > 3)),
+            aes(log(ht+1), log(ace+1), label=name),
+            alpha=.8, seed=1234, show.legend=FALSE) + 
+  geom_label_repel(data=subset(filter(gs_players, league == "ATP"),
+                               (log(ht+1) > 5.25 & log(ace+1) > 3.9) |
+                                (log(ht+1) > 5.28 & log(ace+1) < 1) | 
+                                (log(ht+1) < 5.2 & log(ace+1) > 3)),
+            aes(log(ht+1), log(ace+1), label = name),
+            seed=1234, fill=NA, show.legend=FALSE) +
+  labs(x = "log(height + 1)", title = "ATP")+
+  my_theme
+
+p_wta <- gs_players %>% filter(league == "WTA") %>%
+ggplot( aes(log(ht+1), log(ace+1), color = factor(did_win))) + 
+  geom_jitter() + 
+  scale_color_manual("Winner?", values = win_colors, labels = c("No", "Yes")) + 
+  geom_smooth(method = "lm") + 
+  geom_label_repel(data=subset(filter(gs_players, league == "WTA"),
+                               (log(ht+1) > 5.22 & log(ace+1) > 2.6) |
+                                (log(ht+1) > 5.215 & log(ace+1) < .5) | 
+                                (log(ht+1) < 5.13 & log(ace+1) > 2.1) | 
+                                (log(ht+1) < 5.09 & log(ace+1) > 1.5) |
+                                 (log(ace + 1) > 2.82)),
+            aes(log(ht+1), log(ace+1), label=name),
+            alpha=.8, seed=1234, show.legend=FALSE) + 
+  geom_label_repel(data=subset(filter(gs_players, league == "WTA"),
+                               (log(ht+1) > 5.22 & log(ace+1) > 2.6) |
+                                (log(ht+1) > 5.215 & log(ace+1) < .5) | 
+                                (log(ht+1) < 5.13 & log(ace+1) > 2.1) | 
+                                (log(ht+1) < 5.09 & log(ace+1) > 1.5) |
+                                 (log(ace + 1) > 2.82)),
+            aes(log(ht+1), log(ace+1), label=name),
+            seed=1234, fill=NA, show.legend=FALSE) +
+  labs(x = "log(height + 1)", title = "WTA")+
+  my_theme + theme(legend.position="bottom")
+
+grid.arrange(p_atp, p_wta, nrow=2, heights = c(.46, .54),
+             top = textGrob("Taller players are better servers: confirmed",
+                            gp=gpar(fontsize=20, fontfamily="serif")))
+
+```
+
 
 # Methods {#sec:methods}
 

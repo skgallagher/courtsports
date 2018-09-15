@@ -210,6 +210,9 @@ ue_ranef = as.data.frame(ranef(n_ue_mod, condVar = TRUE)) %>%
   ylab("") +
   ggtitle("Unforced Errors")
 
-plot_grid(aces_ranef, winners_ranef, nets_ranef, ue_ranef)
+aces_ranef
+winners_ranef
+nets_ranef
+ue_ranef
 ```
 
