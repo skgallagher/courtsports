@@ -6,9 +6,12 @@ lubridate
 xml2
 rvest
 deuce
+tidyr
 ggplot2
 forcats
 knitr
 kableExtra
+gridExtra
+MASS
 courtsports
 bindrcpp

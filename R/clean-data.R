@@ -113,6 +113,7 @@ matches_to_player_data <- function(matches,
                                    opp_var_names = "opponent_rank"){
 
 
+    matches$total_points <- matches$w_pointswon + matches$l_pointswon
     ## Copy data frames
     matches_l <- matches
     matches_w <- matches

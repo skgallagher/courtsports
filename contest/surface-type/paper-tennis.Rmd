@@ -20,6 +20,7 @@ knitr::opts_chunk$set(message = FALSE)
 knitr::opts_chunk$set(cache = TRUE)
 library(deuce)
 library(dplyr)
+library(tidyr)
 library(ggplot2)
 library(forcats)
 library(stringr)
@@ -27,9 +28,10 @@ library(knitr)
 library(kableExtra)
 library(gridExtra)
 library(grid)
-
+library(MASS)
 ## To change into library(courtsports)
 devtools::load_all("../..")
+
 ```
 
 
@@ -246,7 +248,111 @@ grid.arrange(p1,p2, nrow=1, widths = c(.44, .56),
 
 # Methods {#sec:methods}
 
-# Results {#sec:results}
+
+
+## Examining individual players
+```{r table}
+data(gs_partial_players)
+
+top_three <- dplyr::filter(gs_players, name %in% c("Rafael Nadal", "Roger Federer", "Serena Williams"))
+matches_played_slam_year <- top_three %>% group_by(name, tournament, year) %>%
+  summarize(matches_played = n())
+matches_played_slam <- matches_played_slam_year %>% group_by(name, tournament) %>%
+  summarize(matches_played = sum(matches_played))
+tab <- spread(matches_played_slam, key = name, value = matches_played)
+total_df <- data.frame(tournament = "Total", as.list(colSums(tab[,-1])))
+colnames(total_df) <- colnames(tab)
+tab <- rbind(tab, total_df)
+
+knitr::kable(tab, format = "latex",
+               row.names = FALSE, col.names = c("Tournament", "Nadal", "Federer", "Williams"),
+               caption = "\\label{tab:three-gs-counts}Number of matches played for Nadal, Federer, and Williams from 2013-2017 at each of the grand slams.",
+               booktabs = TRUE) %>% kable_styling(latex_options = "striped") %>%
+    row_spec(5, bold = TRUE, background = "lightgray")
+```
+
+In Table \ref{tab:three-gs-counts}, we display the number of matches Nadal, Federer, and Williams have played from 2013-2017.  Over that time span, Nadal won 6 grand slams, Federer won 1, Williams won 8.  Despite this, Federer played more total matches in Nadal.  All three players were absent for exactly three slams during this time period due to external factors (Nadal: (1 AO, 0 FO, 1 Wim, 1 USO), Federer: (0 AO, 2 FO, 0 Wim, 1 USO), Serena: (0 AO, 1 FO, 1 Wim, 1 USO)).  Not unexpectedly, Nadal has the most wins on clay (`r tab[2, 2]`), Federer has the most wins at Wimbledon (`r tab[4, 3]`) and Williams the most on hardcourt (`r tab[1, 4]` at AO and `r tab[4, 4]` at USO).  Despite having played more matches than Nadal, Federer only has 1 grand slam to show compared to Nadal's six, which indicates that Federer made it deeper into tournaments on average but had difficulties winning the championships.  For the WTA, Williams had her second most successful five-year span at the grand slams over this time period, winning 8.
+
+We fit individual models for these three individuals (subsetting the data to their matches only), estimating the percent of points won in a match using stepwise regression.  The lower model is the  percent of points regressed on the opponent rank and indicator variables for court type with the FO as the reference variable.  The upper model is the lower model with the additional variables of winner to unforced error ratio, average serve speed, percent aces, percent break points, percent net points won, and their interaction effects with court type.  We do not display the full best fit models here, but they are available online.
+
+ADD CIS!!
+
+## Nadal
+
+
+
+```{r nadal-model}
+
+step_model_n <- model_individual(player_name = "Rafael Nadal", data = gs_partial_players)
+
+std_res_n <- rstandard(step_model_n)
+
+gn <- ggplot(lm(step_model_n$formula, data = step_model_n$data)) + geom_hline(yintercept = 0, col = "red") +
+  geom_point(aes(x=.fitted, y = .stdresid)) + my_theme + ylim(-3, 3) +
+  labs(title = "Nadal",
+       x = "Predicted Percent of Points Won", y = "Standardized Residuals")
+
+
+coefs_n <- coefficients(step_model_n)
+```
+
+
+Looking at Nadal individually, the model with the lowest AIC has positive coefficients opponent rank, percent of aces, and percent of break points won.  It has negative coefficients for AO, USO, and Wim. compared to FO and for percent of net points won.  There are no interaction effects in this model.
+
+
+The standardized residuals plot shown in Figure \ref{fig:individ-resids} (along with the other linear regression diagnostics plots not shown here) shows that the model is a good fit for predicting the percent of points won.  For the significant variables ($\alpha$ = 95\%), while adjusting for the other variables, we expect percent of points won to be $`r signif(abs(coefs_n[2]), 2)`$ less at the AO and $`r signif(abs(coefs_n[4]), 2)`$ less at Wim compared to the FO; to increase by $`r signif(abs(coefs_n[5]), 2)`$ for a one unit increase in opponent rank; a `r .01 * signif(abs(coefs_n[7]), 2)`\% increase for a .01 increase in percent of break points won; and to decrease by $`r .01 * signif(abs(coefs_n[8]), 2)`$ for a .01 increase in percent of net points won.  As such, we see clear evidence Nadal performs better at the FO compared to the other grand slams.
+
+## Federer
+```{r federer-model}
+
+step_model_f <- model_individual(player_name = "Roger Federer", data = gs_partial_players, ref = "Wimbledon")
+
+std_res_f <- rstandard(step_model_f)
+
+gf <- ggplot(lm(step_model_f$formula, data = step_model_f$data)) + geom_hline(yintercept = 0, col = "red") +
+  geom_point(aes(x=.fitted, y = .stdresid)) + my_theme + ylim(-3, 3) +
+  labs(title = "Federer",
+       x = "Predicted Percent of Points Won", y = "Standardized Residuals")
+
+coefs_f <- coefficients(step_model_f)
+```
+
+
+For Federer, the model with the lowest AIC has negative coefficients AO, FO, and USO. vs Wim., and W/UE,  It has positive coefficients for opponent rank, percent of break points won, and all the interaction terms: court and W/UE.
+
+The standardized residuals plot shown in Figure \ref{fig:individ-resids}  shows that the model is a fair fit for predicting the percent of points won, but almost seem to see two clusters of residuals splitting with predicted point percentage of about 0.63.  For the significant variabless ($\alpha$ = 95\%), while adjusting for the other variables, we expect percent of points won to be $`r signif(abs(coefs_f[2] + coefs_f[8]), 2)`$ less at AO compared to the Wim.; $`r signif(abs(coefs_f[3] + coefs_f[9]), 2)`$ less at FO compared to the Wim.; $`r signif(abs(coefs_f[4] + coefs_f[9]), 2)`$\% less at USO compared to the Wim.;  to decrease by $`r signif(abs(coefs_f[6] + coefs_f[8]) , 2)`$ for a one unit increase in W/UE at AO, $`r signif(abs(coefs_f[6] + coefs_f[9]) , 2)`$ for a one unit increase in W/UE at FO, and $`r signif(abs(coefs_f[6] + coefs_f[10]) , 2)`$ for a one unit increase in W/UE at USO.  It is clear that Federer performs best at Wimbledon.
+
+## Williams
+```{r williams-model}
+
+step_model_w <- model_individual(player_name = "Serena Williams", data = gs_partial_players,
+                                 start_lower = TRUE, ref = "Australian Open")
+
+std_res_w <- rstandard(step_model_w)
+
+gw <- ggplot(lm(step_model_w$formula, data = step_model_w$data)) + geom_hline(yintercept = 0, col = "red") +
+  geom_point(aes(x=.fitted, y = .stdresid)) + my_theme + ylim(-3, 3) +
+  labs(title = "Williams",
+       x = "Predicted Percent of Points Won", y = "Standardized Residuals")
+
+coefs_w <- coefficients(step_model_w)
+```
+
+
+```{r resid plots,  fig.height=4, fig.width=12, fig.cap = "\\label{fig:individ-resids}Standardized residuals vs percent of points won  best fit model from forward-backwards stepwise regression for Nadal's, Federer's, and William's, respectively.}"}
+
+grid.arrange(gn, gf, gw, ncol = 3, 
+              top = textGrob("Standardized Residuals vs. Predicted % Points Won",
+                            gp=gpar(fontsize=20, fontfamily="serif")))
+
+
+```
+
+For Williams, the model with the lowest AIC is the largest model of the three selected 22 coefficients.  Since Williams only has 59 observations, we believe this model is overfitting and so caution against inference with this model.  It should also be noted that no women's point by point data was recorded for 2015 so that year is excluded from this model.  The coefficients are court, opponent rank, W/UE, average serve speed, percent aces, percent break points won, percent net points won, and interaction effects with court and W/UE, court and average service speed, court and percent aces, and court and break points won.
+
+The standardized residuals plot shown in Figure \ref{fig:individ-resids}  shows that the model is a fair fit for predicting the percent of points won, but we tend to overestimate the percent of points won in comparison with Nadal.   For the significant variables ($\alpha$ = 95\%), while adjusting for the other variables, we expect percent of points won to increase by $`r signif(abs(coefs_w[5]), 2)`$ for a 1 unit increase in oponent rank; to increase by $`r signif(abs(coefs_w[6] + coefs_w[11]) , 2)`$ for a one unit increase in W/UE at FO, to increase by  $`r signif(abs(coefs_w[6] + coefs_w[12]) , 2)`$for a one unit increase in W/UE at USO, and to increase by  $`r signif(abs(coefs_w[6] + coefs_w[13]) , 2)`$ for a one unit increase in W/UE at Wim. compared to AO; to increase by  $`r signif(.01 * abs(coefs_w[8] + coefs_w[17]) , 2)`$ for a .01 increase in percent of aces at the French Open; and to increase by $`r signif(.01 * abs(coefs_w[9] + coefs_w[20]) , 2)`$ for a .01 increase in percent of break points won at the French Open.
+
+For this, we do not see that Williams is dominant on the hard courts compared to the other courts.  Rather, she has good results on all the courts.  Her significant interaction effects show that if she focuses on acing her opponent and capitalizing on breakpoints, then she has a better chance at winning more points than at the Australian Open.
 
 # Discussion {#sec:discussion}
 

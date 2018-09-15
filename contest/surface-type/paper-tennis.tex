@@ -82,7 +82,7 @@
   \postauthor{\par}
       \predate{\centering\large\emph}
   \postdate{\par}
-    \date{September 12, 2018}
+    \date{September 15, 2018}
 
 \usepackage{booktabs}
 \usepackage{longtable}
@@ -178,10 +178,10 @@ We use models that take into account both individual and group effects
 such as in the Gaussian-process player production basketball model or
 predicting individual soccer performance (Page, Barney, and McGuire
 2013; Egidi and Gabry 2018). Both of those models had success using
-hierarhcical Bayesian models, which we employ in our own models. More
+hierarchical Bayesian models, which we employ in our own models. More
 specifically, we model the players' expected points in a match based on
 the player's own characteristics, the court/tournament effects, and the
-oponent's ranking.
+opponent's ranking.
 
 For issue (2) the player analysis of Nadal, Federer, and Williams, we
 examine whether our model passes the ``common sense'' tests like how the
@@ -231,9 +231,8 @@ attributes, many of which are redundant. We focus on the following
 attributes for both the winner and loser of the match: games won, points
 won, retirement, break points faced, break points saved, aces, country
 of origin, and player attributes. Additionally, we take into account the
-number of sets in a match, the surface type, minutes played, and round
-of the tournament. A subset of the data is shown in Table
-\ref{tab:data}.
+number of sets in a match, the surface type, and round of the
+tournament. A subset of the data is shown in Table \ref{tab:data}.
 
 \rowcolors{2}{gray!6}{white}
 \begin{table}
@@ -265,11 +264,192 @@ available online.
 \hypertarget{sec:eda}{%
 \subsection{Early Data Analysis}\label{sec:eda}}
 
+\hypertarget{examining-the-distribution-of-points-earned}{%
+\subsubsection{Examining the distribution of points
+earned}\label{examining-the-distribution-of-points-earned}}
+
+We first examine the distribution of points earned per match. We find
+that the distribution is similar across tournament, with Wimbledon
+differing slightly from the other grand slams. As expected, there are
+more points earned in the WTA than the ATP due to the differing numbers
+of games played. Also unsurprisingly, the winners of the match tended to
+earn more points than the losers.
+
+\includegraphics{paper-tennis_files/figure-latex/unnamed-chunk-1-1.pdf}
+
+\hypertarget{home-court-advantage}{%
+\subsubsection{Home court advantage}\label{home-court-advantage}}
+
+It is commonly thought that there is a home court advantage in grand
+slam games (SOURCE). In our data we find this to be true (i.e.~French
+players win the French open more than French players win other slams).
+But, we also know that the home team is given preference for wild card
+bids (SOURCE) so potentially citizens of a particular country play in
+``their'' tournament more often than they play in other tournaments. We
+also find this to be true in our data for France, The United States, and
+Australia (i.e.~the proportion of French players in the French Open is
+greater than the proportion of French players in other slams).
+
+Therefore, we want to see how the proportion of wins for the home
+country changes across the different tournaments. If there was really a
+home court advantage, the proportion of French wins each round would be
+higher at the French Open than the Australian Open, the US Open, and
+Wimbledon. The same would be true for Australia and the US. But, we see
+that this isn't the case. After accounting for the number of players
+from each country, we don't find a home court advantage in the grand
+slam.
+
+\includegraphics{paper-tennis_files/figure-latex/unnamed-chunk-2-1.pdf}
+
+\hypertarget{spaniards-on-clay}{%
+\subsection{Spaniards on clay}\label{spaniards-on-clay}}
+
+It is also commonly thought that Spaniards play better on clay. We are
+interested in whether Spaniards win the French Open more than they win
+in other tournaments. It does appear that Spaniards are winning the
+French Open more than they are winning other tournaments. But, this
+result is not significant. In addition, the ranking of Spaniards in the
+French Open is, on average, higher than other tournaments, which may
+help explain this common misconception, although this result is not
+significant either.
+
+\includegraphics{paper-tennis_files/figure-latex/unnamed-chunk-3-1.pdf}
+
 \hypertarget{sec:methods}{%
 \section{Methods}\label{sec:methods}}
 
-\hypertarget{sec:results}{%
-\section{Results}\label{sec:results}}
+\hypertarget{examining-individual-players}{%
+\subsection{Examining individual
+players}\label{examining-individual-players}}
+
+\rowcolors{2}{gray!6}{white}
+\begin{table}
+
+\caption{\label{tab:table}\label{tab:three-gs-counts}Number of matches played for Nadal, Federer, and Williams from 2013-2017 at each of the grand slams.}
+\centering
+\begin{tabular}[t]{lrrr}
+\hiderowcolors
+\toprule
+Tournament & Nadal & Federer & Williams\\
+\midrule
+\showrowcolors
+Australian Open & 20 & 28 & 30\\
+French Open & 29 & 14 & 23\\
+US Open & 21 & 22 & 26\\
+Wimbledon & 11 & 29 & 21\\
+\rowcolor{lightgray}  \textbf{Total} & \textbf{81} & \textbf{93} & \textbf{100}\\
+\bottomrule
+\end{tabular}
+\end{table}
+\rowcolors{2}{white}{white}
+
+In Table \ref{tab:three-gs-counts}, we display the number of matches
+Nadal, Federer, and Williams have played from 2013-2017. Over that time
+span, Nadal won 6 grand slams, Federer won 1, Williams won 8. Despite
+this, Federer played more total matches in Nadal. All three players were
+absent for exactly three slams during this time period due to external
+factors (Nadal: (1 AO, 0 FO, 1 Wim, 1 USO), Federer: (0 AO, 2 FO, 0 Wim,
+1 USO), Serena: (0 AO, 1 FO, 1 Wim, 1 USO)). Not unexpectedly, Nadal has
+the most wins on clay (29), Federer has the most wins at Wimbledon (29)
+and Williams the most on hardcourt (30 at AO and 21 at USO). Despite
+having played more matches than Nadal, Federer only has 1 grand slam to
+show compared to Nadal's six, which indicates that Federer made it
+deeper into tournaments on average but had difficulties winning the
+championships. For the WTA, Williams had her second most successful
+five-year span at the grand slams over this time period, winning 8.
+
+We fit individual models for these three individuals (subsetting the
+data to their matches only), estimating the percent of points won in a
+match using stepwise regression. The lower model is the percent of
+points regressed on the opponent rank and indicator variables for court
+type with the FO as the reference variable. The upper model is the lower
+model with the additional variables of winner to unforced error ratio,
+average serve speed, percent aces, percent break points, percent net
+points won, and their interaction effects with court type. We do not
+display the full best fit models here, but they are available online.
+
+ADD CIS!!
+
+\hypertarget{nadal}{%
+\subsection{Nadal}\label{nadal}}
+
+Looking at Nadal individually, the model with the lowest AIC has
+positive coefficients opponent rank, percent of aces, and percent of
+break points won. It has negative coefficients for AO, USO, and Wim.
+compared to FO and for percent of net points won. There are no
+interaction effects in this model.
+
+The standardized residuals plot shown in Figure \ref{fig:individ-resids}
+(along with the other linear regression diagnostics plots not shown
+here) shows that the model is a good fit for predicting the percent of
+points won. For the significant variables (\(\alpha\) = 95\%), while
+adjusting for the other variables, we expect percent of points won to be
+\(0.034\) less at the AO and \(0.046\) less at Wim compared to the FO;
+to increase by \(1.5\times 10^{-4}\) for a one unit increase in opponent
+rank; a 0.0012\% increase for a .01 increase in percent of break points
+won; and to decrease by \(8.8\times 10^{-4}\) for a .01 increase in
+percent of net points won. As such, we see clear evidence Nadal performs
+better at the FO compared to the other grand slams.
+
+\hypertarget{federer}{%
+\subsection{Federer}\label{federer}}
+
+For Federer, the model with the lowest AIC has negative coefficients AO,
+FO, and USO. vs Wim., and W/UE, It has positive coefficients for
+opponent rank, percent of break points won, and all the interaction
+terms: court and W/UE.
+
+The standardized residuals plot shown in Figure \ref{fig:individ-resids}
+shows that the model is a fair fit for predicting the percent of points
+won, but almost seem to see two clusters of residuals splitting with
+predicted point percentage of about 0.63. For the significant variabless
+(\(\alpha\) = 95\%), while adjusting for the other variables, we expect
+percent of points won to be \(0.04\) less at AO compared to the Wim.;
+\(0.058\) less at FO compared to the Wim.; \(0.007\)\% less at USO
+compared to the Wim.; to decrease by \(0.022\) for a one unit increase
+in W/UE at AO, \(0.073\) for a one unit increase in W/UE at FO, and
+\(0.041\) for a one unit increase in W/UE at USO. It is clear that
+Federer performs best at Wimbledon.
+
+\hypertarget{williams}{%
+\subsection{Williams}\label{williams}}
+
+\begin{figure}
+\centering
+\includegraphics{paper-tennis_files/figure-latex/resid plots-1.pdf}
+\caption{\label{fig:individ-resids}Standardized residuals vs percent of
+points won best fit model from forward-backwards stepwise regression for
+Nadal's, Federer's, and William's, respectively.\}}
+\end{figure}
+
+For Williams, the model with the lowest AIC is the largest model of the
+three selected 22 coefficients. Since Williams only has 59 observations,
+we believe this model is overfitting and so caution against inference
+with this model. It should also be noted that no women's point by point
+data was recorded for 2015 so that year is excluded from this model. The
+coefficients are court, opponent rank, W/UE, average serve speed,
+percent aces, percent break points won, percent net points won, and
+interaction effects with court and W/UE, court and average service
+speed, court and percent aces, and court and break points won.
+
+The standardized residuals plot shown in Figure \ref{fig:individ-resids}
+shows that the model is a fair fit for predicting the percent of points
+won, but we tend to overestimate the percent of points won in comparison
+with Nadal. For the significant variables (\(\alpha\) = 95\%), while
+adjusting for the other variables, we expect percent of points won to
+increase by \(4.8\times 10^{-4}\) for a 1 unit increase in oponent rank;
+to increase by \(0.034\) for a one unit increase in W/UE at FO, to
+increase by \(0.092\)for a one unit increase in W/UE at USO, and to
+increase by \(0.0038\) for a one unit increase in W/UE at Wim. compared
+to AO; to increase by \(2\times 10^{-4}\) for a .01 increase in percent
+of aces at the French Open; and to increase by \(0.0024\) for a .01
+increase in percent of break points won at the French Open.
+
+For this, we do not see that Williams is dominant on the hard courts
+compared to the other courts. Rather, she has good results on all the
+courts. Her significant interaction effects show that if she focuses on
+acing her opponent and capitalizing on breakpoints, then she has a
+better chance at winning more points than at the Australian Open.
 
 \hypertarget{sec:discussion}{%
 \section{Discussion}\label{sec:discussion}}
