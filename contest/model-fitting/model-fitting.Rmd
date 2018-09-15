@@ -155,9 +155,6 @@ as.data.frame(ranef(ind_logistic_noioc, condVar = TRUE)) %>%
 
 Rank and opponent's rank clearly have the largest effect on predicting the winner. Looking at the individual effects for Serena, Nadal, and Federer; they actually fall near the average for all four grand slams. Including rank as an indicator (seeded/not-seeded) substantially decreases the fit of the model, even when individual effects are included. We now look at a similar model, but instead of using `win' as the outcome variable, we'll look at game statistics that may be more sensitive to court surface -- aces, winners, and net points won -- and see if individual differences are detectable. 
 
-
-
-
 ```{r}
 load("../../data/gs_partial_players.rda")
 gs_partial_players$atp = gs_partial_players$Tour == "atp"
