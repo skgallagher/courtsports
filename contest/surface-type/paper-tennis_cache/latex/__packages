@@ -12,3 +12,5 @@ knitr
 kableExtra
 courtsports
 bindrcpp
+gridExtra
+ggrepel
