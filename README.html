@@ -312,7 +312,10 @@ $(document).ready(function () {
 <div id="courtsports" class="section level1">
 <h1>courtsports</h1>
 <p>An <code>R</code> package to analyze tennis data and a reproducible workspace.</p>
-<p>#INSTRUCTIONS</p>
+<p>Authors: Shannon Gallagher, Amanda Luby, and Kayla Frisoli</p>
+</div>
+<div id="instructions" class="section level1">
+<h1>INSTRUCTIONS</h1>
 <div id="download-our-package" class="section level2">
 <h2>Download our package</h2>
 <pre class="{r}"><code>devtools::install_github(&quot;http://github.com/shannong19/courtsports&quot;)</code></pre>
@@ -334,26 +337,62 @@ $(document).ready(function () {
 <li>Open and view <code>&lt;my-file.pdf&gt;</code> which should appear in the directory of the downloaded file</li>
 </ol>
 </div>
+<div id="data-collection-and-transformation" class="section level2">
+<h2>Data Collection and Transformation</h2>
+<p>All data is freely available online from <a href="https://www.rstudio.com/">Jeff Sackmann’s data repositories</a>. In particular, we use <a href="https://github.com/skoval/deuce">S. Kovalchik’s <code>deuce</code> <code>R</code> package</a> to interface the repositories. From <code>deuce</code>, we use the following data sets:</p>
+</div>
+<div id="raw-data" class="section level2">
+<h2>Raw data</h2>
+<ol style="list-style-type: decimal">
+<li><code>data(atp_matches)</code> - Basic results of men’s ATP matches including winner, loser, opponent, country of origin, court, and more (See <code>help(atp_matches)</code>)</li>
+<li><code>data(wta_matches)</code> - Basic results of women’s WTA matches including winner, loser, opponent, country of origin, court, and more (See <code>help(wta_matches)</code>)</li>
+<li><code>data(gs_point_by_point)</code> Point by point data of men and women’s matches with results on number of winners, unforced errors, net points won, and more. This is not complete (See <code>help(gs_point_by_point)</code>)</li>
+</ol>
+</div>
+<div id="data-transformation" class="section level2">
+<h2>Data Transformation</h2>
+<p>We transform the raw data to use in our analysis. These complete transformation scripts may be found in the folder <code>data-raw/</code>. We then store the results of these transformations as <code>.rda</code> objects. These 4 primary transformation objects are available in our package for use:</p>
+<ol style="list-style-type: decimal">
+<li><code>data(gs)</code> - Combined men and women’s grand slam matches from 2013-2017</li>
+<li><code>data(gs_players)</code> - Transformation of <code>gs</code> to look at a single player at a time, instead of pairs of opponents</li>
+<li><code>data(gs_partial)</code> - Aggregated point by point data for the grand slams. It is not complete.</li>
+<li><code>data(gs_partial_players)</code> - Transformation of <code>gs_partial</code> to look at a single player.</li>
+</ol>
+</div>
+</div>
+<div id="analysis-and-results" class="section level1">
+<h1>Analysis and Results</h1>
+<p>We use packages from the <a href="https://www.tidyverse.org/"><code>tidyverse</code></a> to standarize our analysis process. These include <code>dplyr</code>, <code>stringr</code>, <code>ggplot2</code>, <code>tidyr</code>, and more. We hope that by using these, any user may follow our readable and succinct code.</p>
+<p>All plots are reproducible directly from the <code>.Rmd</code> document.</p>
+<div id="hierarchical-model" class="section level2">
+<h2>Hierarchical model</h2>
+<p>Our hierarchical model is computationally intensive for all possible implementations, it takes about ~1 hour to run. As such, we have provided the code in the <code>.Rmd</code> file but do not evaluate it. However, we have saved all intermediate steps as <code>.rda</code> objects accessible by the <code>data()</code> function so those interested can follow our analysis from beginning to end.</p>
+</div>
 <div id="troubleshooting" class="section level2">
 <h2>TROUBLESHOOTING</h2>
 <ol style="list-style-type: decimal">
-<li>Use the most recent version and packages in <code>R</code></li>
+<li><p>Use the most recent version and packages in <code>R</code></p></li>
 <li>Make sure you have the following <code>R</code> packages installed (regular CRAN installation unless otherwise specified)</li>
 </ol>
 <ul>
 <li><code>deuce</code> (<code>r install_github(&quot;skoval/deuce&quot;</code>)</li>
 <li><code>dplyr</code></li>
-<li><code>ggplot2</code></li>
 <li><code>forcats</code></li>
-<li><code>stringr</code></li>
-<li><code>knitr</code></li>
+<li><code>ggplot2</code></li>
+<li><code>ggrepel</code></li>
+<li><code>grid</code></li>
+<li><code>gridExtra</code></li>
 <li><code>kableExtra</code></li>
+<li><code>knitr</code></li>
+<li><code>MASS</code></li>
 <li><code>rmarkdown</code></li>
 <li><code>RStan</code> (See <a href="http://mc-stan.org/users/interfaces/rstan">mc-stan.org</a> for detailed instructions.)</li>
+<li><code>stringr</code></li>
 </ul>
 <ol start="3" style="list-style-type: decimal">
 <li><p>To compile the document as a .pdf file, the user must have <a href="https://rmarkdown.rstudio.com/pdf_document_format">LaTeX installed and perhaps other packages</a></p></li>
-<li><p>Regardless of the document knitting, the user may run the <code>R</code> chunks within the .Rmd file</p></li>
+<li><p>Regardless of the document knitting, the user may run the <code>R</code> chunks within the .Rmd file in conjunction with <a href="https://www.rstudio.com/">RStudio</a> or other interface.</p></li>
+<li><p>If none of this works, please feel free to leave a comment.</p></li>
 </ol>
 </div>
 </div>

@@ -46,7 +46,7 @@ We initially planned to use points won by an individual as our outcome variable,
 * `year`: Factor variable with a level for each year included in the dataset (2013-2017)
 * `atp`: Indicator that the match was played in the ATP league instead of the WTF league.
 
-We will use a multilevel logistic regression framework. This allows us to include fixed effects, which remain the same for each player, as well as include player-level effects. Since players appear multiple times in the data, the observations are not independent and including a player-level effect allows us to account for this dependence. It also provides a way to examine individual player effects and assess, for instance, whether Nadal is more likely to win at Wimbledon after accounting for other variables. We considered the following models:
+We will use a multilevel logistic regression framework. This allows us to include fixed effects, which remain the same for each player, as well as include player-level effects. Since players appear multiple times in the data, the observations are not independent and including a player-level effect allows us to account for this dependence. It also provides a way to examine individual player effects and assess, for instance, whether Federer is more likely to win at Wimbledon after accounting for other variables. We considered the following models:
 
 * No mixed effects
     + `nocourt_logistic`: $\text{logit}(\pi_i) = \beta X$, $X$ does not include `tournament`

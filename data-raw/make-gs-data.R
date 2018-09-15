@@ -31,9 +31,10 @@ devtools::use_data(gs, overwrite = TRUE)
 
 ## Make into player data
 gs_players <- matches_to_player_data(gs,
-                                     w_opp_vars = "loser_rank",
-                                     l_opp_vars = "winner_rank",
-                                     opp_var_names = "opponent_rank")
+                                     w_opp_vars = c("loser_rank"),
+                                     l_opp_vars = c("winner_rank"),
+                                     opp_var_names = c("opponent_rank")
+)
 
 devtools::use_data(gs_players, overwrite = TRUE)
 
