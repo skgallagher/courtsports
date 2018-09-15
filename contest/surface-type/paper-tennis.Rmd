@@ -623,6 +623,26 @@ For this, we do not see that Williams is dominant on the hard courts compared to
 
 # Discussion {#sec:discussion}
 
++ HIGH LEVEL
+  + in general point distribution seems to be the same, 
+  + at the high level there are some surface differences that we have evidence for but cannot be sure either way: spainiards, 
+  + there is no home court advantage 
+  + French Open seems most different of the tournaments
+  + country does not seem to have an effect but individual does with court
++ INTERMEDIATE LEVEL
+  + Aces, Winners, and UEs are all important
+  + Taller people have more aces
+  + Wimbledon seems to have more winners and fewer UEs
++ LOW LEVEL
+  + Hierarchical model doesnt show much effect for Nadal, Federer, and Williams
+  + Individual models predicting % points won does show Nadal good on clay, fed on grass, and williams more jack of all trades
+  + we have less info about higher ranked (worse) players -> we need more data to pick out these effects
+  
++ FUTURE WORK:
+  + closer look at point by point data
+  + include other masters tournaments
+  + pay more attention to year and players over time
+
 # References {#sec:refs}
 
 \footnotesize
