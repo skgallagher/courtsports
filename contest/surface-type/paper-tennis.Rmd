@@ -6,10 +6,9 @@ output:
     fig_caption: yes
     keep_tex: yes
     number_sections: yes
-    toc: true
 header-includes:
   - \usepackage{hyperref}
-abstract: "Tennis grand slams consist of the Australian Open, French Open, Wimbledon, and US Open, which are played on hard (Plexicushion), clay, grass, and hard (DecoTurf) courts, respectively.  The surface type may substantially impact ball speed, height, and spin as well as player speed and agility.  It is also believed that play style and practice habits may contribute to different results across surface types.  For example, Rafael Nadal is thought to be the best clay court player of all time whereas Roger Federer is particularly known for dominance at Wimbledon.  On the women's side, Serena Williams once struggled on clay courts but has seemingly transformed her style to perform better on clay courts, but has perhaps suffered on grass as a consequence.  In this analysis, we examine the result of the top 100 players in grand slams from 2013-2017 across the four different surfaces.  We create a hierarchical model with fixed and random effects to predict the number of points won in a match.  We take into consideration player-specific effects, nationality (which is thought to have an effect on play style), sex, ranking, ELO, and game statistics.   We assess the fit of our model using standard statistical techniques (e.g. MSE, AIC, BIC, residual diagnostics) in addition to `common knowledge' factors (for instance, Rafael Nadal should be indicated as a superior clay court player by the model).  We compare the results of top 100 players across grand slams to examine the effect of court surface. We also provide an in-depth analysis of Nadal, Federer, and S. Williams."
+abstract: "IDK writing is hard"
 bibliography: master.bib
 ---
 
@@ -17,7 +16,6 @@ bibliography: master.bib
 knitr::opts_chunk$set(echo = FALSE)
 knitr::opts_chunk$set(warning=FALSE)
 knitr::opts_chunk$set(message = FALSE)
-knitr::opts_chunk$set(cache = TRUE)
 library(deuce)
 library(dplyr)
 library(tidyr)
@@ -61,27 +59,67 @@ win_colors <- c("#336699", "#339966")
 ```
 
 
-# Introduction {#sec:iintro}
-Rafael Nadal is known as the "King of Clay" in tennis, having won 11 out of his current 17 grand slams titles at the French Open, which is played on a clay surface [@bbc2018].  In contrast, his rival Roger Federer has won his most grand slam titles (8 out of 20) at Wimbledon, which is played on grass.  On the women's side, Serena Williams, winner of 24 grand slam titles, has been dominant both on hard court (7 titles at the Australian Open and 6 at US Open) and grass (7 at Wimbledon).  This trend extends to other top players, who seem to have better results at some grand slams than others.  More broadly, it seems that country of origin has an interaction effect with court type.  For example, Spanish players seem to excel on clay courts and Americans have great success at Wimbledon despite grass courts not being of wide use in the USA.  It also worth questioning whether the US Open and Australian Open should be grouped together as hard courts despite having different surface compositions [@theage2007].  In this paper, we analyze the results of grand slam players from 2013-2017,  and we 
+```{r modelling, eval = FALSE}
+## HIERARCHICAL MODELLING
+## NOT RUN
+## WARNING: Takes about 1 HOUR
 
-1. Determine if and how court surface effects players by implementation of a series of nested hierarchical models
+gs_players$name_int = as.integer(as.factor(gs_players$name))
+gs_players$hand_fac = as.factor(gs_players$hand)
+gs_players$ioc_fac = as.factor(gs_players$ioc)
+gs_players$atp = gs_players$league == "ATP"
+gs_players$year_fac = as.factor(gs_players$year)
+gs_players$late_round = gs_players$round >= "R16"
+gs_players$seeded = gs_players$rank <= 32
+gs_players$opponent_seeded = gs_players$opponent_rank <= 32
 
-2. Examine how Nadal, Federer, and Williams' play differs by surface
+set.seed(091418)
+nocourt_logistic = glm(did_win ~ ioc_fac + late_round + log(rank) + log(opponent_rank) + year_fac + atp, data = gs_players, family = "binomial")
+base_logistic = glm(did_win ~ ioc_fac +  tournament + late_round + log(rank) + log(opponent_rank) + year_fac + atp, data = gs_players, family = "binomial")
+country_logistic = glmer(did_win ~ late_round + log(rank) + log(opponent_rank) + year_fac + atp + (0 + tournament |ioc_fac), data = gs_players, family = "binomial")
+ind_logistic = glmer(did_win ~  ioc_fac + late_round + log(rank) + log(opponent_rank) + year_fac + atp + (0 + tournament |name_int), data = gs_players, family = "binomial")
+ind_logistic_noioc = glmer(did_win ~ late_round + log(rank) + log(opponent_rank) + year_fac + atp + (0 + tournament |name_int), data = gs_players, family = "binomial")
+ind_int_logistic = glmer(did_win ~ late_round + log(rank) + log(opponent_rank) + year_fac + atp + tournament + (1|name_int), data = gs_players, family = "binomial")
+ind_year_logistic = glmer(did_win ~ late_round + log(rank) + log(opponent_rank) + atp + tournament + (0+year_fac|name_int), data = gs_players, family = "binomial")
+n_aces_mod = lmer(n_aces ~ late_round + log(rank) + log(opponent_rank) + year_fac + atp + (0 + tournament |name), data = gs_partial_players)
+n_winners_mod = lmer(n_winners ~ late_round + log(rank) + log(opponent_rank) + year_fac + atp + (0 + tournament |name), data = gs_partial_players)
+n_net_mod = lmer(n_netpt_w ~ late_round + log(rank) + log(opponent_rank) + year_fac + atp + (0 + tournament |name), data = gs_partial_players)
+n_ue_mod = lmer(n_ue ~ late_round + log(rank) + log(opponent_rank) + year_fac + atp + (0 + tournament |name), data = gs_partial_players)
 
-3. Assess whether we can group the two hard court surfaces together.
 
-As to issue (1) quantifying the effect of court surface on players, there has not been much written about with regards to tennis.  There are materials available in the literature for forecasting the outcome of tennis matches [@klaassen2003; @newton2005; @mchale2011; @kovalchik2016]] or for assessing whether points within a match are independent and identically distributed [@klaassen2001].   [@knottenbelt2012] do take into account surface in their model but do not compare the results of one surface to another.  Other sports analyses do take into account surface type such as grass vs. turf in soccer and football.  Results from these studies show that surface type does have an effect on the game, either directly or indirectly [@andersson2008; @gains2010;].
-
-We use models that take into account both individual and group effects such as in the Gaussian-process player production basketball model or predicting individual soccer performance  [@page2013; @egidi2018].  Both of those models had success using hierarchical Bayesian models, which we employ in our own models. More specifically, we model the players' expected points in a match based on the player's own characteristics, the court/tournament effects, and the opponent's ranking.
+```
 
 
-For issue (2) the player analysis of Nadal, Federer, and Williams, we examine whether our model passes the "common sense" tests  like how the models in [@thomas2013] show that commonly well known hockey players also have high status in the model.  We also examine whether these players do have surface apparent effects. Few academic papers have been written about Nadal, Federer, or Williams.  One paper studies Federer's odds of winning when Nadal suddenly withdrew from Wimbledon showed that Federer was too heavily favored by bookmakers [@leitner2009].  One analysis of Williams shows how she has gotten better with age, even past the point when other greats began to decline, but the study does not look at surface type [@five2015].
+# Introduction {#sec:intro}
 
-Finally, for issue (3), we use clustering methods in order to determine which court surface types are more similar to one another.
+Rafael Nadal is known as the "King of Clay" in tennis, having won 11 out of his current 17 grand slams titles at the French Open (FO), which is played on a clay surface [@bbc2018].  In contrast, his rival Roger Federer has won his most grand slam titles (8 out of 20) at Wimbledon (Wim.), which is played on grass.  On the women's side, Serena Williams, winner of 24 grand slam titles, has been dominant both on hard court (7 titles at the Australian Open (AO) and 6 at US Open (USO)) and grass (7 at Wim.).  These three players have different playstyles and origins, and they are legends in the sport of tennis.  However, their success at grand slams seems to differ among the tournaments, which leads to question why that may be the case.
+
+The four grand slams (AO, FO, Wim., USO) are played in different cities (Melbourne, Paris, London, New York City) at different starting dates (January, May, June, August) over the course of two weeks with 7 total rounds and 128 players.  As a feature unique to tennis, all four slams are played on different surfaces (Plexicushion hardcourt, clay, grass, DecoTurf hardcourt).  It is often thought that top players achieve better results on some surfaces than others.  For example, there is the "home court advantage:" do players from the country of the grand slam tournament perform better than at other grand slams?  Recently, Spanish players, led by Nadal, seem to have dominated the clay court scene [@tp2018] making it seem like players of a certain country may perform better on some surfaces than others.
+
+ In this paper, we analyze the results of grand slam players from 2013-2017, and we analyze the surface effect on players at the four grand slams, first broadly at a high level and then narrowing down to player effects.  More specifically,
+
+1. Determine if results in terms of wins/losses and point distribution differ across the four surfaces
+
+2. Examine more fine grained attributes such as winners, aces, and unforced errors across the four surfaces
+
+3. Assess how individuals differ across the four surfaces, with special focus on Nadal, Federer, and Williams.
+
+As to issue (1) quantifying the high-level effect of court surface on players, there has not been much written about with regards to tennis.  There are materials available in the literature for forecasting the outcome of tennis matches [@klaassen2003; @newton2005; @mchale2011; @kovalchik2016]] or for assessing whether points within a match are independent and identically distributed [@klaassen2001].   [@knottenbelt2012] do take into account surface in their model but do not compare the results of one surface to another and [@pollard2007] concludes that players have more injuries on grass comparead to other courts.  Other sports analyses do take into account surface type such as grass vs. turf in soccer and football.  Results from these studies show that surface type does have an effect on the game, either directly or indirectly [@andersson2008; @gains2010;].
+
+For issue (2) we examine the match attributes more unique to tennis such as winners (when a player hits a shot that the opponent is unable to return), aces (a serve an opponent is unable to return), and unforced errors (UE) (when a player makes a simple mistake resulting in a loss of the point).  Specifically, serving is thought to be of greater importance at Wimbledon since the ball travels faster on grass.  In general, players hope to maximize the winner to UE ratio (W/UE), which may lead to playing more aggressively on faster courts and more conservatively on slower courts such as clay [@theage2007].
+
+
+Finally, for issue (3) the player analyses, we take two approaches.  On one hand, we use a hierarchical model with fixed and random effects taking into account player and tournament attributes using the complete data set and to fairly compare players to one another.  This allows us to leverage tournament information to players without many matches played and to help account for noise.  On the other hand, since Nadal, Federer, and Williams are extremely popular and have had much success in the 2013-2017 time range, we have enough data points with feature attributes to examine the effects individually.  In both cases, we examine whether our models pass "common sense" tests like how the models in [@thomas2013] show that commonly well known hockey players also have high status in the model.  We also examine whether these players do have surface apparent effects.
+
+We use models that take into account both individual and group effects such as in the Gaussian-process player production basketball model or predicting individual soccer performance  [@page2013; @egidi2018].  For our hierarchical model across all players, we model whether a player or lost a match based on player attributes along with opponent rank.  For the individual models, we instead model percent of points won which can better show how dominant a player is in a match.  For model selection, we use AIC to compare models from one another [@wasserman2004].  For the individual models, we do not split the data into training and test sets due to the relatively low number of observations for the individuals.  However, when the data becomes available, we would like to test these models on the 2018 grand slam results.
+
+
+Few academic papers have been written about Nadal, Federer, or Williams.  One paper studies Federer's odds of winning when Nadal suddenly withdrew from Wimbledon and shows that Federer was too heavily favored by bookmakers [@leitner2009].  One analysis of Williams shows how she has gotten better with age, even past the point when other greats began to decline, but the study does not look at surface type [@five2015].
+
 
 Readers may object that we are looking at differences between grand slams, which each have their own time period, weather conditions, play time conditions, and "home court effects" instead of differences in surfaces alone.  However, (1) grand slam data is the most readily available and most complete which makes it the best choice at the moment for modelling, (2) we adjust for these confounders where we can, and (3) analyzing the difference in the grand slams is still useful as they are considered to be the most prestigious events in tennis.
 
-The rest of this paper is organized as follows. In [Section Data](#sec:data) we describe our grand slam tennis data.  In [Section Early Data Analysis](#sec:eda) we examine the data at a high level and use clustering whether to determine how the courts differ from one another.  In [Section Methods](#sec:methods) we describe our hierarchical models we use to determine difference in court surfaces.  In [Section Results](#sec:results) we describe the results of our modelling and also examine the play of Nadal, Federer, and Williams.  Finally in [Section Discussion](#discussion), we discuss future work and extensions or our model. 
+The rest of this paper is organized as follows. In [Section Data](#sec:data) we describe our grand slam tennis data.  In [Section Early Data Analysis](#sec:eda) we examine the data at a high level and use clustering whether to determine how the courts differ from one another.  In [Section Methods](#sec:methods) we describe our models with (1) complete data with few features and (2) partial data with more features.  In [Section Results](#sec:results) we describe the results of our modelling and also examine the play of Nadal, Federer, and Williams.  Finally in [Section Discussion](#discussion), we discuss future work and extensions or our models. 
 
 
 
@@ -89,7 +127,7 @@ The rest of this paper is organized as follows. In [Section Data](#sec:data) we 
 
 ## Data {#sec:data}
 
-The primary data consists of `r nrow(gs)` matches split evenly over the four grand slams and the two leagues: ATP (men's) and WTA (women's).  Each match has `r ncol(gs)` attributes, many of which are redundant.  We focus on the following attributes for both the winner and loser of the match: games won, points won, retirement, break points faced, break points saved, aces, country of origin, and player attributes.  Additionally, we take into account the number of sets in a match, the surface type, and round of the tournament.  A subset of the data is shown in Table \ref{tab:data}.
+The primary data consists of `r nrow(gs)` matches split evenly over the four grand slams and the two leagues: ATP (men's) and WTA (women's).  There are 5080 observations in this data set, which corresponds to a complete data set for the period of 2013-2017 for four grand slams, two, leagues, and 7 rounds.  Each match has `r ncol(gs)` attributes, many of which are redundant.  We focus on the following attributes for both the winner and loser of the match: games won, points won, retirement, break points faced, break points saved, aces, country of origin, and player attributes.  Additionally, we take into account the number of sets in a match, the surface type, and round of the tournament.  A subset of the data is shown in Table \ref{tab:data}.
 
 
 
@@ -101,13 +139,13 @@ s_id <- which(gs$winner_name %in% c("Serena Williams", "Roger Federer", "Rafael 
 cols <- c("winner_name", "tourney_name", "year", "winner_ioc", "w_pointswon", "winner_rank", "l_pointswon", "loser_rank")
 knitr::kable(gs[c(w_id, f_id, n_id), cols], format = "latex",
              row.names = FALSE, col.names = c("Winner", "Tournament", "Year", "W. IOC", "W. Points",  "W. Rank", "L. Points", "L. Rank"),
-             caption = "\\label{tab:data}Example of the grand slam data.  It includes winner and loser attributes, match attributes, and tournament attributes.  Not all attributes are shown here.",
+             caption = "\\label{tab:data}Example of the complete grand slam data.  It includes winner and loser attributes, match attributes, and tournament attributes.  Not all attributes are shown here.",
              booktabs = TRUE) %>% kable_styling(latex_options = "striped", "hold_position")
 ```
 
-The secondary data point by point data for grand slam matches.  In this data set, each row is a point in a match with details on who won the point, whether a player had a forced or unforced error, winner, ace, or net point win, and serve speed.  There is also tournament info such as court, year, and time start.  Additional attributes include rally length, winner and final score of the match, retirement, and minutes played.  However, these additional attributes are only available for about 1/10 of the data.  
+The secondary data is partial point by point data for grand slam matches.  In this data set, each row is a point in a match with details on who won the point, whether a player had a forced or unforced error, winner, ace, or net point win, and serve speed.  There is also tournament info such as surface, year, and time start.  Additional attributes include rally length, winner and final score of the match, retirement, and minutes played.  However, these additional attributes are only available for about 1/8 of the data.  
 
-We aggregate the point by point data into match data, summing the total number of errors, winners, aces, net points, and taking the average service speed for each player in the match.  We then join the point by point match data with the grand slam data to find the score of the match.  We do this by matching on tournament, year, player one, and player two.  This final data set consists of 3066 observations (compared to the 5080 in the original grand slams).  The median rank of the winners for the original data is `r median(gs$winner_rank, na.rm = TRUE)` and the median rank for the winners of the partial data is `r median(gs_partial$winner_rank)`.  The same trend is true for the loser rank.  This means that it is more likely for better players to have court by court data, which may effect our analysis.  Additionally, we found that no women's point by point data was recorded for 2015.
+We aggregate the partial point by point data into partial match data, summing the total number of errors, winners, aces, net points, and taking the average service speed for each player in the match.  We then join the partial match data with the complete data to find the score and outcome of the match.  We do this by joining the features of tournament, year, player one, and player two.  This final data set consists of `r nrow(gs_pbp)` observations (compared to the 5080 in the original grand slams).  The median rank of the winners for the original data is `r median(gs$winner_rank, na.rm = TRUE)`, and the median rank for the winners of the partial data is `r median(gs_partial$winner_rank)`.  The same trend is true for the loser rank.  This means that it is more likely for better players to have court by court data, which may effects our analysis for models when using this more detailed yet partial data.  Additionally, we found that no women's point by point data was recorded for 2015.
 
 All data is obtained from Jeff Sackmann's open website via the `R` package `deuce` [@sackmann2018; @deuce2017].  All steps of our analysis from collection to dissemination are freely available online.
 
@@ -465,8 +503,7 @@ Rank and opponent's rank clearly have the largest effect on predicting the winne
 (some plots that show a) Serena/Federer are stronger servers, b) Federer makes fewer unforced errors at Wimbledon, c) something about Nadal)
 
 
-## Examining individual players
-
+## Modelling players individually
 
 ```{r table, fig.pos = 'H'}
 data(gs_partial_players)
@@ -490,7 +527,11 @@ knitr::kable(tab, format = "latex",
 
 In Table \ref{tab:three-gs-counts}, we display the number of matches Nadal, Federer, and Williams have played from 2013-2017.  Over that time span, Nadal won 6 grand slams, Federer won 1, Williams won 8.  Despite this, Federer played more total matches in Nadal.  All three players were absent for exactly three slams during this time period due to external factors (Nadal: (1 AO, 0 FO, 1 Wim, 1 USO), Federer: (0 AO, 2 FO, 0 Wim, 1 USO), Serena: (0 AO, 1 FO, 1 Wim, 1 USO)).  Not unexpectedly, Nadal has the most wins on clay (`r tab[2, 2]`), Federer has the most wins at Wimbledon (`r tab[4, 3]`) and Williams the most on hardcourt (`r tab[1, 4]` at AO and `r tab[4, 4]` at USO).  Despite having played more matches than Nadal, Federer only has 1 grand slam to show compared to Nadal's six, which indicates that Federer made it deeper into tournaments on average but had difficulties winning the championships.  For the WTA, Williams had her second most successful five-year span at the grand slams over this time period, winning 8.
 
-We fit individual linear models for these three individuals (subsetting the data to their matches only), estimating the percent of points won in a match using stepwise regression.  The lower model is the  percent of points regressed on the opponent rank and indicator variables for court type with the FO as the reference variable.  The upper model is the lower model with the additional variables of winner to unforced error ratio (W/UE), average serve speed, percent aces, percent break points, percent net points won, and their interaction effects with court type.  We do not display the full best fit models here, but they are available online.  We do report the effects ($\pm 2 \cdot$ Std. Err.) of significant variables and their interaction terms, adjusting for the other covariates.  Since we postulated that Nadal is best on clay, Federer on grass, and Williams on hard court, specificically, AO, we use the FO, Wim., and AO, respectively, as the reference variable in the model.  For Nadal and Federer we use forward-backwards stepwise regression, using AIC as the criterion, beginning with the full model.  For Williams, we also use forwards-backwards stepwise regression but begin at the low model since she has more missing data.
+We fit individual linear models for these three individuals (subsetting the partial data to their matches only), estimating the percent of points won in a match using forward-backwards stepwise regression.  The lower model is the  percent of points regressed on the opponent rank and indicator variables for surface with one court as the reference variable (in the below equation, the reference surface as FO),
+$$
+E[Y_{\% pts. won}|X] = \beta_0 + \beta_1 X_{opp. rank} + \beta_{2, AO}\mathcal{I}(X_{sur.} = AO)  + \beta_{2, Wim.}\mathcal{I}(X_{sur.} = Wim.) + \beta_{2, USO}\mathcal{I}(X_{sur.} = USO)  .
+$$  
+The upper model is the lower model with the additional variables of winner to unforced error ratio (W/UE), average serve speed, percent aces, percent break points, percent net points won, and their interaction effects with court type.  We do not display the full best fit models here, but they are available online.  We do report the effects ($\pm 2 \cdot$ Std. Err.) of significant variables and their interaction terms, adjusting for the other covariates.  Since we postulated that Nadal is best on clay, Federer on grass, and Williams on hard court, specificically, AO, we use the FO, Wim., and AO, respectively, as the reference variable in the model.  For Nadal and Federer we use forward-backwards stepwise regression, using AIC as the criterion, beginning with the full model.  For Williams, we also use forwards-backwards stepwise regression but begin at the low model since she has more missing data.
 
 
 ## Nadal: King of Clay: confirmed
@@ -514,13 +555,13 @@ cov_n <- vcov(step_model_n)
 ```
 
 
-Looking at Nadal individually, the model with the lowest AIC has positive coefficients opponent rank, percent of aces, and percent of break points won.  It has negative coefficients for AO, USO, and Wim. compared to FO and for percent of net points won.  There are no interaction effects in this model.
+Looking at Nadal individually, the model with the lowest AIC has positive coefficients for opponent rank, percent of aces, and percent of break points won.  It has negative coefficients for AO, USO, and Wim. compared to FO and for percent of net points won.  There are no interaction effects in this model.
 
 
 The standardized residuals plot shown in Figure \ref{fig:individ-resids} (along with the other linear regression diagnostics plots not shown here) shows that the model is a good fit for predicting the percent of points won.  For the significant variables ($\alpha$ = 95\%), while adjusting for the other variables, we expect percent of points won to be $`r signif(abs(coefs_n[2]), 2)` \pm `r signif(2 * sqrt(cov_n[2,2]), 2)`$ less at the AO and $`r signif(abs(coefs_n[4]), 2)` \pm `r signif(2 * sqrt(cov_n[4,4]), 2)`$ less at Wim compared to the FO; to increase by $`r signif(abs(coefs_n[5]), 2)`\pm `r signif(2 * sqrt(cov_n[5,5]), 2)`$ for a one unit increase in opponent rank; a $`r .01 * signif(abs(coefs_n[7]), 2)`\pm `r signif(.02 * sqrt(cov_n[7,7]), 2)`$ increase for a .01 increase in percent of break points won; and to decrease by $`r .01 * signif(abs(coefs_n[8]), 2)` \pm `r signif(.02 * sqrt(cov_n[8,8]), 2)`$ for a .01 increase in percent of net points won.  As such, we see clear evidence Nadal performs better at the FO compared to the other grand slams.
 
 
-## Federer: Wimbledon extraordinaire: debunked
+## Federer: Wimbledon extraordinaire: confirmed
 
 ```{r federer-model}
 
@@ -539,7 +580,7 @@ cov_f <- vcov(step_model_f)
 ```
 
 
-For Federer, the model with the lowest AIC has negative coefficients AO, FO, and USO. vs Wim., and W/UE,  It has positive coefficients for opponent rank, percent of break points won, and all the interaction terms: court and W/UE.
+For Federer, the model with the lowest AIC has negative coefficients for AO, FO, and USO. vs Wim., and W/UE,  It has positive coefficients for opponent rank, percent of break points won, and all the interaction terms: court and W/UE.
 
 The standardized residuals plot shown in Figure \ref{fig:individ-resids}  shows that the model is a fairly good fit for predicting the percent of points won, but almost seem to see two clusters of residuals splitting with predicted point percentage of about 0.63.  For the significant variables ($\alpha$ = 95\%), while adjusting for the other variables, we expect percent of points won to be $`r signif(abs(coefs_f[2] + coefs_f[8]), 2)` \pm `r signif(2 * sqrt(cov_f[2,2] + cov_f[8,8] + 2 * cov_f[2,8]), 2)`$ less at AO compared to the Wim.; $`r signif(abs(coefs_f[3] + coefs_f[9]), 2)`\pm `r signif(2 * sqrt(cov_f[3,3] + cov_f[9,9] + 2 * cov_f[3,9]), 2)`$ less at FO compared to the Wim.; $`r signif(abs(coefs_f[4] + coefs_f[9]), 2)`\pm `r signif(2 * sqrt(cov_f[4,4] + cov_f[9,9] + 2 * cov_f[4,9]), 2)`$ less at USO compared to the Wim.;  to decrease by $`r signif(abs(coefs_f[6] + coefs_f[8]) , 2)` \pm `r signif(2 * sqrt(cov_f[6,6] + cov_f[8,8] + 2 * cov_f[6,8]), 2)`$ for a one unit increase in W/UE at AO, $`r signif(abs(coefs_f[6] + coefs_f[9]) , 2)` \pm `r signif(2 * sqrt(cov_f[6,6] + cov_f[9,9] + 2 * cov_f[6,9]), 2)`$ for a one unit increase in W/UE at FO, and $`r signif(abs(coefs_f[6] + coefs_f[10]) , 2)` \pm `r signif(2 * sqrt(cov_f[6,6] + cov_f[10,10] + 2 * cov_f[6,10]), 2)`$ for a one unit increase in W/UE at USO.  This is strong evidence that Federer performs best at Wimbledon but possibly does better at the USO, depending on his W/UE ratio.
 
@@ -573,12 +614,12 @@ grid.arrange(gn, gf, gw, ncol = 3,
 
 ```
 
-For Williams, the model with the lowest AIC is the largest model of the three selected 22 coefficients.  Since Williams only has 59 observations, we believe this model is overfitting and so caution against inference with this model.  It should also be noted that no women's point by point data was recorded for 2015 so that year is excluded from this model.  The coefficients are court, opponent rank, W/UE, average serve speed, percent aces, percent break points won, percent net points won, and interaction effects with court and W/UE, court and average service speed, court and percent aces, and court and break points won.
+For Williams, the model with the lowest AIC selected 22 coefficients, which makes it the largest model of the three.  Since Williams only has 59 observations, we believe this model is overfitting and so caution the reader to be wary of any inference from this model.  It should also be noted that no women's point by point data was recorded for 2015 (in which she won three grand slams) so that year is excluded from this model.  The coefficients are surface, opponent rank, W/UE, average serve speed, percent aces, percent break points won, percent net points won, and interaction effects with court and W/UE, court and average service speed, court and percent aces, and court and break points won.
 
-The standardized residuals plot shown in Figure \ref{fig:individ-resids}  shows that the model is a fair fit for predicting the percent of points won, but we tend to overestimate the percent of points won in comparison with Nadal.   For the significant variables ($\alpha$ = 95$\%$), while adjusting for the other variables, we expect percent of points won to increase by $`r signif(abs(coefs_w[5]), 2)` \pm `r signif(2 * sqrt(cov_w[5,5]), 2)`$ for a 1 unit increase in oponent rank; to increase by $`r signif(abs(coefs_w[6] + coefs_w[11]) , 2)` \pm `r signif(2 * sqrt(cov_w[6,6] + cov_w[11,11] + 2 * cov_w[6,11]), 2)`$ for a one unit increase in W/UE at FO, to increase by  $`r signif(abs(coefs_w[6] + coefs_w[12]) , 2)` \pm `r signif(2 * sqrt(cov_w[6,6] + cov_w[12,12] + 2 * cov_w[6,12]), 2)`$ for a one unit increase in W/UE at USO, and to increase by  $`r signif(abs(coefs_w[6] + coefs_w[13]) , 2) `\pm `r signif(2 * sqrt(cov_w[6,6] + cov_w[13,13] + 2 * cov_w[6,13]), 2)`$ for a one unit increase in W/UE at Wim. compared to AO; to increase by  $`r signif(.01 * abs(coefs_w[8] + coefs_w[17]) , 2)`\pm `r signif(.02 * sqrt(cov_w[8,8] + cov_w[17,17] + 2 * cov_w[17,8]), 2)`$ for a .01 increase in percent of aces at the French Open; and to increase by $`r signif(.01 * abs(coefs_w[9] + coefs_w[20]) , 2)` \pm `r signif(.02 * sqrt(cov_w[9,9] + cov_w[20,20] + 2 * cov_w[20,9]), 2)`$ for a .01 increase in percent of break points won at the French Open.
+The standardized residuals plot shown in Figure \ref{fig:individ-resids}  shows that the model is a fair fit for predicting the percent of points won, but we tend to overestimate the percent of points won in comparison with Nadal's model.   For the significant variables ($\alpha$ = 95$\%$), while adjusting for the other variables, we expect percent of points won to increase by $`r signif(abs(coefs_w[5]), 2)` \pm `r signif(2 * sqrt(cov_w[5,5]), 2)`$ for a 1 unit increase in oponent rank; to increase by $`r signif(abs(coefs_w[6] + coefs_w[11]) , 2)` \pm `r signif(2 * sqrt(cov_w[6,6] + cov_w[11,11] + 2 * cov_w[6,11]), 2)`$ for a one unit increase in W/UE at FO, to increase by  $`r signif(abs(coefs_w[6] + coefs_w[12]) , 2)` \pm `r signif(2 * sqrt(cov_w[6,6] + cov_w[12,12] + 2 * cov_w[6,12]), 2)`$ for a one unit increase in W/UE at USO, and to increase by  $`r signif(abs(coefs_w[6] + coefs_w[13]) , 2) `\pm `r signif(2 * sqrt(cov_w[6,6] + cov_w[13,13] + 2 * cov_w[6,13]), 2)`$ for a one unit increase in W/UE at Wim. compared to AO; to increase by  $`r signif(.01 * abs(coefs_w[8] + coefs_w[17]) , 2)`\pm `r signif(.02 * sqrt(cov_w[8,8] + cov_w[17,17] + 2 * cov_w[17,8]), 2)`$ for a .01 increase in percent of aces at the French Open; and to increase by $`r signif(.01 * abs(coefs_w[9] + coefs_w[20]) , 2)` \pm `r signif(.02 * sqrt(cov_w[9,9] + cov_w[20,20] + 2 * cov_w[20,9]), 2)`$ for a .01 increase in percent of break points won at the French Open.
 
 
-For this, we do not see that Williams is dominant on the hard courts compared to the other courts.  Rather, she has good results on all the courts.  Her significant interaction effects show that if she focuses on acing her opponent and capitalizing on breakpoints, then she has a better chance at winning more points than at the Australian Open.
+For this, we do not see that Williams is dominant on the hard courts compared to the other courts.  Rather, she has great results on all the courts and has the titles to prove it.  Her significant interaction effects show that if she focuses on acing her opponent and capitalizing on breakpoints, then she has a better chance at winning more points at the French Open than at the Australian Open.
 
 # Discussion {#sec:discussion}
 
