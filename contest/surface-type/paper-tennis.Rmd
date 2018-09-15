@@ -346,8 +346,7 @@ We fit individual models for these three individuals (subsetting the data to the
 
 ADD CIS!!
 
-## Nadal
-
+### Nadal
 
 
 ```{r nadal-model}
@@ -371,7 +370,7 @@ Looking at Nadal individually, the model with the lowest AIC has positive coeffi
 
 The standardized residuals plot shown in Figure \ref{fig:individ-resids} (along with the other linear regression diagnostics plots not shown here) shows that the model is a good fit for predicting the percent of points won.  For the significant variables ($\alpha$ = 95\%), while adjusting for the other variables, we expect percent of points won to be $`r signif(abs(coefs_n[2]), 2)`$ less at the AO and $`r signif(abs(coefs_n[4]), 2)`$ less at Wim compared to the FO; to increase by $`r signif(abs(coefs_n[5]), 2)`$ for a one unit increase in opponent rank; a `r .01 * signif(abs(coefs_n[7]), 2)`\% increase for a .01 increase in percent of break points won; and to decrease by $`r .01 * signif(abs(coefs_n[8]), 2)`$ for a .01 increase in percent of net points won.  As such, we see clear evidence Nadal performs better at the FO compared to the other grand slams.
 
-## Federer
+### Federer
 ```{r federer-model}
 
 step_model_f <- model_individual(player_name = "Roger Federer", data = gs_partial_players, ref = "Wimbledon")
@@ -391,7 +390,7 @@ For Federer, the model with the lowest AIC has negative coefficients AO, FO, and
 
 The standardized residuals plot shown in Figure \ref{fig:individ-resids}  shows that the model is a fair fit for predicting the percent of points won, but almost seem to see two clusters of residuals splitting with predicted point percentage of about 0.63.  For the significant variabless ($\alpha$ = 95\%), while adjusting for the other variables, we expect percent of points won to be $`r signif(abs(coefs_f[2] + coefs_f[8]), 2)`$ less at AO compared to the Wim.; $`r signif(abs(coefs_f[3] + coefs_f[9]), 2)`$ less at FO compared to the Wim.; $`r signif(abs(coefs_f[4] + coefs_f[9]), 2)`$\% less at USO compared to the Wim.;  to decrease by $`r signif(abs(coefs_f[6] + coefs_f[8]) , 2)`$ for a one unit increase in W/UE at AO, $`r signif(abs(coefs_f[6] + coefs_f[9]) , 2)`$ for a one unit increase in W/UE at FO, and $`r signif(abs(coefs_f[6] + coefs_f[10]) , 2)`$ for a one unit increase in W/UE at USO.  It is clear that Federer performs best at Wimbledon.
 
-## Williams
+### Williams
 ```{r williams-model}
 
 step_model_w <- model_individual(player_name = "Serena Williams", data = gs_partial_players,
@@ -422,6 +421,32 @@ For Williams, the model with the lowest AIC is the largest model of the three se
 The standardized residuals plot shown in Figure \ref{fig:individ-resids}  shows that the model is a fair fit for predicting the percent of points won, but we tend to overestimate the percent of points won in comparison with Nadal.   For the significant variables ($\alpha$ = 95\%), while adjusting for the other variables, we expect percent of points won to increase by $`r signif(abs(coefs_w[5]), 2)`$ for a 1 unit increase in oponent rank; to increase by $`r signif(abs(coefs_w[6] + coefs_w[11]) , 2)`$ for a one unit increase in W/UE at FO, to increase by  $`r signif(abs(coefs_w[6] + coefs_w[12]) , 2)`$for a one unit increase in W/UE at USO, and to increase by  $`r signif(abs(coefs_w[6] + coefs_w[13]) , 2)`$ for a one unit increase in W/UE at Wim. compared to AO; to increase by  $`r signif(.01 * abs(coefs_w[8] + coefs_w[17]) , 2)`$ for a .01 increase in percent of aces at the French Open; and to increase by $`r signif(.01 * abs(coefs_w[9] + coefs_w[20]) , 2)`$ for a .01 increase in percent of break points won at the French Open.
 
 For this, we do not see that Williams is dominant on the hard courts compared to the other courts.  Rather, she has good results on all the courts.  Her significant interaction effects show that if she focuses on acing her opponent and capitalizing on breakpoints, then she has a better chance at winning more points than at the Australian Open.
+
+## Mixed-effects models for all grand slams
+
+### Logistic regression for wins
+
+We will use a multilevel logistic regression framework. This allows us to include fixed effects, which remain the same for each player, as well as include player-level effects. Since players appear multiple times in the data, the observations are not independent and including a player-level effect allows us to account for this dependence. It also provides a way to examine individual player effects and assess, for instance, whether Federer is more likely to win at Wimbledon after accounting for other variables.
+
+We initially planned to use points won by an individual as our outcome variable, but found that it may not be an ideal measure of player performance. For instance, players may score few points in a match due to a poor performance, but they may also score few (relative) points if they win a short match. Modeling the number of points won is also complicated by the difference between length of matches for men (best of 5 sets) and women (best of 3 sets). For these reasons, we chose to model whether a player won the match, with the following predictors:
+
+* `ioc_fac`: Country that the player represents
+* `tournament`: Which Grand Slam the match was played at
+* `late_round`: Indicator for whether the match occured in Round of 16 or later
+* `rank`: Rank of player at the time of the match
+    + Included on log scale 
+* `opponent_rank`: Rank of opponent at the time of the match
+    + Included on log scale
+* `year`: Factor variable with a level for each year included in the dataset (2013-2017)
+* `atp`: Indicator that the match was played in the ATP league instead of the WTF league.
+
+(short discussion of models fit, show plots for final model)
+
+### Linear regression for other stats
+
+Rank and opponent's rank clearly have the largest effect on predicting the winner. Looking at the individual effects for Serena, Nadal, and Federer; they actually fall near the average for all four grand slams. Including rank as an indicator (seeded/not-seeded) substantially decreases the fit of the model, even when individual effects are included. We now look at a similar model, but instead of using `win' as the outcome variable, we'll look at game statistics that may be more sensitive to court surface -- aces, winners, and net points won -- and see if individual differences are detectable. 
+
+(some plots that show a) Serena/Federer are stronger servers, b) Federer makes fewer unforced errors at Wimbledon, c) something about Nadal)
 
 # Discussion {#sec:discussion}
 
