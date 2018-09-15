@@ -390,42 +390,16 @@ grid.arrange(p_atp, p_wta, nrow=2, heights = c(.46, .54),
 
 # Methods {#sec:methods}
 
-## Mixed-effects models for all grand slams
+## Mixed-effects models
 
 We use a mixed-effects modeling approach to examine the grand slam results from all players from 2013-2017. This allows us to include fixed effects, which remain the same for each player, as well as include player-level effects. Since players appear multiple times in the data, the observations are not independent and including a player-level effect allows us to account for this dependence. It also provides a way to examine individual player effects.
 
-### Logistic regression for wins
+### Modeling wins with logistic regression
 
-We initially planned to use points won by an individual as our outcome variable, but found that it may not be an ideal measure of player performance. For instance, players may score few points in a match due to a poor performance, but they may also score few (relative) points if they win a short match. Modeling the number of points won is also complicated by the difference between length of matches for men (best of 5 sets) and women (best of 3 sets). For these reasons, we chose to model whether a player won the match using a mixed-effects logistic regression approach, with the following predictors:
+We initially planned to use points won by an individual as our outcome variable, but found that it may not be an ideal measure of player performance. For instance, players may score few points in a match due to a poor performance, but they may also score few (relative) points if they win a short match. Modeling the number of points won is also complicated by the difference between length of matches for men (best of 5 sets) and women (best of 3 sets). For these reasons, we chose to model whether a player won the match using a mixed-effects logistic regression approach, with possible predictors including country of origin, tournament that the match was played at, whether the match occured in Round of 16 or later, rank of player, rank of opposing player, year of the match, and whether it was a men's or women's match.
 
-* `ioc_fac`: Country that the player represents
-* `tournament`: Which Grand Slam the match was played at
-* `late_round`: Indicator for whether the match occured in Round of 16 or later
-* `rank`: Rank of player at the time of the match
-    + Included on log scale 
-* `opponent_rank`: Rank of opponent at the time of the match
-    + Included on log scale
-* `year`: Factor variable with a level for each year included in the dataset (2013-2017)
-* `atp`: Indicator that the match was played in the ATP league instead of the WTF league.
+We considered a variety of models incorporating effects as either fixed or random. That is $\pi_i = \beta X_i + \delta_i$, where $\pi_i = P(Y_i = 1)$, $X_i$ are the fixed effects included in the model, and $\delta_i$ is a random effect across either players or years. Based on AIC, we found the model that included a player-level term for each tournament, but excluded fixed terms for country, was the best fit for the data. The models are summarized in table (REF TABLE).
 
-We considered the following models:
-
-* No mixed effects
-    + `nocourt_logistic`: $\text{logit}(\pi_i) = \beta X$, $X$ does not include `tournament`
-        + If this model fits well, court surface does not have an effect on winning probability
-    + `base_logistic`: $\text{logit}(\pi_i) = \beta X$
-        + If this model fits better than the mixed-effects models, performance does not depend on individual-level or IOC-level 
-* IOC-level effect
-    + `country_logistic`: $\text{logit}(\pi_i) = \beta X + \beta_{T[i]}T$, $\beta_{T[i]} = \alpha_i C_i$
-* Player-level effect
-    + `ind_logistic`: $\text{logit}(\pi_i) = \beta X + \beta_{T[i]}T$, $\beta_{T[i]} = \alpha_i P_i$
-        * Includes both a fixed-effect term for IOC and a player-level effect for each grand slam
-    + `ind_logistic_noioc`: $\text{logit}(\pi_i) = \beta X + \beta_{T[i]}T$, where $X$ does not include IOC and $T$ represents indicators for tournament, $\beta_{T[i]} = \alpha_i P_i$
-        * Simpler than the `ind_logistic` model, since we exclude IOC effects.
-    + `ind_int_noioc`: $\text{logit}(\pi_i) = \beta X + \beta_{0[i]}$, where $X$ does not include IOC, $\beta_{0[i]} = \alpha_i$
-        * Similar to `ind_logistic_noioc`, but includes a single player-level effect rather than a player-level effect for each grand slam. 
-    + `ind_year_logistic`: $\text{logit}(\pi_i) = \beta X + \beta_{D[i]}$, where $X$ does not include IOC and $D$ represents indicators for years, $\beta_{Y[i]} = \alpha_i Y_i$
-        * Rather than including a player-level effect for grand slam, includes a player-level effect for each year in the dataset
 
 ```{r}
 load("../../data/gs_players.rda")
@@ -439,7 +413,6 @@ load("../../data/ind_logistic_noioc.rda")
 load("../../data/ind_year_logistic.rda")
 ```
         
-Based on AIC, the `ind_logistic_noioc` model performed best after accounting for the number of variables in the model. 
 
 ```{r, warning = FALSE}
 model_names = c("nocourt_logistic", "base_logistic", "country_logistic", "ind_logistic", 
@@ -460,24 +433,43 @@ for(mod in 1:nrow(model.sums)){
   else model.ests = rbind(model.ests, betas)
 }
 
-knitr::kable(model.sums, format = "latex",
-             row.names = FALSE, col.names = c("Model", "AIC", "EDF"),
+model.sums$name = c("no_court", "no_random_ef", "country_ef", "ind_ef", "ind_no_ioc", "ind_intercept", "ind_year_ef")
+model.sums$fixed = c("No country, no tournament",
+                     "all",
+                     "no country, no tournament",
+                     "no tournament",
+                     "no country, no tournament",
+                     "no country",
+                     "no country, no year")
+model.sums$random = c("none",
+                      "none",
+                      "tournament (by country)",
+                      "tournament (by individual)",
+                      "tournament (by individual)",
+                      "intercept (by individual)",
+                      "year (by individual)")
+
+knitr::kable(model.sums[,c("name", "fixed", "random", "aic", "edf")], format = "latex",
+             row.names = FALSE, col.names = c("Model", "Fixed Effects", "Random Effects", "AIC", "EDF"),
              caption = "\\label{model.sums}AIC summary of the seven logistic regression models fitted. Including individual effects for each grand slam, without including any country effects, leads to the best model fit according to AIC.",
              booktabs = TRUE) %>% kable_styling(latex_options = "striped")
 ```
 
-If we examine the fixed effects for all seven models, and the random effects for the `ind_logistic` and `ind_logistic_noioc`, we see that the model structure chosen does not substantially change the parameter estimates. Across all models, `rank` and `opponent_rank` appear to best explain the probability of winning the match. Other fixed effects in the models, like whether it was a late round in the grand slam, the year, or ATP/WTF, were not found to be significantly different than zero. 
+If we examine the fixed effects for all seven models, we see that the model structure chosen does not substantially change the parameter estimates. Across all models, `rank` and `opponent_rank` appear to best explain the probability of winning the match. Other fixed effects in the models, like whether it was a late round in the grand slam, the year, or ATP/WTF, were not found to be significantly different than zero. If we look at the random effects for Williams, Federer, and Nadal, however, the individual effects are not very informative (especially after taking uncertainty into consideration). 
 
-```{r}
+```{r, fig.height = 3, fig.cap ="\\label{fig:mixed-mods-ests}Estimated fixed effects for all seven models and player-level effects for Williams, Federer and Nadal under the ind_no_ioc model."}
 fixed.effects.plot = model.ests %>%
   filter(., !grepl("ioc", term)) %>%
-  ggplot(., aes(x = term, y = exp(estimate), col = model, ymin = exp(estimate - 2*std.error), ymax = exp(estimate + 2*std.error))) +
+  ggplot(., aes(x = term, y = estimate, col = model, ymin = estimate - 2*std.error, ymax = estimate + 2*std.error)) +
   geom_errorbar(width = .7, position = position_dodge()) +
-  theme_minimal() + 
+  my_theme +
   theme(axis.text.x=element_text(angle = 45, hjust = 1)) +
-  scale_color_brewer(palette = "Dark2") + 
   ggtitle("Fixed effects") +
-  theme(legend.position = "bottom")
+  scale_color_brewer("",palette = "Dark2") +
+  theme(legend.position = "none") + 
+  xlab("") +
+  scale_x_discrete("", breaks = waiver(), labels = c("Intercept", "ATP", "Late round", "Op Rank (log)", "Rank (log)", "French", "US", "Wimbledon", "2014", "2015", "2016", "2017"))+
+  guides(col = guide_legend(nrow=2))
 
 ran_tourn = rbind(ranef(ind_logistic)$name_int, ranef(ind_logistic_noioc)$name_int)
 ran_tourn$model = c(rep("ind_logistic", nrow(ranef(ind_logistic)$name_int)), rep("ind_logistic_noioc", nrow(ranef(ind_logistic)$name_int)))
@@ -485,51 +477,130 @@ ran_tourn$model = c(rep("ind_logistic", nrow(ranef(ind_logistic)$name_int)), rep
 random.effects.plot = ran_tourn %>%
   gather(., tourn, estimate, -model) %>%
   mutate(., tournament = gsub("tournament", "", tourn)) %>%
-  ggplot(., aes(x = tournament, y = exp(estimate), fill = model)) +
+  ggplot(., aes(x = tournament, y = estimate, fill = model)) +
   geom_violin() + 
-  theme_minimal() +
+  my_theme +
   scale_fill_brewer(palette = "Dark2") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))+
   ggtitle("Random effects") +
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom") +
+  guides(col = guide_legend(nrow=3))
 
-plot_grid(fixed.effects.plot, random.effects.plot)
-```
-
-Looking at the `ind_logistic_noioc` random effects more in-depth, we see that the effects for the Austrialian Open, US Open, and Wimbledon are all quite correlated. This suggests that, after accounting for additional variables such as rank and opponent rank, differences in win probability are not detectable between the two types of hard court and grass. 
-
-```{r}
-knitr::kable(round(cor(ranef(ind_logistic_noioc)$name_int),2), format = "latex",
-             row.names = TRUE, col.names = c("Australian Open", "French Open", "US Open", "Wimbledon"),
-             caption = "Correlation matrix for random effects",
-             booktabs = TRUE) %>% kable_styling(latex_options = "striped")
-```
-
-If we look at our big three, their individual effects are not very informative (especially after taking uncertainty into consideration). 
-
-```{r}
 gs_players$name_int = as.integer(as.factor(gs_players$name))
 name_lookup = unique(cbind(gs_players$name, gs_players$name_int))
 name_lookup = name_lookup[order(as.integer(name_lookup[,2])),]
-as.data.frame(ranef(ind_logistic_noioc, condVar = TRUE)) %>%
+top_three_ranef = as.data.frame(ranef(ind_logistic_noioc, condVar = TRUE)) %>%
   mutate(tournament = gsub("tournament", "", term)) %>%
   mutate(name = name_lookup[,1][as.integer(grp)]) %>% 
   filter(., name == "Serena Williams" | name == "Rafael Nadal" | name == "Roger Federer") %>%
   ggplot(., aes(x = name, y = condval, ymin = condval- 2*condsd, ymax = condval + 2*condsd, color = tournament)) +
   geom_errorbar(width = .5, position = "dodge") + 
   xlab("") + 
-  ylab("Random Effect") + 
-  scale_color_brewer(palette = "Dark2") +
-  coord_flip()
+  ylab("Estimate") + 
+  scale_color_manual("", values=tournament_colors) +
+  my_theme +
+  coord_flip() +
+  ggtitle("Random Effects") +
+  theme(legend.position = "bottom") + 
+  guides(col = guide_legend(nrow=2)) + 
+  theme(legend.text=element_text(size=8))
+
+grid.arrange(fixed.effects.plot, top_three_ranef, nrow = 1, widths = c(.5, .5))
+```
+
+Looking at the random effects more in-depth, we see that the effects for the Austrialian Open, US Open, and Wimbledon are all quite correlated. This suggests that, after accounting for additional variables such as rank and opponent rank, differences in win probability are not detectable between the two types of hard court and grass. 
+
+```{r}
+knitr::kable(round(cor(ranef(ind_logistic_noioc)$name_int),2), format = "latex",
+             row.names = FALSE, col.names = c("Australian Open", "French Open", "US Open", "Wimbledon"),
+             caption = "Correlation matrix for random effects",
+             booktabs = TRUE) %>% kable_styling(latex_options = "striped")
 ```
 
 ### Linear regression for other stats
 
-Rank and opponent's rank clearly have the largest effect on predicting the winner. Looking at the individual effects for Serena, Nadal, and Federer; they actually fall near the average for all four grand slams. We now look at a similar model, but instead of using `win' as the outcome variable, we'll look at game statistics that may be more sensitive to court surface -- aces, winners, net points won, and unforced errors -- and see if individual differences are detectable. 
+Rank and opponent's rank clearly have the largest effect on predicting the winner. Looking at the individual effects for Serena, Nadal, and Federer; they actually fall near the average for all four grand slams. We now look at a similar model, but instead of using `win' as the outcome variable, we'll look at game statistics that may be more sensitive to court surface -- aces, net points won, and unforced errors -- and see if individual differences are detectable. We fit three additional models, each of the form $Y_i = \beta X_i + \beta_{T[i]}T$ with $\beta_{T[i]} = \alpha_i T_i$, with $X_i$ including the same variables as the model above. 
 
-(some plots that show a) Serena/Federer are stronger servers, b) Federer makes fewer unforced errors at Wimbledon, c) something about Nadal)
+```{r, eval = FALSE}
+gs_partial_players$atp = gs_partial_players$Tour == "atp"
+gs_partial_players$year_fac = as.factor(gs_partial_players$year)
+gs_partial_players$late_round = gs_partial_players$round >= "R16"
+gs_partial_players$seeded = gs_partial_players$rank <= 32
+gs_partial_players$opponent_seeded = gs_partial_players$opponent_rank <= 32
+n_aces_mod = lmer(n_aces ~ late_round + log(rank) + log(opponent_rank) + year_fac + atp + (0 + tournament |name), data = gs_partial_players)
+n_winners_mod = lmer(n_winners ~ late_round + log(rank) + log(opponent_rank) + year_fac + atp + (0 + tournament |name), data = gs_partial_players)
+n_net_mod = lmer(n_netpt_w ~ late_round + log(rank) + log(opponent_rank) + year_fac + atp + (0 + tournament |name), data = gs_partial_players)
+n_ue_mod = lmer(n_ue ~ late_round + log(rank) + log(opponent_rank) + year_fac + atp + (0 + tournament |name), data = gs_partial_players)
+```
 
+```{r}
+load("../../data/n_aces_mod.rda")
+load("../../data/n_net_mod.rda")
+load("../../data/n_ue_mod.rda")
+load("../../data/n_winners_mod.rda")
+```
 
+```{r, fig.height = 2.5, fig.cap = "\\label{fig:mixed-mods-stats}Estimated player-level effects for Williams, Federer and Nadal when modeling aces, net winners, and unforced errors."}
+aces_ranef = as.data.frame(ranef(n_aces_mod, condVar = TRUE)) %>%
+  mutate(tournament = gsub("tournament", "", term)) %>%
+  filter(., grp == "Serena Williams" | grp == "Rafael Nadal" | grp == "Roger Federer") %>%
+  ggplot(., aes(x = as.character(grp), y = condval, ymin = condval- 2*condsd, ymax = condval + 2*condsd, col = tournament)) +
+  geom_errorbar(height = .5, position = position_dodge()) +
+  ylab("Estimate") + 
+  xlab("") +
+  ggtitle("Aces") + 
+  scale_color_manual("", values=tournament_colors) +
+  my_theme +
+  coord_flip() +
+  theme(legend.position = "none")
+
+winners_ranef = as.data.frame(ranef(n_winners_mod, condVar = TRUE)) %>%
+  mutate(tournament = gsub("tournament", "", term)) %>%
+  filter(., grp == "Serena Williams" | grp == "Rafael Nadal" | grp == "Roger Federer") %>%
+  ggplot(., aes(x = as.character(grp), y = condval, ymin = condval- 2*condsd, ymax = condval + 2*condsd, col = tournament)) +
+  geom_errorbar(height = .5, position = position_dodge()) +
+  ylab("Estimate") + 
+  xlab("") +
+  ggtitle("Winners") + 
+  scale_color_manual("", values=tournament_colors) +
+  my_theme +
+  theme(axis.text.y = element_blank()) +
+  coord_flip() +
+  theme(legend.position = "none")
+
+nets_ranef = as.data.frame(ranef(n_net_mod, condVar = TRUE)) %>%
+  mutate(tournament = gsub("tournament", "", term)) %>%
+  filter(., grp == "Serena Williams" | grp == "Rafael Nadal" | grp == "Roger Federer") %>%
+  ggplot(., aes(x = as.character(grp), y = condval, ymin = condval- 2*condsd, ymax = condval + 2*condsd, col = tournament)) +
+  geom_errorbar(height = .5, position = position_dodge()) +
+  ylab("Estimate") + 
+  xlab("") +
+  ggtitle("Net Wins") + 
+  scale_color_manual("", values=tournament_colors) +
+  my_theme +
+  theme(axis.text.y = element_blank()) +
+  coord_flip() +
+  theme(legend.position = "none")
+
+ue_ranef = as.data.frame(ranef(n_ue_mod, condVar = TRUE)) %>%
+  mutate(tournament = gsub("tournament", "", term)) %>%
+  filter(., grp == "Serena Williams" | grp == "Rafael Nadal" | grp == "Roger Federer") %>%
+  ggplot(., aes(x = as.character(grp), y = condval, ymin = condval- 2*condsd, ymax = condval + 2*condsd, col = tournament)) +
+  geom_errorbar(height = .5, position = position_dodge()) +
+  ylab("Estimate") + 
+  xlab("") +
+  ggtitle("Unforced Errors") + 
+  scale_color_manual("", values=tournament_colors) +
+  my_theme +
+  theme(axis.text.y = element_blank()) +
+  coord_flip() + 
+  theme(legend.text=element_text(size=10))
+
+grid.arrange(aces_ranef, nets_ranef, ue_ranef, nrow = 1, widths = c(.38, .22, .45))
+
+```
+
+If we look at the random effects for Williams, Federer, and Nadal (FIGURE REF), differences are much more noticeable than in the logistic regression model. For instance, we would predict more aces for Williams at the Australian Open and Wimbledon than at the French Open. We also see that Federer's performance at Wimbledon is consistently better than other tournaments in both aces and unforced errors. Interestingly, an increased performance on clay is not observed for Nadal in aces, net winners, or unforced errors. 
 ## Modelling players individually
 
 ```{r table, fig.pos = 'H'}
