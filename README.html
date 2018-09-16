@@ -313,6 +313,7 @@ $(document).ready(function () {
 <h1>courtsports</h1>
 <p>An <code>R</code> package to analyze tennis data and a reproducible workspace.</p>
 <p>Authors: Shannon Gallagher, Amanda Luby, and Kayla Frisoli</p>
+<p>Find our paper <a href="https://github.com/shannong19/courtsports/blob/master/contest/surface-type/paper-tennis.pdf">here</a>.</p>
 </div>
 <div id="instructions" class="section level1">
 <h1>INSTRUCTIONS</h1>
@@ -329,12 +330,12 @@ $(document).ready(function () {
 <p><a href="https://github.com/shannong19/courtsports/blob/master/contest/surface-type/paper-tennis.Rmd" class="uri">https://github.com/shannong19/courtsports/blob/master/contest/surface-type/paper-tennis.Rmd</a></p>
 <ol start="2" style="list-style-type: decimal">
 <li><p>Open the file in <code>RStudio</code> and knit it OR</p></li>
-<li><p>Open an <code>R</code> session</p></li>
-</ol>
+<li>Open an <code>R</code> session
 <ol style="list-style-type: lower-alpha">
 <li>Change the directory to where you downloaded the file</li>
 <li>Run the command <code>rmarkdown::render(&lt;my-file.Rmd&gt;)</code></li>
 <li>Open and view <code>&lt;my-file.pdf&gt;</code> which should appear in the directory of the downloaded file</li>
+</ol></li>
 </ol>
 </div>
 <div id="data-collection-and-transformation" class="section level2">
@@ -366,28 +367,33 @@ $(document).ready(function () {
 <p>All plots are reproducible directly from the <code>.Rmd</code> document.</p>
 <div id="hierarchical-model" class="section level2">
 <h2>Hierarchical model</h2>
-<p>Our hierarchical model is computationally intensive for all possible implementations, it takes about ~1 hour to run. As such, we have provided the code in the <code>.Rmd</code> file but do not evaluate it. However, we have saved all intermediate steps as <code>.rda</code> objects accessible by the <code>data()</code> function so those interested can follow our analysis from beginning to end.</p>
+<p>Our hierarchical model is computationally intensive. To run all possible implementations, it takes about ~1 hour to run. As such, we have provided the code in the <code>.Rmd</code> file but do not evaluate it. However, we have saved all intermediate steps as <code>.rda</code> objects accessible by the <code>data()</code> function so those interested can follow our analysis from beginning to end.</p>
 </div>
 <div id="troubleshooting" class="section level2">
 <h2>TROUBLESHOOTING</h2>
-<ol style="list-style-type: decimal">
+<ol start="0" style="list-style-type: decimal">
+<li><p>Make sure <code>courtsports</code> is installed. (<code>devtools::install_github(&quot;shannong19/courtsports&quot;)</code>)</p></li>
 <li><p>Use the most recent version and packages in <code>R</code></p></li>
-<li>Make sure you have the following <code>R</code> packages installed (regular CRAN installation unless otherwise specified)</li>
+<li><p>Make sure you have the following <code>R</code> packages installed (regular CRAN installation unless otherwise specified)</p></li>
 </ol>
 <ul>
-<li><code>deuce</code> (<code>r install_github(&quot;skoval/deuce&quot;</code>)</li>
+<li><code>broom</code></li>
+<li><code>cowplot</code></li>
+<li><code>deuce</code> (<code>install_github(&quot;skoval/deuce&quot;</code>)</li>
 <li><code>dplyr</code></li>
 <li><code>forcats</code></li>
 <li><code>ggplot2</code></li>
+<li><code>ggpubr</code></li>
 <li><code>ggrepel</code></li>
 <li><code>grid</code></li>
 <li><code>gridExtra</code></li>
 <li><code>kableExtra</code></li>
 <li><code>knitr</code></li>
+<li><code>lme4</code></li>
 <li><code>MASS</code></li>
 <li><code>rmarkdown</code></li>
-<li><code>RStan</code> (See <a href="http://mc-stan.org/users/interfaces/rstan">mc-stan.org</a> for detailed instructions.)</li>
 <li><code>stringr</code></li>
+<li><code>tidyr</code></li>
 </ul>
 <ol start="3" style="list-style-type: decimal">
 <li><p>To compile the document as a .pdf file, the user must have <a href="https://rmarkdown.rstudio.com/pdf_document_format">LaTeX installed and perhaps other packages</a></p></li>

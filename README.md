@@ -4,6 +4,8 @@ An `R` package to analyze tennis data and a reproducible workspace.
 
 Authors: Shannon Gallagher, Amanda Luby, and Kayla Frisoli
 
+Find our paper [here](https://github.com/shannong19/courtsports/blob/master/contest/surface-type/paper-tennis.pdf).
+
 
 # INSTRUCTIONS
 
@@ -24,10 +26,9 @@ To reproduce our paper for the sports analytics conference
 2. Open the file in `RStudio` and knit it OR
 
 3. Open an `R` session
-
-  a. Change the directory to where you downloaded the file
-  b. Run the command `rmarkdown::render(<my-file.Rmd>)`
-  c. Open and view `<my-file.pdf>` which should appear in the directory of the downloaded file
+    a. Change the directory to where you downloaded the file
+    b. Run the command `rmarkdown::render(<my-file.Rmd>)`
+    c. Open and view `<my-file.pdf>` which should appear in the directory of the downloaded file
   
 ## Data Collection and Transformation
 
@@ -56,29 +57,36 @@ All plots are reproducible directly from the `.Rmd` document.
 
 ## Hierarchical model
 
-Our hierarchical model is computationally intensive for all possible implementations, it takes about ~1 hour to run.  As such, we have provided the code in the `.Rmd` file but do not evaluate it.  However, we have saved all intermediate steps as `.rda` objects accessible by the `data()` function so those interested can follow our analysis from beginning to end.
+Our hierarchical model is computationally intensive.  To run all possible implementations, it takes about ~1 hour to run.  As such, we have provided the code in the `.Rmd` file but do not evaluate it.  However, we have saved all intermediate steps as `.rda` objects accessible by the `data()` function so those interested can follow our analysis from beginning to end.
   
 ## TROUBLESHOOTING
+
+0.  Make sure `courtsports` is installed. (`devtools::install_github("shannong19/courtsports")`)
 
 1. Use the most recent version and packages in `R`
 
 2. Make sure you have the following `R` packages installed (regular CRAN installation unless otherwise specified)
+
+ + `broom`
+ + `cowplot`
  + `deuce` (`install_github("skoval/deuce"`)
  + `dplyr`
  + `forcats`
  + `ggplot2`
+ + `ggpubr`
  + `ggrepel`
  + `grid`
  + `gridExtra`
  + `kableExtra`
  + `knitr`
+ + `lme4`
  + `MASS`
  + `rmarkdown` 
- + `RStan` (See [mc-stan.org](http://mc-stan.org/users/interfaces/rstan) for detailed instructions.)
  + `stringr`
+ + `tidyr`
  
  
- 
+
 
  
 3. To compile the document as a .pdf file, the user must have [LaTeX installed and perhaps other packages](https://rmarkdown.rstudio.com/pdf_document_format)
