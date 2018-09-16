@@ -34,7 +34,7 @@ library(cowplot)
 library(ggpubr)
 
 ## To change into library(courtsports)
-devtools::load_all("../..")
+library(courtsports)
 
 ```
 
@@ -575,7 +575,7 @@ The full model is the lower model with the additional variables of winner to unf
 
 ```{r nadal-model}
 
-step_model_n <- model_individual(player_name = "Rafael Nadal", data = gs_partial_players)
+step_model_n <- courtsports:::model_individual(player_name = "Rafael Nadal", data = gs_partial_players)
 
 std_res_n <- rstandard(step_model_n)
 
@@ -600,7 +600,7 @@ Looking at Nadal individually, the model with the lowest AIC has positive coeffi
 
 ```{r federer-model}
 
-step_model_f <- model_individual(player_name = "Roger Federer", data = gs_partial_players, ref = "Wimbledon")
+step_model_f <- courtsports:::model_individual(player_name = "Roger Federer", data = gs_partial_players, ref = "Wimbledon")
 
 std_res_f <- rstandard(step_model_f)
 
@@ -625,7 +625,7 @@ For the significant variables ($\alpha$ = 95\%), while adjusting for the other v
 
 ```{r williams-model}
 
-step_model_w <- model_individual(player_name = "Serena Williams", data = gs_partial_players,
+step_model_w <- courtsports:::model_individual(player_name = "Serena Williams", data = gs_partial_players,
                                  start_lower = TRUE, ref = "Australian Open")
 
 std_res_w <- rstandard(step_model_w)
