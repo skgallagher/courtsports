@@ -119,7 +119,7 @@ Few academic papers have been written about Nadal, Federer, or Williams.  @leitn
 
 Readers may object that we are looking at differences between grand slams, which each have their own time period, weather conditions, play time conditions, and "home court effects" instead of differences in surfaces alone.  However, (1) grand slam data is the most readily available and most complete which makes it the best choice at the moment for modelling, (2) we adjust for these confounders where we can, and (3) analyzing the difference in the grand slams is still useful as they are considered to be the most prestigious events in tennis.
 
-The rest of this paper is organized as follows. In Section 2 we describe the grand slam tennis data and examine it at a high level.  In Section 2.2 we examine the data at a high level and use clustering methods to determine how the courts differ from one another.  In Section 3 we describe our models with (1) complete data with few features and (2) partial data with more features along with the results.  Finally in Section 4, we summarize our results and discuss future work. 
+The rest of this paper is organized as follows. In Section 2 we describe the grand slam tennis data and examine it at a high level.  In Section 3 we describe our models with (1) complete data with few features and (2) partial data with more features along with the results.  Finally in Section 4, we summarize our results and discuss future work. 
 
 # Data and EDA {#sec:data-eda}
 
