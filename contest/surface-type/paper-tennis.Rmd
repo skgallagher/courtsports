@@ -419,7 +419,7 @@ knitr::kable(model.sums[,c("name", "fixed", "random", "aic", "edf")], format = "
 
 If we examine the fixed effects for all seven models (see Fig. \ref{fig:mixed-mods-ests} (left)), we see that the parameter estimates do not substantially change across models. Rank and opponent rank appear to best explain the probability of winning the match. Other fixed effects in the models (whether it was a late round in the grand slam, the year, or ATP/WTA) were not found to be significantly different than zero. If we look at the random effects (see Fig. \ref{fig:mixed-mods-ests} (right)) for Williams, Federer, and Nadal, however, the individual effects are not informative (especially after taking uncertainty into consideration). 
 
-```{r, fig.height = 3.5, fig.width=10, fig.cap ="\\label{fig:mixed-mods-ests}Estimated fixed effects for all seven models and player-level effects for Williams, Federer and Nadal under the ind_no_ioc model."}
+```{r, fig.height = 3.8, fig.width=10, fig.cap ="\\label{fig:mixed-mods-ests}Estimated fixed effects for all seven models and player-level effects for Williams, Federer and Nadal under the ind_no_ioc model."}
 fixed.effects.plot = model.ests %>%
   filter(., !grepl("ioc", term)) %>%
   ggplot(., aes(x = term, y = estimate, col = model, ymin = estimate - 2*std.error, ymax = estimate + 2*std.error)) +
@@ -505,7 +505,7 @@ load("../../data/n_ue_mod.rda")
 load("../../data/n_winners_mod.rda")
 ```
 
-```{r, fig.height = 3, fig.width=10, fig.cap = "\\label{fig:mixed-mods-stats}Estimated player-level effects for Williams, Federer and Nadal when modeling aces, net winners, and unforced errors."}
+```{r, fig.height = 3.4, fig.width=10, fig.cap = "\\label{fig:mixed-mods-stats}Estimated player-level effects for Williams, Federer and Nadal when modeling aces, net winners, and unforced errors."}
 aces_ranef = as.data.frame(ranef(n_aces_mod, condVar = TRUE)) %>%
   mutate(tournament = gsub("tournament", "", term)) %>%
   filter(., grp == "Serena Williams" | grp == "Rafael Nadal" | grp == "Roger Federer") %>%
