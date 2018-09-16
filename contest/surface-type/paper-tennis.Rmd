@@ -8,7 +8,7 @@ output:
     number_sections: yes
 header-includes:
   - \usepackage{hyperref}
-abstract: "The Australian Open, The French Open, Wimbledon, and The US Open are the four most prestigious events (grand slams) in tennis and are played on four different surfaces: Plexicushion (hard court), clay, grass, and DecoTurf (hard court), respectively.  It is often thought that some players achieve better results at some grand slams than others and that difference in results may be attributed, at least partially, to the difference in the surfaces.  For example three top players of all time, Rafael Nadal, Roger Federer, and Serena Williams have achieved their best results on clay, grass, and hard courts, respectively.  In this paper, we examine the effect of surface type at grand slams from 2013-2017 for top players, adjusting for confounders such as league, competitor strength, and player attributes.  We answer the question of court effect on player results at first a high level using ``complete'' data with few features and then using partial data with a variety of tennis-specific features.  Our primary model is a hierarchical model with fixed and random effects accounting for both player and tournament features.  We show that differences in surface type become more apparent with more detailed data and that more study should be conducted in this area."
+abstract: "The Australian Open, French Open, Wimbledon, and US Open are the four most prestigious events (grand slams) in tennis and are played on four different surfaces: Plexicushion (hard court), clay, grass, and DecoTurf (hard court), respectively.  It is often thought that some players achieve better results at some grand slams than others and that difference in results may be attributed, at least partially, to the difference in the surfaces.  For example three top players of all time, Rafael Nadal, Roger Federer, and Serena Williams have achieved their best results on clay, grass, and hard courts, respectively.  In this paper, we examine the effect of surface type at grand slams from 2013-2017 for top players, adjusting for confounders such as league, competitor strength, and player attributes.  We answer the question of court effect on player results at first a high level using ``complete'' data with few features and then using partial data with a variety of tennis-specific features.  Our primary model is a hierarchical model with fixed and random effects accounting for both player and tournament features.  We show that differences in surface type become more apparent with more detailed data and that more study should be conducted in this area."
 bibliography: master.bib
 ---
 
@@ -357,7 +357,7 @@ We use a hierarchical modeling approach to examine the grand slam results from a
 
 We initially planned to use points won by an individual as our outcome variable, but found that it may not be an ideal measure of player performance. For instance, players may score few points in a match due to a poor performance, but they may also score few (relative) points if they win a short match. Modeling the number of points won is also complicated by the difference between length of matches for men (best of 5 sets) and women (best of 3 sets). For these reasons, we chose to model whether a player won the match using a hierarchical logistic regression approach, with possible covariates including country of origin (IOC), tournament that the match was played at, whether the match occurred in Round of 16 or later, rank of player, rank of opposing player, year of the match, and whether it was a men's or women's match.
 
-We considered a variety of models incorporating effects as either fixed or random. That is $E[Y_{\% pts. won}|X] = \beta X$, where $E[\pi_i|X_i, \delta_i] = \beta X_i + \delta_i$ (i.e. a player win), $X_i$ are the fixed effects included in the model, and $\delta_i$ is a random effect across either players or years. Based on AIC, we found the model that included a player-level term for each tournament, but excluded fixed terms for country, was the best fit for the data. The models are summarized in Table \ref{tab:model.sums}.
+We considered a variety of models incorporating effects as either fixed or random. That is $E[\pi_i|X_i, \delta_i] = \beta X_i + \delta_i$, where $\pi_i = P(Y_i = 1)$, $X_i$ are the fixed effects included in the model, and $\delta_i$ is a random effect across either players or years. Based on AIC, we found the model that included a player-level term for each tournament, but excluded fixed terms for country, was the best fit for the data. The models are summarized in Table \ref{tab:model.sums}.
 
 
 ```{r}
@@ -485,7 +485,7 @@ knitr::kable(round(cor(ranef(ind_logistic_noioc)$name_int),2), format = "latex",
 
 ### Linear regression for other outcomes
 
-Instead of using `win' as the outcome variable, we now look at match statistics that may be more sensitive to court surface -- aces, net points won, and UEs -- and see if individual differences among players are detectable. We fit three additional models, each of the form $Y_i = \beta X_i + \delta_i$, where $\delta_i = \alpha_i T_i$, $T_i$ is the four grand slam tournaments, and $X_i$ includes the same variables as the model above. 
+Instead of using `win' as the outcome variable, we now look at match statistics that may be more sensitive to court surface -- aces, net points won, and UEs -- and see if individual differences among players are detectable. We fit three additional models, each of the form $E[Y_i|X_i, \delta_i] = \beta X_i + \delta_i$, where $\delta_i = \alpha_i T_i$, $T_i$ is the four grand slam tournaments, and $X_i$ includes the same variables as the model above. 
 
 ```{r, eval = FALSE}
 gs_partial_players$atp = gs_partial_players$Tour == "atp"
@@ -575,10 +575,8 @@ If we look at the random effects for Williams, Federer, and Nadal (see Fig. \ref
 
 ## Modeling players individually
 
-We also fit individual linear models for Williams, Federer, and Nadal (subsetting the partial data to their matches only).  We estimate the percent of points won in a match using forward-backwards stepwise regression.  The lower model is the percent of points regressed on the opponent rank and indicator variables for surface with one court as the reference variable (in the below equation, the reference surface as FO),
-$$
-E[Y_{\% pts. won}|X] = \beta_0 + \beta_1 X_{opp. rank} + \beta_{2, AO}\mathcal{I}(X_{sur.} = AO)  + \beta_{2, Wim.}\mathcal{I}(X_{sur.} = Wim.) + \beta_{2, USO}\mathcal{I}(X_{sur.} = USO)  .
-$$  
+We also fit individual linear models for Williams, Federer, and Nadal (subsetting the partial data to their matches only).  We estimate the percent of points won in a match using forward-backwards stepwise regression.  The lower model is the percent of points regressed on the opponent rank and indicator variables for surface with one court as the reference variable (in the below equation, the reference surface as FO),$E[Y_{\% pts. won}|X] = \beta X$. 
+
 The full model is the lower model with the additional variables of winner to unforced error ratio (W/UE), average serve speed, percent aces, percent break points, percent net points won, and their interaction effects with court type.  We do not display the full best fit models here, but they are available online.  We do report the effects ($\pm 2 \cdot$ Std. Err.) of significant variables and their interaction terms, adjusting for the other covariates.  Since we postulated that Nadal is best on clay, Federer on grass, and Williams on hard court, specifically at AO, we use the FO, Wim., and AO, respectively, as the reference variable in the model.  For Nadal and Federer we use forward-backwards stepwise regression, using AIC as the criterion, beginning with the full model.  For Williams, we also use forwards-backwards stepwise regression but begin at the low model since she has more missing data.
 
 
