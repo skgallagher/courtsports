@@ -104,15 +104,15 @@ In this paper, we use the results of grand slam players from 2013-2017 to analyz
 
 1. Determine if results (in terms of wins/losses and point distributions) differ across the four surfaces
 
-2. Examine fine grained attributes such as winners, aces, and unforced errors across the four surfaces
+2. Examine tennis specific attributes such as winners, aces, and unforced errors across the four surfaces
 
 3. Assess how players perform across the four surfaces, with focus on Nadal, Federer, and Williams.
 
-There has been little work on quantifying the high-level effect of court surface in tennis issue (1). Existing literature provides methods for forecasting the outcome of tennis matches [@klaassen2003; @newton2005; @mchale2011; @kovalchik2016]] or for assessing whether points within a match are independent and identically distributed [@klaassen2001]. @knottenbelt2012 take court surface into account in their model, but do not compare the results of one surface to another, and @pollard2007 conclude that players have more injuries on grass compared to other courts. Results from studies performed in other sports show that surface type does have an effect on the game, either directly or indirectly [@andersson2008; @gains2010].
+There has been little work on quantifying the high-level effect of court surface in tennis (issue 1). Existing literature provides methods for forecasting the outcome of tennis matches [@klaassen2003; @newton2005; @mchale2011; @kovalchik2016]] or for assessing whether points within a match are independent and identically distributed [@klaassen2001]. @knottenbelt2012 take court surface into account in their model, but do not compare the results of one surface to another, and @pollard2007 conclude that players have more injuries on grass compared to other courts. Results from studies performed in other sports show that surface type does have an effect on the game, either directly or indirectly [@andersson2008; @gains2010].
 
-We examine the match attributes more unique to tennis to address issue (2). These attributes include winners (when a player hits a shot that the opponent is unable to return), aces (a serve an opponent is unable to return), and unforced errors (UE) (when a player makes a simple mistake resulting in a loss of the point).  In general, players hope to maximize the winner to UE ratio (W/UE), which may lead to playing more aggressively on faster courts and more conservatively on slower courts such as clay [@theage2007].
+We examine the match attributes more unique to tennis to address (issue 2). These attributes include winners (when a player hits a shot that the opponent is unable to return), aces (a serve an opponent is unable to return), and unforced errors (UE) (when a player makes a simple mistake resulting in a loss of the point).  In general, players hope to maximize the winner to UE ratio (W/UE), which may lead to playing more aggressively on faster courts and more conservatively on slower courts such as clay [@theage2007].
 
-Finally, to assess how individual players differ in performance across surfaces, issue (3), we take two approaches.  The first is to use a hierarchical model with fixed and random effects, taking into account player and tournament attributes using the complete data set.  This allows us to leverage tournament information to model players with few matches played and to help account for noise.  Our second approach is to model performance for specific players individually. Since Nadal, Federer, and Williams are extremely popular and have had much success in the 2013-2017 time range, we have enough data points with tennis-specific feature attributes to examine the effects individually.  In both cases, we examine whether our models pass "common sense" tests like how the models in @thomas2013 show that commonly well known hockey players also have high status in the model.  We also examine whether these players do have court surface effects. For the individual models, we do not split the data into training and test sets due to the relatively low number of observations for the individuals.  However, when the data becomes available, we would like to test these models on the 2018 grand slam results. For model selection, we use AIC to compare models to one another [@wasserman2004].  
+Finally, to assess how individual players differ in performance across surfaces, (issue 3), we take two approaches.  The first is to use a hierarchical model with fixed and random effects, taking into account player and tournament attributes using the complete data set.  This allows us to leverage tournament information to model players with few matches played and to help account for noise.  Our second approach is to model performance for specific players individually. Since Nadal, Federer, and Williams are extremely popular and have had much success in the 2013-2017 time range, we have enough data points with tennis-specific feature attributes to examine the effects individually.  In both cases, we examine whether our models pass "common sense" tests like how the models in @thomas2013 show that commonly well known hockey players also have high status in the model.  We also examine whether these players do have court surface effects. For the individual models, we do not split the data into training and test sets due to the relatively low number of observations for the individuals.  However, when the data becomes available, we would like to test these models on the 2018 grand slam results. For model selection, we use AIC to compare models to one another [@wasserman2004].  
 
 Few academic papers have been written about Nadal, Federer, or Williams.  One paper studies Federer's odds of winning when Nadal suddenly withdrew from Wimbledon and shows that Federer was too heavily favored by bookmakers [@leitner2009].  One analysis of Williams shows how she has gotten better with age, even past the point when other greats began to decline, but the study does not look at surface type [@five2015].
 
@@ -141,8 +141,6 @@ knitr::kable(gs[c(w_id, f_id, n_id), cols], format = "latex",
 The secondary data is partial point by point data for grand slam matches.  In this data set, each row is a point in a match with details on who won the point, serve speed, and whether a player had a forced or unforced error, winner, ace, or net point win.  There is also tournament info such as court surface, year, and time start.  Additional attributes include rally length, winner and final score of the match, retirement, and minutes played.  However, these additional attributes are only available for about 1/8 of the data.   This partial data set consists of `r nrow(gs_partial)` observations (compared to the 5080 in the original grand slams).  The median rank of the winners for the original data is `r median(gs$winner_rank, na.rm = TRUE)`, and the median rank for the winners of the partial data is `r median(gs_partial$winner_rank)`.  The same trend is true for the loser rank.  This means that it is more likely for better players to have court by court data, which may effects our analysis for models when using this more detailed yet partial data.  Additionally, we found that no women's point by point data was recorded for 2015.
 
 ```{r table, fig.pos = 'H'}
-data(gs_partial_players)
-
 top_three <- dplyr::filter(gs_players, name %in% c("Rafael Nadal", "Roger Federer", "Serena Williams"))
 matches_played_slam_year <- top_three %>% group_by(name, tournament, year) %>%
   summarize(matches_played = n())
@@ -212,7 +210,7 @@ It is commonly thought that there is a home court advantage in grand slam matche
 
 Therefore, we want to see how the proportion of wins for the home country changes across the different tournaments. If there really is a home court advantage, the proportion of French wins each round would be higher at the FO than the AO, the USO, and Wim.. The same would be true for Australia, the US, and Great Britain. However, in Figure \ref{fig:home-court} that this is not the case. After accounting for the number of players from each country, we do not find a home court advantage in the grand slams. 
 
-```{r, fig.height=3.5, fig.width=10, fig.align='center', fig.cap = "\\label{fig:home-court} A home court advantage does not appear to exist in any of the grand slams after we account for the number of players from a given country."}
+```{r, fig.height=3.5, fig.width=10, fig.align='center', fig.pos = 'H', fig.cap = "\\label{fig:home-court} A home court advantage does not appear to exist in any of the grand slams after we account for the number of players from a given country."}
 france_wins <- filter(gs_players, ioc == "FRA", round < "QF") %>% 
   group_by(tournament, round) %>% 
   summarise(win_prop = mean(did_win),
@@ -304,7 +302,7 @@ chisq_r16 <- with(filter(gs_players, ioc == "ESP", round == "R16"),
 
 It is also commonly thought that Spaniards play better on clay. We are interested in whether Spaniards win matches at the French Open more than they win in other tournaments. It does appear that Spaniards are winning the French Open more than they are winning other tournaments as the line in Figure \ref{fig:spain-clay} for the French Open is consistently higher than the other tournaments. However, this result is not significant at any round (p-value = `r round(chisq_r128$p.value, 2)`, `r round(chisq_r64$p.value, 2)`, `r round(chisq_r32$p.value, 2)`, `r round(chisq_r16$p.value, 2)`). The ranking of Spaniards in the French Open is, on average, higher than other tournaments, meaning that, on average Spanish players in the French Open are worse in ranking yet winning more often. 
 
-```{r, fig.height=3.8, fig.width=8, out.width="80%", fig.align='center', fig.cap = "\\label{fig:spain-clay} We find that spaniards win more often at the French Open than other slams, even though their ranking is, on average, lower in the FO."}
+```{r, fig.height=3.8, fig.width=8, out.width="80%", fig.align='center',  fig.pos = 'H',  fig.cap = "\\label{fig:spain-clay} We find that spaniards win more often at the French Open than other slams, even though their ranking is, on average, lower in the FO."}
 
 p1 <- ggplot(spain_wins, aes(round, win_prop, color=tournament, group=tournament)) + 
   geom_line() + 
@@ -337,7 +335,7 @@ grid.arrange(top = textGrob("Spaniards perform better on Clay: confirmed",
 
 We find that the distribution of UEs and aces differ by tournament.  In Figure \ref{fig:ue-ace} we plot the total aces in a match vs. the total unforced errors in a match and color by the tournament. Specifically, matches in Wimbledon follow different ace and error patterns than the other tournaments. These matches tend to cluster in the upper left hand part of the graph, meaning that at Wimbledon players are making fewer unforced errors and scoring more aces. It is thought that the ball moves faster on grass courts and so the ace result is unsurprising, but making fewer errors is unexpected, especially because players seldom practice on grass. 
 
-```{r, out.width="70%", fig.width=7, fig.height=3.5, fig.align='center', fig.cap= "\\label{fig:ue-ace}We see Wim. matches tend to have more aces and fewer unforced errors than the other tournaments."}
+```{r, out.width="70%", fig.width=7, fig.height=3.4, fig.align='center', fig.cap= "\\label{fig:ue-ace}We see Wim. matches tend to have more aces and fewer unforced errors than the other tournaments."}
 ggplot(gs_partial, aes(w_n_ue + w_n_ue, w_n_aces + w_n_aces,
                            label = tournament, color=tournament)) + 
   geom_jitter() +
@@ -346,8 +344,6 @@ ggplot(gs_partial, aes(w_n_ue + w_n_ue, w_n_aces + w_n_aces,
   my_theme + scale_color_manual("Tournament", values = tournament_colors)
 
 ```
-
-
 
 
 # Methods {#sec:methods}
@@ -360,7 +356,7 @@ We use a hierarchical modeling approach to examine the grand slam results from a
 
 We initially planned to use points won by an individual as our outcome variable, but found that it may not be an ideal measure of player performance. For instance, players may score few points in a match due to a poor performance, but they may also score few (relative) points if they win a short match. Modeling the number of points won is also complicated by the difference between length of matches for men (best of 5 sets) and women (best of 3 sets). For these reasons, we chose to model whether a player won the match using a hierarchical logistic regression approach, with possible covariates including country of origin (IOC), tournament that the match was played at, whether the match occurred in Round of 16 or later, rank of player, rank of opposing player, year of the match, and whether it was a men's or women's match.
 
-We considered a variety of models incorporating effects as either fixed or random. That is $\pi_i = \beta X_i + \delta_i$, where $\pi_i = P(Y_i = 1)$ (i.e. a player win), $X_i$ are the fixed effects included in the model, and $\delta_i$ is a random effect across either players or years. Based on AIC, we found the model that included a player-level term for each tournament, but excluded fixed terms for country, was the best fit for the data. The models are summarized in Table \ref{tab:model.sums}.
+We considered a variety of models incorporating effects as either fixed or random. That is $E[Y_{\% pts. won}|X] = \beta X$, where $E[\pi_i|X_i, \delta_i] = \beta X_i + \delta_i$ (i.e. a player win), $X_i$ are the fixed effects included in the model, and $\delta_i$ is a random effect across either players or years. Based on AIC, we found the model that included a player-level term for each tournament, but excluded fixed terms for country, was the best fit for the data. The models are summarized in Table \ref{tab:model.sums}.
 
 
 ```{r}
@@ -419,16 +415,20 @@ knitr::kable(model.sums[,c("name", "fixed", "random", "aic", "edf")], format = "
 
 If we examine the fixed effects for all seven models (see Fig. \ref{fig:mixed-mods-ests} (left)), we see that the parameter estimates do not substantially change across models. Rank and opponent rank appear to best explain the probability of winning the match. Other fixed effects in the models (whether it was a late round in the grand slam, the year, or ATP/WTA) were not found to be significantly different than zero. If we look at the random effects (see Fig. \ref{fig:mixed-mods-ests} (right)) for Williams, Federer, and Nadal, however, the individual effects are not informative (especially after taking uncertainty into consideration). 
 
-```{r, fig.height = 3.8, fig.width=10, fig.cap ="\\label{fig:mixed-mods-ests}Estimated fixed effects for all seven models and player-level effects for Williams, Federer and Nadal under the ind_no_ioc model."}
+```{r, fig.height = 3.8, fig.width=10, fig.cap ="\\label{fig:mixed-mods-ests}Estimated fixed effects for all seven models (left plot) and player-level effects for Williams, Federer and Nadal under the ind_no_ioc model."}
 fixed.effects.plot = model.ests %>%
   filter(., !grepl("ioc", term)) %>%
   ggplot(., aes(x = term, y = estimate, col = model, ymin = estimate - 2*std.error, ymax = estimate + 2*std.error)) +
   geom_errorbar(width = .7, position = position_dodge()) +
   my_theme +
-  theme(axis.text.x=element_text(angle = 45, hjust = 1)) +
+  # coord_flip() +
+  theme(axis.text.x=element_text(angle = 30, hjust = 1)) +
   ggtitle("Fixed effects") +
   scale_color_brewer("",palette = "Dark2") +
-  theme(legend.position = "none") + 
+  theme(legend.position = "bottom", legend.text=element_text(size=8),
+        # legend.margin=margin(0, 0, 0, 0),
+        legend.margin=margin(t = 0, unit='cm'),
+        legend.box.margin=margin(-10,-10,-10,-10)) + 
   xlab("") +
   ylab("Estimate") +
   scale_x_discrete("", breaks = waiver(), labels = c("Intercept", "ATP", "Late round", "Op Rank (log)", "Rank (log)", "French", "US", "Wimbledon", "2014", "2015", "2016", "2017"))+
@@ -446,7 +446,7 @@ random.effects.plot = ran_tourn %>%
   scale_fill_brewer(palette = "Dark2") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))+
   ggtitle("Random effects") +
-  theme(legend.position = "bottom") +
+  theme(legend.position = "bottom", legend.text=element_text(size=8)) +
   guides(col = guide_legend(nrow=3))
 
 gs_players$name_int = as.integer(as.factor(gs_players$name))
@@ -469,7 +469,7 @@ top_three_ranef = as.data.frame(ranef(ind_logistic_noioc, condVar = TRUE)) %>%
   theme(legend.text=element_text(size=8))
 
 grid.arrange(fixed.effects.plot, top_three_ranef, nrow = 1, widths = c(.5, .5),
-             top = textGrob("`ind_no_ioc' model",
+             top = textGrob("Parameter estimates from logistic model",
                             gp=gpar(fontsize=20, fontfamily="serif")))
 ```
 
@@ -505,7 +505,7 @@ load("../../data/n_ue_mod.rda")
 load("../../data/n_winners_mod.rda")
 ```
 
-```{r, fig.height = 3.4, fig.width=10, fig.cap = "\\label{fig:mixed-mods-stats}Estimated player-level effects for Williams, Federer and Nadal when modeling aces, net winners, and unforced errors."}
+```{r, fig.height = 3.3, fig.width=10, fig.cap = "\\label{fig:mixed-mods-stats}Estimated player-level effects for Williams, Federer and Nadal when modeling aces, net winners, and unforced errors."}
 aces_ranef = as.data.frame(ranef(n_aces_mod, condVar = TRUE)) %>%
   mutate(tournament = gsub("tournament", "", term)) %>%
   filter(., grp == "Serena Williams" | grp == "Rafael Nadal" | grp == "Roger Federer") %>%
@@ -670,9 +670,9 @@ Based on the model results, we do not see that Williams is dominant on the hard 
 
 # Discussion {#sec:discussion}
 
-At the highest level, we find that the general point distribution seems to be the same for all court surfaces. There may be some differences in player performance on the different court surfaces, but these differences are not definitive (e.g. that Spaniards perform better on clay). We do not find evidence for a home court advantage across all players in the grand slams. We also find that the FO seems to be the most different out of the four grand slams, but Wimbledon also displays some unique characteristics with regards to low amounts of UEs. 
+At the highest level, we find that the general point distribution seems to be the same for all court surfaces. There may be some differences in player performance on the different court surfaces, but these differences are not definitive (e.g. that Spaniards perform better on clay). We do not find evidence for a home court advantage across all players in the grand slams. We also find that the French Open seems to be the most different out of the four grand slams, but Wimbledon also displays some unique characteristics with regards to low amounts of UEs. 
 
-Using a hierarchical model approach, we do not see strong individual effects for Williams, Federer, and Nadal in predicting wins. We do, however, see differences for these players in hierarchical models to predict aces, net winners, and UEs, and that these differences are largely consistent with common tennis knowledge.
+Using a hierarchical model approach, we do not see strong individual effects for Williams, Federer, and Nadal in predicting wins. We do, however, see differences for these players in hierarchical models to predict aces, net winners, and unforced errors, and that these differences are largely consistent with common tennis knowledge.
 
 Individual linear models predicting percent of points won show that Nadal was best on clay, Federer is best on grass, and Williams is strong in all grand slams, which also agrees with prior conceptions. 
 
