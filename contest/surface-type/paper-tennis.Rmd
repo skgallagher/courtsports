@@ -607,6 +607,16 @@ Looking at Nadal individually, the model with the lowest AIC has positive coeffi
 
 
  For the significant variables ($\alpha$ = 95\%), after adjusting for the other variables, we expect percent of points won to be $`r signif(abs(coefs_n[2]), 2)` \pm `r signif(2 * sqrt(cov_n[2,2]), 2)`$ less at the Australian Open and $`r signif(abs(coefs_n[4]), 2)` \pm `r signif(2 * sqrt(cov_n[4,4]), 2)`$ less at Wimbledon compared to the French Open; to increase by $`r signif(abs(coefs_n[5]), 2)`\pm `r signif(2 * sqrt(cov_n[5,5]), 2)`$ for a one unit increase in opponent rank; a $`r .01 * signif(abs(coefs_n[7]), 2)`\pm `r signif(.02 * sqrt(cov_n[7,7]), 2)`$ increase for a .01 increase in percent of break points won; and to decrease by $`r .01 * signif(abs(coefs_n[8]), 2)` \pm `r signif(.02 * sqrt(cov_n[8,8]), 2)`$ for a .01 increase in percent of net points won.  As such, we see clear evidence Nadal performs better at the French Open compared to the other grand slams.
+ 
+ 
+ 
+```{r nadal-graph}
+ ## NADAL COEF SIZE
+ 
+df_n <- data.frame(coeff = names(step_model_n$coeff), ave = step_model_n$coeff, sd = sqrt(diag(vcov(step_model_n))))
+df_n$player <- "Nadal"
+```
+
 
 
 ## Federer: Wimbledon extraordinaire: confirmed
@@ -626,6 +636,17 @@ gf <- ggplot(lm(step_model_f$formula, data = step_model_f$data)) + geom_hline(yi
 coefs_f <- coefficients(step_model_f)
 cov_f <- vcov(step_model_f)
 ```
+
+```{r federer-graph}
+
+ ## federer
+ 
+df_f <- data.frame(coeff = names(step_model_f$coeff), ave = step_model_f$coeff, sd = sqrt(diag(vcov(step_model_f))))
+df_f$player <- "Federer"
+```
+
+
+
 
 
 For Federer, the model with the lowest AIC has negative coefficients for Australian Open, French Open, and US Open vs Wimbledon, and W/UE,  It has positive coefficients for opponent rank, percent of break points won, and all the interaction terms: court and W/UE.
@@ -652,12 +673,73 @@ cov_w <- vcov(step_model_w)
 coefs_w <- coefficients(step_model_w)
 ```
 
+
+```{r williams-graph}
+ ## WilliamsCOEF SIZE
+ 
+df_w <- data.frame(coeff = names(step_model_w$coeff), ave = step_model_w$coeff, sd = sqrt(diag(vcov(step_model_w))))
+df_w$player <- "Williams"
+```
+
+
+
 For Williams, the model with the lowest AIC selected 22 coefficients, which makes it the largest model of the three.  Since Williams only has 59 observations, we believe this model is overfitting and so caution the reader to be wary of any inference from this model.  It should also be noted that no women's point by point data was recorded for 2015 (in which she won three grand slams).
 
 For the significant variables ($\alpha$ = 95$\%$), while adjusting for the other variables, we expect percent of points won to increase by $`r signif(abs(coefs_w[5]), 2)` \pm `r signif(2 * sqrt(cov_w[5,5]), 2)`$ for a 1 unit increase in opponent rank; to increase by $`r signif(abs(coefs_w[6] + coefs_w[11]) , 2)` \pm `r signif(2 * sqrt(cov_w[6,6] + cov_w[11,11] + 2 * cov_w[6,11]), 2)`$ for a one unit increase in W/UE at FO, to increase by  $`r signif(abs(coefs_w[6] + coefs_w[12]) , 2)` \pm `r signif(2 * sqrt(cov_w[6,6] + cov_w[12,12] + 2 * cov_w[6,12]), 2)`$ for a one unit increase in W/UE at USO, and to increase by  $`r signif(abs(coefs_w[6] + coefs_w[13]) , 2) `\pm `r signif(2 * sqrt(cov_w[6,6] + cov_w[13,13] + 2 * cov_w[6,13]), 2)`$ for a one unit increase in W/UE at Wim. compared to AO; to increase by  $`r signif(.01 * abs(coefs_w[8] + coefs_w[17]) , 2)`\pm `r signif(.02 * sqrt(cov_w[8,8] + cov_w[17,17] + 2 * cov_w[17,8]), 2)`$ for a .01 increase in percent of aces at the FO; and to increase by $`r signif(.01 * abs(coefs_w[9] + coefs_w[20]) , 2)` \pm `r signif(.02 * sqrt(cov_w[9,9] + cov_w[20,20] + 2 * cov_w[20,9]), 2)`$ for a .01 increase in percent of break points won at the FO compared to AO.
 
 
 Based on the model results, we do not see that Williams is dominant on the hard courts compared to the other courts.  Rather, she has respectable results on all the surfaces.  
+
+
+```{r plot-individual-effects}
+df <- rbind(df_n, df_w, df_f)
+keep_coefs <- which(df$coeff %in% c("(Intercept)", "opponent_rank",
+                                    "pct_ace", "pct_bp", "pct_netpt",
+                                    "ave_serve_speed", "wue_ratio"))
+df <- df[keep_coefs,]
+ggplot(df, aes(x = coeff, y = ave, col = player)) +
+  geom_errorbar(aes(ymin = ave - 2 *sd, ymax = ave + 2 * sd), position = "dodge", width = .3) + 
+   my_theme +
+  # coord_flip() +
+  theme(axis.text.x=element_text(angle = 30, hjust = 1)) +
+  geom_hline(yintercept = 0, linetype = "dashed", alpha = .4) + 
+  ggtitle("Effects on Reference Court") +
+  scale_color_brewer("",palette = "Dark2") +
+  theme(legend.position = "bottom", legend.text=element_text(size=8),
+        # legend.margin=margin(0, 0, 0, 0),
+        legend.margin=margin(t = 0, unit='cm'),
+        legend.box.margin=margin(-10,-10,-10,-10)) + 
+  xlab("") + coord_flip() + 
+  ylab("Estimate") +
+  scale_x_discrete(labels = c("Intercept", "Opp. Rank", "% Aces", "% Break Points Won", "% Net Points Won", "Ave. Serve Speed", "Winner:UE"))
+  guides(col = guide_legend(nrow=2))
+  #ggsave("~/Documents/ref-courts-eff.pdf", width = 8, height = 6)
+```
+  
+  
+```{r}
+df <- rbind(df_n, df_w, df_f)
+keep_coefs <- which(df$coeff %in% c("(Intercept)", "opponent_rank",
+                                    "pct_ace", "pct_bp", "pct_netpt",
+                                    "ave_serve_speed", "wue_ratio"))
+  ## Interaction Effects
+df2 <- df[-keep_coefs,]
+ggplot(df2, aes(x = coeff, y = ave, col = player)) +
+  geom_errorbar(aes(ymin = ave - 2 *sd, ymax = ave + 2 * sd), position = "dodge", width = .3) + 
+   my_theme +
+  # coord_flip() +
+  theme(axis.text.x=element_text(angle = 30, hjust = 1)) +
+  ggtitle("Interaction Effects") +
+  scale_color_brewer("",palette = "Dark2") +
+  theme(legend.position = "bottom", legend.text=element_text(size=8),
+        # legend.margin=margin(0, 0, 0, 0),
+        legend.margin=margin(t = 0, unit='cm'),
+        legend.box.margin=margin(-10,-10,-10,-10)) + 
+  xlab("") +
+  ylab("Estimate") + facet_grid(~player) + coord_flip() + 
+  #scale_x_discrete(labels = c("Intercept", "Opp. Rank", "% Aces", "% Break Points Won", "% Net Points Won", "Ave. Serve Speed", "Winner:UE"))
+  guides(col = guide_legend(nrow=2))
+```
 
 # Discussion {#sec:discussion}
 
