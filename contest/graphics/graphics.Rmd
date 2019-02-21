@@ -23,6 +23,8 @@ library(kableExtra)
 library(pander)
 library(gridExtra)
 library(grid)
+library(ggrepel)
+
 
 ## To change into library(courtsports)
 devtools::load_all("../..")
@@ -32,7 +34,7 @@ devtools::load_all("../..")
 ```{r data-cleaning, include = FALSE}
 data("gs")
 data("gs_players")
-data("gs_partial_pbp")
+data("gs_partial")
 
 my_theme <-  theme_bw() + # White background, black and white theme
   theme(axis.text = element_text(size = 12),
@@ -46,6 +48,10 @@ league_colors <- c("#0C2340", "#902BA3")
 
 win_colors <- c("#336699", "#339966")
 
+# with yellow for us
+tournament_colors <- c("#0297DB", "#b06835", "#ffe500", "#54008b")
+
+
 ```
 
 
@@ -54,6 +60,8 @@ win_colors <- c("#336699", "#339966")
 We first examine the distibution of points earned per match. We find that the distribution is similar across tournament, with Wimbledon differing slightly from the other grand slams. As expected, there are more points earned in the WTA than the ATP due to the differing numbers of games played. Also unsuprisingly, the winners of the match tended to earn more points than the losers.   
 
 ```{r, fig.height=5, fig.width=12}
+tournament_colors <- c("#0297DB", "#b06835", "#ffe500", "#54008b")
+
 
 # grid.arrange(p1, p2, p3, ncol=3, widths=c(.25, .41, .34))
 
@@ -98,6 +106,9 @@ Therefore, we want to see how the proportion of wins for the home country change
 
 
 ```{r, fig.height=4, fig.width=12}
+
+tournament_colors <- c("#0297DB", "#b06835", "#ffd500", "#54008b")
+
 france_wins <- filter(gs_players, ioc == "FRA", round < "QF") %>% 
   group_by(tournament, round) %>% 
   summarise(win_prop = mean(did_win),
@@ -109,6 +120,11 @@ us_wins <- filter(gs_players, ioc == "USA", round < "QF") %>%
             win_prop_se = sqrt(win_prop*(1-win_prop)/n()))
 
 aus_wins <- filter(gs_players, ioc == "AUS", round < "QF") %>% 
+  group_by(tournament, round) %>% 
+  summarise(win_prop = mean(did_win),
+            win_prop_se = sqrt(win_prop*(1-win_prop)/n()))
+
+gbr_wins <- filter(gs_players, ioc == "GBR", round < "QF") %>% 
   group_by(tournament, round) %>% 
   summarise(win_prop = mean(did_win),
             win_prop_se = sqrt(win_prop*(1-win_prop)/n()))
@@ -132,9 +148,16 @@ p3 <- ggplot(aus_wins, aes(round, win_prop, color=tournament, group=tournament))
   # geom_point() +
   labs(title = "Australian players",
        x = "", y = "Win proportion") + 
+  scale_color_manual(guide=FALSE, values=tournament_colors) + my_theme
+
+p4 <- ggplot(gbr_wins, aes(round, win_prop, color=tournament, group=tournament)) + 
+  geom_line() + 
+  # geom_point() +
+  labs(title = "British players",
+       x = "", y = "Win proportion") + 
   scale_color_manual(" ", values=tournament_colors) + my_theme
 
-grid.arrange(p1,p2, p3, nrow=1, widths = c(.29, .29, .42),
+grid.arrange(p3, p1,p2,  p4, nrow=1, widths = c(.22, .22, .22, .34),
              top = textGrob("Home court advantage debunked: win proportion by country",
                             gp=gpar(fontsize=20)),
              bottom = textGrob("Note: we only look at the first 4 rounds due to decreasing sample size",
@@ -150,6 +173,8 @@ grid.arrange(p1,p2, p3, nrow=1, widths = c(.29, .29, .42),
 It is also commonly thought that Spaniards play better on clay. We are intersted in whether Spaniards win the French Open more than they win in other tournaments. It does appear that Spaniards are winning the French Open more than they are winning other tournaments. But, this result is not significant. In addition, the ranking of Spaniards in the French Open is, on average, higher than other tournmanents, which may help explain this common misconseption, although this result is not significant either. 
 
 ```{r, fig.height=5, fig.width=12}
+
+tournament_colors <- c("#0297DB", "#b06835", "#ffd500", "#54008b")
 
 spain_wins <- filter(gs_players, ioc == "ESP", round < "QF") %>% 
   group_by(tournament, round) %>% 
@@ -193,6 +218,159 @@ grid.arrange(p1,p2, nrow=1, widths = c(.44, .56),
                            gp=gpar(fontfamily="serif")))
 
 ```
+
+
+
+## Follow-up
+
+```{r, fig.width=10, fig.height=10}
+
+
+p_atp <- gs_players %>% filter(league == "ATP") %>%
+ggplot( aes(log(ht+1), log(ace+1))) + 
+  geom_jitter(aes(color = tournament)) + 
+  scale_color_manual(guide=FALSE, values = tournament_colors) + 
+  geom_smooth(aes(color = tournament), method = "lm", se=FALSE) + 
+  geom_label_repel(data=subset(gs_players %>% filter(league == "ATP"), (log(ht+1) > 5.25 & log(ace+1) > 3.9) |
+                                (log(ht+1) > 5.28 & log(ace+1) < 1) | 
+                                (log(ht+1) < 5.2 & log(ace+1) > 3)),
+            aes(log(ht+1), log(ace+1), label=name),
+            alpha=.6, seed=1234, show.legend=FALSE) + 
+  geom_label_repel(data=subset(gs_players, (log(ht+1) > 5.25 & log(ace+1) > 3.9) |
+                                (log(ht+1) > 5.28 & log(ace+1) < 1) | 
+                                (log(ht+1) < 5.2 & log(ace+1) > 3)),
+            aes(log(ht+1), log(ace+1), label = name),
+            seed=1234, fill=NA, show.legend=FALSE) +
+  labs(x = "log(height + 1)", title = "ATP")+
+  my_theme
+
+p_wta <- gs_players %>% filter(league == "WTA") %>%
+ggplot(aes(log(ht+1), log(ace+1))) + 
+  geom_jitter(aes(color = tournament)) + 
+  scale_color_manual("Tournament", values = tournament_colors) + 
+  geom_smooth(aes(color = tournament), method = "lm", se=FALSE) + 
+  geom_label_repel(data=subset(filter(gs_players, league == "WTA"),
+                               (log(ht+1) > 5.22 & log(ace+1) > 2.6) |
+                                (log(ht+1) > 5.225 & log(ace+1) < .5) | 
+                                (log(ht+1) < 5.13 & log(ace+1) > 2.1) | 
+                                (log(ht+1) < 5.09 & log(ace+1) > 1.5) |
+                                 (log(ace + 1) > 2.82)),
+            aes(log(ht+1), log(ace+1), label=name),
+            alpha=.6, seed=1234, show.legend=FALSE) + 
+  geom_label_repel(data=subset(filter(gs_players, league == "WTA"),
+                               (log(ht+1) > 5.22 & log(ace+1) > 2.6) |
+                                (log(ht+1) > 5.225 & log(ace+1) < .5) | 
+                                (log(ht+1) < 5.13 & log(ace+1) > 2.1) | 
+                                (log(ht+1) < 5.09 & log(ace+1) > 1.5) |
+                                 (log(ace + 1) > 2.82)),
+            aes(log(ht+1), log(ace+1), label=name),
+            seed=1234, fill=NA, show.legend=FALSE) +
+  labs(x = "log(height + 1)", title = "WTA")+
+  my_theme + theme(legend.position="bottom")
+
+
+
+grid.arrange(p_atp, p_wta, nrow=2, heights = c(.46, .54),
+             top = textGrob("Taller players are better servers: confirmed",
+                            gp=gpar(fontsize=20, fontfamily="serif")))
+
+```
+
+
+
+# dont even know
+
+We find that the distribution of errors and aces differ by tournament. Specifically, GAMES? in Wimbledon follow different ace and error patterns than the other tournaments. 
+
+```{r, fig.height=3, fig.width=4}
+ggplot(gs_partial, aes(w_n_ue + w_n_ue, w_n_aces + w_n_aces,
+                           label = tournament, color=tournament)) + 
+  geom_jitter() +
+  labs( title = "Distribution of errors and aces differ by tournmanet",
+        x = "Total unforced errors", y = "Total aces") +
+  my_theme + scale_color_manual("Tournament", values = tournament_colors)
+
+```
+
+
+# 5 matches to 3
+
+```{r}
+gs_men <- filter(gs, league == "ATP") %>% 
+  rowwise() %>%
+  mutate(winner_wins_after_3 = sum(W1 > L1,
+                                 W2 > L2,
+                                 W3 > L3),
+         winner_after_3 = if((winner_wins_after_3 >= 2) & 
+                             !is.na(winner_wins_after_3)) winner_name else
+                               if(is.na(winner_wins_after_3)) NA else loser_name,
+         winner_same = ifelse((winner_after_3 == winner_name) & !is.na(winner_after_3),
+                              "Yes", ifelse(is.na(winner_after_3), NA, "No")))
+
+table(gs_men$winner_wins_after_3, useNA = "always")
+table(is.na(gs_men$winner_after_3))
+table(gs_men$winner_same)
+
+prop.table(table(gs_men$winner_same))
+
+ggplot(gs_men) + geom_density(aes(winner_rank - loser_rank, color = factor(winner_same)))
+
+```
+
+
+
+# MDS 
+
+
+We are interested in how the tournaments differ in terms of number of winners, number of unforced errors, and number of aces for both players within a MATCH???. We  
+
+visualize the distance between tournaments 
+
+
+```{r, fig.height=4, fig.width=10, eval=FALSE}
+# n_winners_p1, n_winners_p2,
+gs_num <- ungroup(filter(gs_partial_pbp, Tour == "atp")) %>%
+  select( n_ue_p1, n_ue_p2,
+         n_aces_p1, n_aces_p2) %>%
+  na.omit()
+
+mds <- cmdscale(dist(scale(gs_num)), k = 2) %>%
+  as.data.frame() 
+
+# mds <- cmdscale(dist(gs_num), k = 2) %>%
+#   as.data.frame() 
+mds$tournament <- ungroup(filter(gs_partial_pbp, Tour == "atp")) %>%
+  select(n_winners_p1, n_winners_p2, n_ue_p1, n_ue_p2, 
+         n_aces_p1, n_aces_p2, tournament) %>% 
+  na.omit() %>% pull( tournament)
+
+
+p_mds <- ggplot(mds, aes(V1, V2, label = tournament, color=tournament)) + 
+  geom_jitter() +
+  labs( title = "Original") +
+  my_theme + scale_color_manual(guide=FALSE, values = tournament_colors)
+
+
+ggplot(gs_partial_pbp, aes(n_ue_p1 + n_ue_p2, n_aces_p1+ n_aces_p2,
+                           label = tournament, color=tournament)) + 
+  geom_jitter() +
+  labs( title = "Original") +
+  my_theme + scale_color_manual( values = tournament_colors)
+
+p_mds_zoom <- ggplot(mds, aes(V1, V2, label = tournament, color=tournament)) + 
+  geom_jitter() + xlim(c(-1, 2)) + ylim(c(-2, 1.5)) +
+  labs( title = "Zoomed") +
+  my_theme + scale_color_manual("Tournament", values = tournament_colors)
+
+
+grid.arrange(p_mds, p_mds_zoom, nrow=1, widths = c(.42, .58),
+             top = textGrob("MDS plot with: aces, winners, and unforced errors",
+                            gp=gpar(fontsize=20, fontfamily="serif")))
+
+
+```
+
+
 
 
 # Points won 
@@ -678,14 +856,8 @@ ggpairs(gs_players,
 ```
 
 
-## Follow-up
-
-```{r, fig.height=3, fig.width=4}
-ggplot(gs_players) + geom_point(aes(log(ht+1), log(ace+1), color = factor(did_win)))
-```
 
 
-# MDS 
 
 ```{r, eval=FALSE}
 gs_num <- select(gs, w_ace, w_df, w_svpt, w_1stIn, w_1stWon, w_2ndWon,
@@ -764,6 +936,9 @@ ggplot(mds, aes(V1, V2, label = tournament, color=tournament)) + geom_text()
 # MDS 
 
 
+
+
+
 ```{r, eval=FALSE}
 # winner_rank, loser_rank, 
 gs_num <- select(ungroup(gs_partial_pbp), winner_age,
@@ -834,7 +1009,4 @@ filter(mds2, V2 > 2)
 
 
 ```
-
-```
-
 
