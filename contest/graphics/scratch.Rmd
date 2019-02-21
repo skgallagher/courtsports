@@ -1,0 +1,68 @@
+---
+title: "scratch"
+author: "Kayla Frisoli, Shannon Gallagher, and Amanda Luby"
+date: "September 15, 2018"
+output: html_document
+---
+
+
+### Tall players and aces
+
+Another common thought about tennis is that taller players are better servers. We find this to be true and see a strong positive correlation between teh variables. We highlight some interesting players BLAH BLAH BLAH. 
+
+
+```{r, fig.width=10, fig.height=4.8, fig.align='center'}
+
+set.seed(8)
+
+atp_servers <- c("Ivo Karlovic", "John Isner", "Rafael Nadal",
+                 "Roger Federer", "Andy Murray")
+atp_servers <- sapply(atp_servers,
+                      function(x) return(sample(which(gs_players$name == x), 2))) %>%
+  as.numeric() %>% gs_players[., ]
+
+wta_servers <- c("Karolina Pliskova", "Caroline Wozniacki",
+                 "Venus Williams", "Serena Williams", "Madison Keys")
+wta_servers <- sapply(wta_servers,
+                      function(x) return(sample(which(gs_players$name == x), 2))) %>%
+  as.numeric() %>% gs_players[., ]
+
+
+p_atp <- gs_players %>% filter(league == "ATP") %>%
+ggplot( aes(log(ht+1), log(ace+1))) + 
+  geom_jitter(aes(color = tournament)) + 
+  scale_color_manual(" ", values = tournament_colors) + 
+  geom_smooth( method = "lm", color="black") + 
+  geom_label_repel(data=atp_servers,
+            aes(log(ht+1), log(ace+1), label=name),
+            alpha=.8, seed=1234, show.legend=FALSE) + 
+  geom_label_repel(data=atp_servers,
+            aes(log(ht+1), log(ace+1), label = name),
+            seed=1234, fill=NA, show.legend=FALSE) +
+  labs(x = "log(height + 1)", title = "ATP") +
+  my_theme
+
+p_wta <- gs_players %>% filter(league == "WTA") %>%
+ggplot(aes(log(ht+1), log(ace+1))) + 
+  geom_jitter(aes(color = tournament)) + 
+  scale_color_manual(" ", values = tournament_colors) + 
+  geom_smooth(method = "lm", color="black") + 
+  geom_label_repel(data=wta_servers,
+            aes(log(ht+1), log(ace+1), label=name),
+            alpha=.8, seed=1234, show.legend=FALSE) + 
+  geom_label_repel(data=wta_servers,
+            aes( log(ht+1), log(ace+1), label=name),
+            seed=1234, fill=NA, show.legend=FALSE) +
+  labs(x = "log(height + 1)", title = "WTA")+
+  my_theme 
+
+# grid.arrange(p_atp, p_wta, nrow=1, widths=c(.4, .6),
+#              top = textGrob("Taller players are better servers: confirmed",
+#                             gp=gpar(fontsize=20, fontfamily="serif")))
+
+ggarrange(p_atp, p_wta, common.legend = TRUE, legend="bottom") %>%
+  grid.arrange(top = textGrob("Taller players are better servers: confirmed",
+                            gp=gpar(fontsize=20, fontfamily="serif")))
+
+
+```
