@@ -35,7 +35,7 @@ library(cowplot)
 library(ggpubr)
 
 ## To change into library(courtsports)
-library(courtsports)
+devtools::load_all("~/courtsports")
 
 ```
 
@@ -45,6 +45,16 @@ data(gs)
 data(gs_players)
 data(gs_partial)
 data(gs_partial_players)
+
+wim_inds <- which(gs$tournament == "Wimbledon")
+head(gs[wim_inds,])
+
+serena_inds <- which(gs_partial_players$name == "Serena Williams")
+gs_partial_players[serena_inds[1],]
+
+head(gs_partial)
+djoker_inds <- which(gs_partial_players$name == "Novak Djokovic")
+gs_partial_players[djoker_inds[1],]
 
 ```
 
