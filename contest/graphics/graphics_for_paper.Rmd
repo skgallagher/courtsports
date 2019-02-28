@@ -31,6 +31,7 @@ library(broom)
 library(lme4)
 library(cowplot)
 library(ggpubr)
+library(reshape2)
 
 
 ## To change into library(courtsports)
@@ -238,14 +239,16 @@ gbr_wins <- filter(gs_players, ioc == "GBR", round < "QF") %>%
 
 
 
+our_alpha <- 0.5
 
 p1<- ggplot(france_wins, aes(round, win_prop,
                              color=tournament, group=tournament,
-                             alpha = tournament)) + 
+                             alpha = tournament,
+                             size = tournament)) + 
   # geom_line(size = 3) + 
   # geom_point() +
   labs(title = "French players",
-       x = "", y = "Win proportion") + 
+       x = "", y = " ") + 
   geom_line(size=3) + 
   scale_color_manual(guide=FALSE, values=tournament_colors,
                                 labels = c("Australian Open\n(Plexicushion)",
@@ -253,7 +256,9 @@ p1<- ggplot(france_wins, aes(round, win_prop,
                                            "US Open\n(DecoTurf)",
                                            "Wimbledon\n(Grass)")) + my_theme   + 
 scale_alpha_manual(guide = FALSE,
-                   values = c(0.2, 1, 0.2, 0.2))
+                   values = c(our_alpha, 1, our_alpha, our_alpha)) + 
+scale_size_manual(guide = FALSE,
+                   values = c(1, 3, 1, 1))
 
 p2 <- ggplot(us_wins, aes(round, win_prop,
                           color=tournament, group=tournament,
@@ -261,7 +266,8 @@ p2 <- ggplot(us_wins, aes(round, win_prop,
   # geom_line() + 
   # geom_point() +
   labs(title = "USA players",
-       x = "", y = "Win proportion") + 
+              x = "", y = " ") + 
+       # x = "", y = "Win proportion") + 
     geom_line(size=3) + 
   scale_color_manual(guide=FALSE, values=tournament_colors,
                                 labels = c("Australian Open\n(Plexicushion)",
@@ -269,7 +275,7 @@ p2 <- ggplot(us_wins, aes(round, win_prop,
                                            "US Open\n(DecoTurf)",
                                            "Wimbledon\n(Grass)")) + my_theme   + 
 scale_alpha_manual(guide = FALSE,
-                   values = c(0.2, 0.2, 1, 0.2))
+                   values = c(our_alpha, our_alpha, 1, our_alpha))
 
 p3 <- ggplot(aus_wins, aes(round, win_prop,
                            color=tournament, group=tournament, alpha = tournament)) + 
@@ -277,6 +283,7 @@ p3 <- ggplot(aus_wins, aes(round, win_prop,
   # geom_point() +
   labs(title = "Aus. players",
        x = "", y = "Win proportion") + 
+         # x = "", y = " ") + 
     geom_line(size=3) + 
   scale_color_manual(guide=FALSE, values=tournament_colors,
                                 labels = c("Australian Open\n(Plexicushion)",
@@ -284,7 +291,7 @@ p3 <- ggplot(aus_wins, aes(round, win_prop,
                                            "US Open\n(DecoTurf)",
                                            "Wimbledon\n(Grass)")) + my_theme   + 
 scale_alpha_manual(guide = FALSE,
-                   values = c(1, 0.2, 0.2, 0.2))
+                   values = c(1, our_alpha, our_alpha, our_alpha))
 
 
 p4 <- ggplot(gbr_wins, aes(round, win_prop, color=tournament,
@@ -292,7 +299,8 @@ p4 <- ggplot(gbr_wins, aes(round, win_prop, color=tournament,
                            alpha = tournament)) + 
   geom_line(size=3) + 
   labs(title = "British players",
-       x = "", y = "Win proportion") + 
+       # x = "", y = "Win proportion") + 
+       x = "", y = " ") + 
   scale_color_manual(" ", values=tournament_colors,
                                 labels = c("Australian Open\n(Plexicushion)",
                                            "French Open\n(Clay)",
@@ -300,7 +308,7 @@ p4 <- ggplot(gbr_wins, aes(round, win_prop, color=tournament,
                                            "Wimbledon\n(Grass)")) + my_theme +
   guides(color = guide_legend(override.aes = list(size = 7)))  + 
 scale_alpha_manual(guide = FALSE,
-                   values = c(0.2, 0.2, 0.2, 1))
+                   values = c(our_alpha, our_alpha, our_alpha, 1))
 
 # 
 # + 
@@ -330,6 +338,123 @@ grid.arrange(.,
 
 ```
 
+
+
+```{r}
+
+
+p1<- ggplot(france_wins, aes(round, win_prop,
+                             color=tournament, group=tournament,
+                             # alpha = tournament,
+                             size = tournament,
+                             linetype = tournament)) + 
+  # geom_line(size = 3) + 
+  # geom_point() +
+  labs(title = "French players",
+       x = "", y = " ") + 
+  geom_line() + 
+  scale_color_manual(guide=FALSE, values=tournament_colors,
+                                labels = c("Australian Open\n(Plexicushion)",
+                                           "French Open\n(Clay)",
+                                           "US Open\n(DecoTurf)",
+                                           "Wimbledon\n(Grass)")) + my_theme   + 
+# scale_alpha_manual(guide = FALSE,
+#                    values = c(our_alpha, 1, our_alpha, our_alpha)) + 
+scale_size_manual(guide = FALSE,
+                   values = c(1, 3, 1, 1)) + 
+  scale_linetype_manual(guide = FALSE,
+                   values = c(2, 1, 2, 2))
+
+p2 <- ggplot(us_wins, aes(round, win_prop,
+                          color=tournament, group=tournament,
+                          # alpha = tournament,
+                          size = tournament,
+                          linetype=tournament)) + 
+  # geom_line() + 
+  # geom_point() +
+  labs(title = "USA players",
+              x = "", y = " ") + 
+       # x = "", y = "Win proportion") + 
+    geom_line() + 
+  scale_color_manual(guide=FALSE, values=tournament_colors,
+                                labels = c("Australian Open\n(Plexicushion)",
+                                           "French Open\n(Clay)",
+                                           "US Open\n(DecoTurf)",
+                                           "Wimbledon\n(Grass)")) + my_theme   + 
+  scale_size_manual(guide = FALSE,
+                   values = c(1, 1, 3, 1)) + 
+  scale_linetype_manual(guide = FALSE,
+                   values = c(2, 2, 1, 2))
+# scale_alpha_manual(guide = FALSE,
+#                    values = c(our_alpha, our_alpha, 1, our_alpha))
+
+p3 <- ggplot(aus_wins, aes(round, win_prop,
+                           color=tournament, group=tournament, # alpha = tournament,
+                           size = tournament,
+                           linetype = tournament)) + 
+  # geom_line() + 
+  # geom_point() +
+  labs(title = "Aus. players",
+       x = "", y = "Win proportion") + 
+         # x = "", y = " ") + 
+    geom_line() + 
+  scale_color_manual(guide=FALSE, values=tournament_colors,
+                                labels = c("Australian Open\n(Plexicushion)",
+                                           "French Open\n(Clay)",
+                                           "US Open\n(DecoTurf)",
+                                           "Wimbledon\n(Grass)")) + my_theme   + 
+  scale_size_manual(guide = FALSE,
+                   values = c(3, 1, 1, 1)) + 
+  scale_linetype_manual(guide = FALSE,
+                   values = c(1, 2, 2, 2))
+# scale_alpha_manual(guide = FALSE,
+#                    values = c(1, our_alpha, our_alpha, our_alpha)) 
+
+
+p4 <- ggplot(gbr_wins, aes(round, win_prop, color=tournament,
+                           group=tournament, fill = tournament,
+                           # alpha = tournament,
+                           size = tournament,
+                           linetype = tournament)) + 
+  geom_line() + 
+  labs(title = "British players",
+       # x = "", y = "Win proportion") + 
+       x = "", y = " ") + 
+  scale_color_manual(" ", values=tournament_colors,
+                                labels = c("Australian Open\n(Plexicushion)",
+                                           "French Open\n(Clay)",
+                                           "US Open\n(DecoTurf)",
+                                           "Wimbledon\n(Grass)")) + my_theme +
+  guides(color = guide_legend(override.aes = list(size = 7)))  + 
+  scale_size_manual(guide = FALSE,
+                   values = c(1, 1, 1, 3)) + 
+  scale_linetype_manual(guide = FALSE,
+                   values = c(2, 2, 2, 1))
+
+# scale_alpha_manual(guide = FALSE,
+#                    values = c(our_alpha, our_alpha, our_alpha, 1))
+
+
+ggarrange(p3, p1, p2,  p4, nrow=1, ncol=4, common.legend = TRUE, legend="bottom") %>%
+grid.arrange(.,
+             # top = textGrob("Home court advantage: debunked",
+             #                gp=gpar(fontsize=20, fontfamily="serif")),
+             bottom = textGrob("Note: we only look at the first 4 rounds due to decreasing sample size",
+                           just = "left",
+                           gp=gpar(fontfamily="serif", fontsize = 20))) 
+
+
+ggarrange(p3, p1, p2,  p4, nrow=1, ncol=4, common.legend = TRUE, legend="bottom") %>%
+grid.arrange(.,
+             # top = textGrob("Home court advantage: debunked",
+             #                gp=gpar(fontsize=20, fontfamily="serif")),
+             bottom = textGrob("Note: we only look at the first 4 rounds due to decreasing sample size",
+                           just = "left",
+                           gp=gpar(fontfamily="serif", fontsize = 20))) %>%
+  ggsave("plots/home_court.jpg", ., height=5, width=graphic_width_long)
+
+
+```
 
 
 ## Spaniards on clay
@@ -431,7 +556,7 @@ ggarrange( p1, p2, nrow=1, ncol=2, common.legend = TRUE, legend="bottom") %>%
 
 ggplot(gs_partial, aes(w_n_ue + l_n_ue, w_n_aces + l_n_aces,
                            label = tournament, color=tournament)) + 
-  geom_jitter(size=3) +
+  geom_jitter(size=2) +
   labs( title = "Distribution of errors and aces differ by tournament",
         x = "Total unforced errors", y = "Total aces") +
   my_theme + scale_color_manual("Tournament",
@@ -1023,6 +1148,37 @@ ue_ranef = as.data.frame(ranef(n_ue_mod, condVar = TRUE)) %>%
 
 ```
 
+
+
+# correlation plots
+
+```{r}
+win_colors <- c("#336699", "#339966")
+
+mat <- matrix(c(1, 0, .94, .93,
+         0, 1, -.05, -.36,
+         .94, -.05, 1, .88,
+         .93, -.36, .88, 1), byrow = TRUE, nrow = 4)
+colnames(mat) <- c("Aus. Open", "French Open", "US Open", "Wimbledon")
+rownames(mat) <- c("Aus. Open", "French Open", "US Open", "Wimbledon")
+#
+df <- melt(mat)
+#
+ggplot(df, aes(x = Var1, y = Var2, fill = value)) + geom_tile() +
+     geom_tile(color = "white")+
+    scale_fill_gradient2(low = win_colors[2], high = win_colors[1], mid = "white", 
+                         midpoint = 0, limit = c(-1,1), 
+                         space = "Lab", name="Correlation") + 
+                         # labels = c("-1.0", "-0.5", "  0.0", "  0.5", "  1.0")) + 
+  labs(x = "", y = "",
+       title = "Correlation matrix for random effects")  +
+  my_theme
+
+ggsave("plots/correlation.jpg", 
+       height=6, width = graphic_width_short)
+
+
+```
 
   
   
