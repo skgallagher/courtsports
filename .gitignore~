@@ -1,0 +1,20 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+contest/surface-type/images/
+contest/surface-type/paper-tennis_cache/
+contest/surface-type/paper-tennis_files/
+*_cache/
+*_files/
+.pdf
+.tex
+
+# knitr and R markdown default cache directories
+/*_cache/
+/cache/
+/*_files/
+
+# Temporary files created by R markdown
+*.utf8.md
+*.knit.md

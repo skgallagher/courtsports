@@ -22,3 +22,4 @@ ggplot(df, aes(x = Var1, y = Var2, fill = value)) + geom_tile() +
    midpoint = 0, limit = c(-1,1), space = "Lab", 
    name="Correlation") + labs(x = "", y = "",
                               title = "Correlation matrix for random effects")
+ggsave("corr-mat.pdf")
