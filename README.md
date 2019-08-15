@@ -12,7 +12,7 @@ Find our paper [here](https://github.com/shannong19/courtsports/blob/master/cont
 ## Download our package
 
 ```{r}
-devtools::install_github("http://github.com/shannong19/courtsports")
+devtools::install_github("shannong19/courtsports")
 ```
 
 ## Reproduce the report
