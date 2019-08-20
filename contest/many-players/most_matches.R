@@ -383,6 +383,13 @@ pred_df <- gs_partial_players %>% group_by(name) %>%
     filter(name %in% top_players$name) %>%
     summarize_if(is.numeric, quantile, na.rm = TRUE, probs = quant)
 
+## rank difference
+gs_partial_players %>%
+    filter(name %in% top_players$name)  %>%
+    group_by(name) %>% 
+    summarize( diff = (max(rank, na.rm = TRUE) - min(rank, na.rm = TRUE))) %>%
+    filter(diff >= 50)
+
 pred_list <- vector(mode = "list", length = L)
 for(ll in 1:L){
     ii <- which(top_players$name == as.character(unique(player_df$name))[ll])
@@ -465,9 +472,9 @@ ggsave("individual-models-results-mod-sub.pdf", width = 10, height = 14)
 ## diags for federer DONE
 ## and interpretation of model DONE
 ## table of # of observations, # of covariates, R^2, and VIF DONE
-## rewrite interps of cool graphs
-## add how this work will transform tennis forever
+## rewrite interps of cool graphs DONE
+## add how this work will transform tennis forever DONE
 ## Explain about different styles of play and emphasize court differences in
-## discussion/intro
-## variable discussion and statistics ugh
+## discussion/intro DONE
+## variable discussion and statistics ugh DONE
 ## R package maintenace// vignette mostly to get EDA, hiearchical model, and individual models

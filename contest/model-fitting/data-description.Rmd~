@@ -1,0 +1,129 @@
+---
+title: "Data description"
+author: "Gallagher, Frisoli, and Luby"
+date: "August 6, 2019"
+output:
+  pdf_document
+---
+
+```{r setup, eval = FALSE}
+library(courtsports)
+library(knitr)
+library(kableExtra)
+library(broom)
+library(tidyverse)
+```
+
+```{r invis-setup, echo = FALSE}
+devtools::load_all("~/courtsports")
+library(knitr)
+library(kableExtra)
+library(broom)
+library(tidyverse)
+```
+
+## `gs_players`
+
+```{r}
+data(gs_players)
+dim(gs_players)
+```
+
+The data contained in `gs_players` is extracted from Jeff Sackman's tennis repository via the `R deuce` package and shown here for convenience.  It consists of *all* non-qualifying round grandslam matches between 2013-2017.  There are 127 matches in each round (which will appear twice, one for each player of reference), two leagues,  four grandslams per year, and five years.  The help files from both these sources are useful resources to exploring the data.
+
+The covariates in this data set are the following:
+
+- `tourney_id` unique ID for tournament round with format `{year}-{league}-{tournament type}-{slam ID}-{round}-{year}` (character)
+
+- `tourney_name` Full name of the slam (character)
+
+- `surface` - one of "Hard," "Clay," or "Grass" (character)
+
+- `draw_size` - number of total players in the tournament (integer)
+
+- `tourney_level` identifier of whether tournament is a Grand Slam (character)
+
+- `match_num` Unique ID for the match within the tournament (integer)
+
+- `id` unique player ID (integer)
+
+- `seed` seed of player (integer/NA)
+
+- `entry` whether the player was a qualifier (character)
+
+- `name` full player name
+
+- `hand` handedness of the player (character)
+
+- `ht` height of player in cm (integer)
+
+- `ioc` IOC/country of player (character)
+
+- `age` age in years (numeric)
+
+- `rank` rank of player at time of match (integer)
+
+- `rank_points` points of player at time of match (integer)
+
+- `opponent_rank` rank of opponent (integer)
+
+- `score` final score of match (character)
+
+- `best_of` maximum number of sets (integer)
+
+- `round` round of the match (character)
+
+- `minutes` match duration in minutes (numeric/NA)
+
+- `aces` number of aces in the match by the player (integer)
+
+- `df` number of double faults by the player in the match (integer)
+
+- `svpt` number of service points for the player (integer)
+
+- `1stIn` number of first serves in by the player (integer)
+
+- `1stWon` number of first serves won (integer)
+
+- `2ndWon` number of second serves won (integer)
+
+- `SvGms` number of service games (integer)
+
+- `bpSaved` number of break points saved (integer)
+
+- `bpFaced` number of break points faced (integer)
+
+- `Retirement` whether the player retired (forfeit) or not (logical)
+
+- `{X}` number of games won in the first set where $X = 1, \dots, 5$ (integer)
+
+- `TB{Y}` number of points player won in the tie breaker of set $Y$ for $Y = 1, \dots, 5$ (integer)
+
+- `tourney_start_date` date the tournament began YYYY-MM-DD (date)
+
+- `match_id` combination of `tourney_id` and `match_id` (character)
+
+- `league` one of "WTA" or "ATP" (character)
+
+`tournament` standardized tournament names (character)
+
+- `pointswon` total number of points player won (integer)
+
+- `gameswon` total number of games player won (integer)
+
+- `setswon` total number of sets player won (integer)
+
+- `total_points` total number of points player won (integer)
+
+- `did_win` indicator of whether player won 1 = Won, 0 = Lost
+
+
+
+```{r summary-gs-players, echo = FALSE}
+gs_players %>% summary() %>% 
+  kable(., format = "latex",   row.names = FALSE,
+      booktabs = TRUE, digits = 1, longtable = TRUE,
+      caption = "Summary of covariates in \\texttt{gs\\_players}.",
+      escape = FALSE, linesep = "") %>%
+  kable_styling(latex_options = "striped", "hold_position")
+```

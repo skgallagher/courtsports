@@ -1,0 +1,92 @@
+\documentclass{article}
+
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{multirow}
+\usepackage[table]{xcolor}
+
+\begin{document}
+
+\begin{longtable}{lllllllllllllllllllllllllllllllllllllllllllllllllll}
+\caption{\label{tab:}Summary of covariates in 	\texttt{gs\_players}.}\\
+\toprule
+ tourney\_id & tourney\_name &   surface &   draw\_size &     tourney\_level &   match\_num &       id &     seed &    entry &     name &     hand &       ht &     ioc &      age &      rank &  rank\_points & opponent\_rank &    score &    best\_of &     round &    minutes &      ace &       df &      svpt &     1stIn &     1stWon &     2ndWon &     SvGms &    bpSaved &    bpFaced & Retirement &       1 &       2 &       3 &       4 &       5 &      TB1 &      TB2 &      TB3 &      TB4 &      TB5 & tourney\_start\_date &      year &   match\_id &    league &           tournament &   pointswon &    gameswon &    setswon &  total\_points &    did\_win\\
+\midrule
+\rowcolor{gray!6}  Length:10160 & Length:10160 & Length:10160 & Min.   :128 & Grand Slams:10160 & Min.   :  1.0 & Min.   :100644 & Length:10160 & Length:10160 & Length:10160 & Length:10160 & Min.   :157.0 & Length:10160 & Min.   :15.38 & Min.   :   1.00 & Min.   :    3 & Min.   :   1.00 & Length:10160 & Min.   :3 & R128   :5120 & Min.   : 11.0 & Min.   : 0.000 & Min.   : 0.000 & Min.   :  0.00 & Min.   :  0.00 & Min.   :  0.00 & Min.   : 0.0 & Min.   : 0.0 & Min.   : 0.000 & Min.   : 0.000 & Mode :logical & Min.   :0.000 & Min.   :0.000 & Min.   : 0.000 & Min.   :0.000 & Min.   : 0.000 & Min.   : 0.000 & Min.   : 0.000 & Min.   : 0.000 & Min.   : 0.000 & Min.   : 1.000 & Min.   :2013-01-14 & Min.   :2013 & Length:10160 & Length:10160 & Australian Open:2540 & Min.   :  0.00 & Min.   : 0.00 & Min.   :0.000 & Min.   :  0.0 & Min.   :0.0\\
+Class :character & Class :character & Class :character & 1st Qu.:128 & C10        :    0 & 1st Qu.: 53.0 & 1st Qu.:104918 & Class :character & Class :character & Class :character & Class :character & 1st Qu.:175.0 & Class :character & 1st Qu.:23.63 & 1st Qu.:  19.00 & 1st Qu.:  656 & 1st Qu.:  19.00 & Class :character & 1st Qu.:3 & R64    :2560 & 1st Qu.: 94.0 & 1st Qu.: 2.000 & 1st Qu.: 2.000 & 1st Qu.: 67.00 & 1st Qu.: 41.00 & 1st Qu.: 27.00 & 1st Qu.:11.0 & 1st Qu.: 8.0 & 1st Qu.: 2.000 & 1st Qu.: 5.000 & FALSE:9848 & 1st Qu.:3.000 & 1st Qu.:3.000 & 1st Qu.: 3.000 & 1st Qu.:3.000 & 1st Qu.: 3.000 & 1st Qu.: 4.000 & 1st Qu.: 4.000 & 1st Qu.: 4.000 & 1st Qu.: 4.000 & 1st Qu.: 3.750 & 1st Qu.:2014-04-22 & 1st Qu.:2014 & Class :character & Class :character & French Open    :2540 & 1st Qu.: 66.00 & 1st Qu.:10.00 & 1st Qu.:0.000 & 1st Qu.:135.0 & 1st Qu.:0.0\\
+\rowcolor{gray!6}  Mode  :character & Mode  :character & Mode  :character & Median :128 & C100       :    0 & Median : 99.0 & Median :200002 & Mode  :character & Mode  :character & Mode  :character & Mode  :character & Median :182.0 & Mode  :character & Median :26.74 & Median :  48.00 & Median : 1040 & Median :  48.00 & Mode  :character & Median :4 & R32    :1280 & Median :123.0 & Median : 4.000 & Median : 3.000 & Median : 89.00 & Median : 55.00 & Median : 38.00 & Median :17.0 & Median :14.0 & Median : 5.000 & Median : 8.000 & TRUE :312 & Median :6.000 & Median :6.000 & Median : 6.000 & Median :6.000 & Median : 6.000 & Median : 7.000 & Median : 7.000 & Median : 7.000 & Median : 7.000 & Median : 7.000 & Median :2015-06-11 & Median :2015 & Mode  :character & Mode  :character & US Open        :2540 & Median : 91.00 & Median :13.00 & Median :2.000 & Median :179.0 & Median :0.5\\
+NA & NA & NA & Mean   :128 & C125       :    0 & Mean   :100.3 & Mean   :153788 & NA & NA & NA & NA & Mean   :181.4 & NA & Mean   :26.73 & Mean   :  65.62 & Mean   : 1888 & Mean   :  65.62 & NA & Mean   :4 & R16    : 640 & Mean   :129.8 & Mean   : 6.433 & Mean   : 3.793 & Mean   : 93.64 & Mean   : 57.69 & Mean   : 39.95 & Mean   :17.7 & Mean   :12.5 & Mean   : 5.126 & Mean   : 8.731 & NA & Mean   :4.803 & Mean   :4.733 & Mean   : 4.824 & Mean   :4.782 & Mean   : 5.226 & Mean   : 5.949 & Mean   : 5.931 & Mean   : 5.964 & Mean   : 5.831 & Mean   : 5.643 & Mean   :2015-05-25 & Mean   :2015 & NA & NA & Wimbledon      :2540 & Mean   : 93.64 & Mean   :14.19 & Mean   :1.478 & Mean   :187.3 & Mean   :0.5\\
+\rowcolor{gray!6}  NA & NA & NA & 3rd Qu.:128 & C20        :    0 & 3rd Qu.:139.0 & 3rd Qu.:201533 & NA & NA & NA & NA & 3rd Qu.:188.0 & NA & 3rd Qu.:29.61 & 3rd Qu.:  89.00 & 3rd Qu.: 2072 & 3rd Qu.:  89.00 & NA & 3rd Qu.:5 & QF     : 320 & 3rd Qu.:159.0 & 3rd Qu.: 9.000 & 3rd Qu.: 5.000 & 3rd Qu.:115.00 & 3rd Qu.: 71.00 & 3rd Qu.: 51.00 & 3rd Qu.:23.0 & 3rd Qu.:18.0 & 3rd Qu.: 7.000 & 3rd Qu.:12.000 & NA & 3rd Qu.:6.000 & 3rd Qu.:6.000 & 3rd Qu.: 6.000 & 3rd Qu.:6.000 & 3rd Qu.: 6.000 & 3rd Qu.: 7.000 & 3rd Qu.: 7.000 & 3rd Qu.: 7.000 & 3rd Qu.: 7.000 & 3rd Qu.: 7.000 & 3rd Qu.:2016-07-12 & 3rd Qu.:2016 & NA & NA & NA & 3rd Qu.:115.00 & 3rd Qu.:19.00 & 3rd Qu.:2.000 & 3rd Qu.:229.0 & 3rd Qu.:1.0\\
+NA & NA & NA & Max.   :128 & C25        :    0 & Max.   :239.0 & Max.   :219434 & NA & NA & NA & NA & Max.   :208.0 & NA & Max.   :44.31 & Max.   :1410.00 & Max.   :16950 & Max.   :1410.00 & NA & Max.   :5 & SF     : 160 & Max.   :314.0 & Max.   :75.000 & Max.   :23.000 & Max.   :257.00 & Max.   :178.00 & Max.   :136.00 & Max.   :58.0 & Max.   :42.0 & Max.   :25.000 & Max.   :31.000 & NA & Max.   :7.000 & Max.   :7.000 & Max.   :14.000 & Max.   :7.000 & Max.   :22.000 & Max.   :19.000 & Max.   :16.000 & Max.   :15.000 & Max.   :14.000 & Max.   :12.000 & Max.   :2017-08-28 & Max.   :2017 & NA & NA & NA & Max.   :234.00 & Max.   :44.00 & Max.   :3.000 & Max.   :461.0 & Max.   :1.0\\
+\rowcolor{gray!6}  NA & NA & NA & NA & (Other)    :    0 & NA & NA & NA & NA & NA & NA & NA's   :2554 & NA & NA's   :1 & NA's   :11 & NA's   :11 & NA's   :11 & NA & NA & (Other):  80 & NA's   :3580 & NA's   :1318 & NA's   :1334 & NA's   :1318 & NA's   :1318 & NA's   :1318 & NA's   :1318 & NA's   :3074 & NA's   :1318 & NA's   :1318 & NA & NA's   :30 & NA's   :84 & NA's   :3590 & NA's   :7782 & NA's   :9260 & NA's   :8700 & NA's   :8886 & NA's   :9358 & NA's   :9794 & NA's   :10132 & NA & NA & NA & NA & NA & NA's   :1318 & NA's   :6 & NA & NA's   :1318 & NA\\
+\bottomrule
+
+
+\end{longtable}
+
+
+\begin{longtable}{llllllll}
+\caption{\label{tab:}Summary of covariates in 	\texttt{gs\_players}.}\\
+\toprule
+  &  &  &  &  &  &  & \\
+\midrule
+\rowcolor{gray!6}  tourney\_id & Length:10160 & Class :character & Mode  :character & NA & NA & NA & NA\\
+tourney\_name & Length:10160 & Class :character & Mode  :character & NA & NA & NA & NA\\
+\rowcolor{gray!6}  surface & Length:10160 & Class :character & Mode  :character & NA & NA & NA & NA\\
+draw\_size & Min.   :128 & 1st Qu.:128 & Median :128 & Mean   :128 & 3rd Qu.:128 & Max.   :128 & NA\\
+\rowcolor{gray!6}  tourney\_level & Grand Slams:10160 & C10        :    0 & C100       :    0 & C125       :    0 & C20        :    0 & C25        :    0 & (Other)    :    0\\
+match\_num & Min.   :  1.0 & 1st Qu.: 53.0 & Median : 99.0 & Mean   :100.3 & 3rd Qu.:139.0 & Max.   :239.0 & NA\\
+\rowcolor{gray!6}  id & Min.   :100644 & 1st Qu.:104918 & Median :200002 & Mean   :153788 & 3rd Qu.:201533 & Max.   :219434 & NA\\
+seed & Length:10160 & Class :character & Mode  :character & NA & NA & NA & NA\\
+\rowcolor{gray!6}  entry & Length:10160 & Class :character & Mode  :character & NA & NA & NA & NA\\
+name & Length:10160 & Class :character & Mode  :character & NA & NA & NA & NA\\
+\rowcolor{gray!6}  hand & Length:10160 & Class :character & Mode  :character & NA & NA & NA & NA\\
+ht & Min.   :157.0 & 1st Qu.:175.0 & Median :182.0 & Mean   :181.4 & 3rd Qu.:188.0 & Max.   :208.0 & NA's   :2554\\
+\rowcolor{gray!6}  ioc & Length:10160 & Class :character & Mode  :character & NA & NA & NA & NA\\
+age & Min.   :15.38 & 1st Qu.:23.63 & Median :26.74 & Mean   :26.73 & 3rd Qu.:29.61 & Max.   :44.31 & NA's   :1\\
+\rowcolor{gray!6}  rank & Min.   :   1.00 & 1st Qu.:  19.00 & Median :  48.00 & Mean   :  65.62 & 3rd Qu.:  89.00 & Max.   :1410.00 & NA's   :11\\
+rank\_points & Min.   :    3 & 1st Qu.:  656 & Median : 1040 & Mean   : 1888 & 3rd Qu.: 2072 & Max.   :16950 & NA's   :11\\
+\rowcolor{gray!6}  opponent\_rank & Min.   :   1.00 & 1st Qu.:  19.00 & Median :  48.00 & Mean   :  65.62 & 3rd Qu.:  89.00 & Max.   :1410.00 & NA's   :11\\
+score & Length:10160 & Class :character & Mode  :character & NA & NA & NA & NA\\
+\rowcolor{gray!6}  best\_of & Min.   :3 & 1st Qu.:3 & Median :4 & Mean   :4 & 3rd Qu.:5 & Max.   :5 & NA\\
+round & R128   :5120 & R64    :2560 & R32    :1280 & R16    : 640 & QF     : 320 & SF     : 160 & (Other):  80\\
+\rowcolor{gray!6}  minutes & Min.   : 11.0 & 1st Qu.: 94.0 & Median :123.0 & Mean   :129.8 & 3rd Qu.:159.0 & Max.   :314.0 & NA's   :3580\\
+ace & Min.   : 0.000 & 1st Qu.: 2.000 & Median : 4.000 & Mean   : 6.433 & 3rd Qu.: 9.000 & Max.   :75.000 & NA's   :1318\\
+\rowcolor{gray!6}  df & Min.   : 0.000 & 1st Qu.: 2.000 & Median : 3.000 & Mean   : 3.793 & 3rd Qu.: 5.000 & Max.   :23.000 & NA's   :1334\\
+svpt & Min.   :  0.00 & 1st Qu.: 67.00 & Median : 89.00 & Mean   : 93.64 & 3rd Qu.:115.00 & Max.   :257.00 & NA's   :1318\\
+\rowcolor{gray!6}  1stIn & Min.   :  0.00 & 1st Qu.: 41.00 & Median : 55.00 & Mean   : 57.69 & 3rd Qu.: 71.00 & Max.   :178.00 & NA's   :1318\\
+1stWon & Min.   :  0.00 & 1st Qu.: 27.00 & Median : 38.00 & Mean   : 39.95 & 3rd Qu.: 51.00 & Max.   :136.00 & NA's   :1318\\
+\rowcolor{gray!6}  2ndWon & Min.   : 0.0 & 1st Qu.:11.0 & Median :17.0 & Mean   :17.7 & 3rd Qu.:23.0 & Max.   :58.0 & NA's   :1318\\
+SvGms & Min.   : 0.0 & 1st Qu.: 8.0 & Median :14.0 & Mean   :12.5 & 3rd Qu.:18.0 & Max.   :42.0 & NA's   :3074\\
+\rowcolor{gray!6}  bpSaved & Min.   : 0.000 & 1st Qu.: 2.000 & Median : 5.000 & Mean   : 5.126 & 3rd Qu.: 7.000 & Max.   :25.000 & NA's   :1318\\
+bpFaced & Min.   : 0.000 & 1st Qu.: 5.000 & Median : 8.000 & Mean   : 8.731 & 3rd Qu.:12.000 & Max.   :31.000 & NA's   :1318\\
+\rowcolor{gray!6}  Retirement & Mode :logical & FALSE:9848 & TRUE :312 & NA & NA & NA & NA\\
+1 & Min.   :0.000 & 1st Qu.:3.000 & Median :6.000 & Mean   :4.803 & 3rd Qu.:6.000 & Max.   :7.000 & NA's   :30\\
+\rowcolor{gray!6}  2 & Min.   :0.000 & 1st Qu.:3.000 & Median :6.000 & Mean   :4.733 & 3rd Qu.:6.000 & Max.   :7.000 & NA's   :84\\
+3 & Min.   : 0.000 & 1st Qu.: 3.000 & Median : 6.000 & Mean   : 4.824 & 3rd Qu.: 6.000 & Max.   :14.000 & NA's   :3590\\
+\rowcolor{gray!6}  4 & Min.   :0.000 & 1st Qu.:3.000 & Median :6.000 & Mean   :4.782 & 3rd Qu.:6.000 & Max.   :7.000 & NA's   :7782\\
+5 & Min.   : 0.000 & 1st Qu.: 3.000 & Median : 6.000 & Mean   : 5.226 & 3rd Qu.: 6.000 & Max.   :22.000 & NA's   :9260\\
+\rowcolor{gray!6}  TB1 & Min.   : 0.000 & 1st Qu.: 4.000 & Median : 7.000 & Mean   : 5.949 & 3rd Qu.: 7.000 & Max.   :19.000 & NA's   :8700\\
+TB2 & Min.   : 0.000 & 1st Qu.: 4.000 & Median : 7.000 & Mean   : 5.931 & 3rd Qu.: 7.000 & Max.   :16.000 & NA's   :8886\\
+\rowcolor{gray!6}  TB3 & Min.   : 0.000 & 1st Qu.: 4.000 & Median : 7.000 & Mean   : 5.964 & 3rd Qu.: 7.000 & Max.   :15.000 & NA's   :9358\\
+TB4 & Min.   : 0.000 & 1st Qu.: 4.000 & Median : 7.000 & Mean   : 5.831 & 3rd Qu.: 7.000 & Max.   :14.000 & NA's   :9794\\
+\rowcolor{gray!6}  TB5 & Min.   : 1.000 & 1st Qu.: 3.750 & Median : 7.000 & Mean   : 5.643 & 3rd Qu.: 7.000 & Max.   :12.000 & NA's   :10132\\
+tourney\_start\_date & Min.   :2013-01-14 & 1st Qu.:2014-04-22 & Median :2015-06-11 & Mean   :2015-05-25 & 3rd Qu.:2016-07-12 & Max.   :2017-08-28 & NA\\
+\rowcolor{gray!6}  year & Min.   :2013 & 1st Qu.:2014 & Median :2015 & Mean   :2015 & 3rd Qu.:2016 & Max.   :2017 & NA\\
+match\_id & Length:10160 & Class :character & Mode  :character & NA & NA & NA & NA\\
+\rowcolor{gray!6}  league & Length:10160 & Class :character & Mode  :character & NA & NA & NA & NA\\
+tournament & Australian Open:2540 & French Open    :2540 & US Open        :2540 & Wimbledon      :2540 & NA & NA & NA\\
+\rowcolor{gray!6}  pointswon & Min.   :  0.00 & 1st Qu.: 66.00 & Median : 91.00 & Mean   : 93.64 & 3rd Qu.:115.00 & Max.   :234.00 & NA's   :1318\\
+gameswon & Min.   : 0.00 & 1st Qu.:10.00 & Median :13.00 & Mean   :14.19 & 3rd Qu.:19.00 & Max.   :44.00 & NA's   :6\\
+\rowcolor{gray!6}  setswon & Min.   :0.000 & 1st Qu.:0.000 & Median :2.000 & Mean   :1.478 & 3rd Qu.:2.000 & Max.   :3.000 & NA\\
+total\_points & Min.   :  0.0 & 1st Qu.:135.0 & Median :179.0 & Mean   :187.3 & 3rd Qu.:229.0 & Max.   :461.0 & NA's   :1318\\
+\rowcolor{gray!6}  did\_win & Min.   :0.0 & 1st Qu.:0.0 & Median :0.5 & Mean   :0.5 & 3rd Qu.:1.0 & Max.   :1.0 & NA\\
+\bottomrule
+\end{longtable}
+
+
+\end{document}
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
