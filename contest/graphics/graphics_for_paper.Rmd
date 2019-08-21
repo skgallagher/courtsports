@@ -636,10 +636,21 @@ prop.table(with(filter(gs_players, ioc == "ESP", round == "R128"),
 with(filter(gs_players, ioc == "ESP", round == "R128"),
                 table(did_win, tournament))
 
+################################################################################
+# TESTS FOR PAPER
+################################################################################
 with(filter(gs_players, ioc == "ESP", round == "R128"),
      table(did_win, tournament)) %>%
   chisq.test(correct = TRUE)
-
+with(filter(gs_players, ioc == "ESP", round == "R64"),
+     table(did_win, tournament)) %>%
+  chisq.test(correct = TRUE)
+with(filter(gs_players, ioc == "ESP", round == "R32"),
+     table(did_win, tournament)) %>%
+  chisq.test(correct = TRUE)
+with(filter(gs_players, ioc == "ESP", round == "R16"),
+     table(did_win, tournament)) %>%
+  chisq.test(correct = TRUE)
 ```
 
 
@@ -847,10 +858,10 @@ ggplot( aes(log(ht+1), ace/svpt)) +
   geom_smooth( method = "lm", color="black") + 
   geom_label_repel(data=atp_servers,
             aes(log(ht+1), ace/svpt, label=name),
-            alpha=.8, seed=1234, show.legend=FALSE, size = 8) + 
+            alpha=.8, seed=1234, show.legend=FALSE, size = 7) + 
   geom_label_repel(data=atp_servers,
             aes(log(ht+1), ace/svpt, label = name),
-            seed=1234, fill=NA, show.legend=FALSE, size = 8) +
+            seed=1234, fill=NA, show.legend=FALSE, size = 7) +
   labs(x = "log(height + 1)", y = "ace% = aces / serves", title = "ATP") +
   my_theme + scale_color_manual("Tournament",
                                 values = tournament_colors,
@@ -867,10 +878,10 @@ ggplot(aes(log(ht+1), ace/svpt)) +
   geom_smooth(method = "lm", color="black") + 
   geom_label_repel(data=wta_servers,
             aes(log(ht+1), ace/svpt, label=name),
-            alpha=.8, seed=1234, show.legend=FALSE, size = 8) + 
+            alpha=.8, seed=1234, show.legend=FALSE, size = 7) + 
   geom_label_repel(data=wta_servers,
             aes( log(ht+1), ace/svpt, label=name),
-            seed=1234, fill=NA, show.legend=FALSE, size = 8) +
+            seed=1234, fill=NA, show.legend=FALSE, size = 7) +
   labs(x = "log(height + 1)", y = "ace%  = aces / serves", title = "WTA")+
   my_theme + scale_color_manual("Tournament",
                                 values = tournament_colors,
@@ -889,7 +900,7 @@ ggarrange(p_atp_percent, p_wta_percent, common.legend = TRUE, legend="bottom")
 #                             gp=gpar(fontsize=20, fontfamily="serif")))
 
 # ggsave("plots/aces.jpg", height=7, width=16)
-ggsave("plots/aces2_percent.jpg", height=7, width=graphic_width_long)
+ggsave("plots/aces2_percent.jpg", height=8, width=graphic_width_long)
 
 ```
 
