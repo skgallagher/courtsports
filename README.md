@@ -15,20 +15,16 @@ Find our paper [here](https://github.com/shannong19/courtsports/blob/master/cont
 devtools::install_github("shannong19/courtsports")
 ```
 
-## Reproduce the report
+## Results
 
-To reproduce our paper for the sports analytics conference
+The results of our paper may be reproduced by running the scripts in `paper_results`.  For user convenience, we have provided example code for each of the three sections.
 
-1. Download the following file and save it as as `<my-file.Rmd>` (where you name the file):
+### EDA and Visualization
 
-[https://github.com/shannong19/courtsports/blob/master/contest/surface-type/paper-tennis.Rmd](https://github.com/shannong19/courtsports/blob/master/contest/surface-type/paper-tennis.Rmd) 
+### Hierarchical Modelling
 
-2. Open the file in `RStudio` and knit it OR
 
-3. Open an `R` session
-    a. Change the directory to where you downloaded the file
-    b. Run the command `rmarkdown::render(<my-file.Rmd>)`
-    c. Open and view `<my-file.pdf>` which should appear in the directory of the downloaded file
+### Individual Modelling
   
 ## Data Collection and Transformation
 
@@ -48,16 +44,8 @@ We transform the raw data to use in our analysis.  These complete transformation
 2. `data(gs_players)` - Transformation of `gs` to look at a single player at a time, instead of pairs of opponents
 3. `data(gs_partial)` - Aggregated point by point data for the grand slams.  It is not complete.
 4. `data(gs_partial_players)` - Transformation of `gs_partial` to look at a single player.
-  
-# Analysis and Results
 
-We use packages from the [`tidyverse`](https://www.tidyverse.org/) to standarize our analysis process.  These include `dplyr`, `stringr`, `ggplot2`, `tidyr`, and more.  We hope that by using these, any user may follow our readable and succinct code.
-
-All plots are reproducible directly from the `.Rmd` document.
-
-## Hierarchical model
-
-Our hierarchical model is computationally intensive.  To run all possible implementations, it takes about ~1 hour to run.  As such, we have provided the code in the `.Rmd` file but do not evaluate it.  However, we have saved all intermediate steps as `.rda` objects accessible by the `data()` function so those interested can follow our analysis from beginning to end.
+The **complete and full* data description and summaries of the data are available [here]().
   
 ## TROUBLESHOOTING
 
@@ -85,12 +73,6 @@ Our hierarchical model is computationally intensive.  To run all possible implem
  + `stringr`
  + `tidyr`
  
- 
-
 
  
-3. To compile the document as a .pdf file, the user must have [LaTeX installed and perhaps other packages](https://rmarkdown.rstudio.com/pdf_document_format)
-
-4.  Regardless of the document knitting, the user may run the `R` chunks within the .Rmd file in conjunction with [RStudio](https://www.rstudio.com/) or other interface.
- 
-5. If none of this works, please feel free to leave a comment.
+3. If none of this works, please feel free to leave a comment.

@@ -1,9 +1,9 @@
 ---
 title: "Data description"
 author: "Gallagher, Frisoli, and Luby"
-date: "August 6, 2019"
+date: "September 5, 2019"
 output:
-  pdf_document
+  html_document
 ---
 
 ```{r setup, eval = FALSE}
@@ -14,7 +14,7 @@ library(broom)
 library(tidyverse)
 ```
 
-```{r invis-setup, echo = FALSE}
+```{r invis-setup, echo = FALSE, warning = FALSE, message = FALSE}
 devtools::load_all("~/courtsports")
 library(knitr)
 library(kableExtra)
@@ -123,11 +123,11 @@ Below is a summary of each of the variables.
 
 ```{r summary-gs-players, echo = FALSE}
 gs_players %>% summary() %>% t() %>% 
-  kable(., format = "latex",  
+  kable(., format = "html",  
       booktabs = TRUE, digits = 1, 
-      caption = "Summary of covariates in \\texttt{gs\\_players}.",
+      caption = "Summary of covariates in gs_players.",
       escape = TRUE, linesep = "") %>%
-  kable_styling(latex_options = c("striped", "hold_position", "scale_down"))
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
 ```
 
 ## `gs_pbp`
@@ -158,11 +158,11 @@ Each row in this data set is a match with summarized statistics such as number o
 
 ```{r summary-gs-pbp, echo = FALSE}
 gs_pbp %>% summary() %>% t() %>% 
-  kable(., format = "latex",  
+  kable(., format = "html",  
       booktabs = TRUE, digits = 1, 
-      caption = "Summary of covariates in \\texttt{gs\\_pbp}.",
+      caption = "Summary of covariates in gs_pbp.",
       escape = TRUE, linesep = "") %>%
-  kable_styling(latex_options = c("striped", "hold_position", "scale_down"))
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
 ```
 
 
@@ -177,11 +177,12 @@ The summary table of the covariates is displayed below.
 
 ```{r summary-gs-partial, echo = FALSE}
 gs_partial %>% summary() %>% t() %>% 
-  kable(., format = "latex",  
+  kable(., format = "html",  
       booktabs = TRUE, digits = 1, 
-      caption = "Summary of covariates in \\texttt{gs\\_partial}.",
+      caption = "Summary of covariates in gs_partial.",
       escape = TRUE, linesep = "") %>%
-  kable_styling(latex_options = c("striped", "hold_position", "scale_down"))
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed")) #%>%
+  ##kable_styling(latex_options = c("striped", "hold_position", "scale_down"))
 ```
 
 
@@ -194,10 +195,11 @@ The summary table of the covariates is displayed below.
 
 ```{r summary-gs-partial-players, echo = FALSE}
 gs_partial_players %>% summary() %>% t() %>% 
-  kable(., format = "latex",  
+  kable(., format = "html",  
       booktabs = TRUE, digits = 1, 
-      caption = "Summary of covariates in \\texttt{gs\\_partial\\_players}.",
+      caption = "Summary of covariates in gs_partial_players}.",
       escape = TRUE, linesep = "") %>%
-  kable_styling(latex_options = c("striped", "hold_position", "scale_down"))
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+ ## kable_styling(latex_options = c("striped", "hold_position", "scale_down"))
 ```
 
