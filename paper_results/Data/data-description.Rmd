@@ -1,0 +1,205 @@
+---
+title: "Data description"
+author: "Gallagher, Frisoli, and Luby"
+date: "September 5, 2019"
+output:
+  html_document
+---
+
+```{r setup, eval = FALSE}
+library(courtsports)
+library(knitr)
+library(kableExtra)
+library(broom)
+library(tidyverse)
+```
+
+```{r invis-setup, echo = FALSE, warning = FALSE, message = FALSE}
+devtools::load_all("~/courtsports")
+library(knitr)
+library(kableExtra)
+library(broom)
+library(tidyverse)
+```
+
+## `gs_players`
+
+```{r}
+data(gs_players)
+dim(gs_players)
+```
+
+The data contained in `gs_players` is extracted from Jeff Sackman's tennis repository via the `R deuce` package and shown here for convenience.  It consists of *all* non-qualifying round grandslam matches between 2013-2017.  There are 127 matches in each round (which will appear twice, one for each player of reference), two leagues,  four grandslams per year, and five years.  The help files from both these sources are useful resources to exploring the data.
+
+The covariates in this data set are the following:
+
+- `tourney_id` unique ID for tournament round with format `{year}-{league}-{tournament type}-{slam ID}-{round}-{year}` (character)
+
+- `tourney_name` Full name of the slam (character)
+
+- `surface` - one of "Hard," "Clay," or "Grass" (character)
+
+- `draw_size` - number of total players in the tournament (integer)
+
+- `tourney_level` identifier of whether tournament is a Grand Slam (character)
+
+- `match_num` Unique ID for the match within the tournament (integer)
+
+- `id` unique player ID (integer)
+
+- `seed` seed of player (integer/NA)
+
+- `entry` whether the player was a qualifier (character)
+
+- `name` full player name
+
+- `hand` handedness of the player (character)
+
+- `ht` height of player in cm (integer)
+
+- `ioc` IOC/country of player (character)
+
+- `age` age in years (numeric)
+
+- `rank` rank of player at time of match (integer)
+
+- `rank_points` points of player at time of match (integer)
+
+- `opponent_rank` rank of opponent (integer)
+
+- `score` final score of match (character)
+
+- `best_of` maximum number of sets (integer)
+
+- `round` round of the match (character)
+
+- `minutes` match duration in minutes (numeric/NA)
+
+- `aces` number of aces in the match by the player (integer)
+
+- `df` number of double faults by the player in the match (integer)
+
+- `svpt` number of service points for the player (integer)
+
+- `1stIn` number of first serves in by the player (integer)
+
+- `1stWon` number of first serves won (integer)
+
+- `2ndWon` number of second serves won (integer)
+
+- `SvGms` number of service games (integer)
+
+- `bpSaved` number of break points saved (integer)
+
+- `bpFaced` number of break points faced (integer)
+
+- `Retirement` whether the player retired (forfeit) or not (logical)
+
+- `{X}` number of games won in the first set where $X = 1, \dots, 5$ (integer)
+
+- `TB{Y}` number of points player won in the tie breaker of set $Y$ for $Y = 1, \dots, 5$ (integer)
+
+- `tourney_start_date` date the tournament began YYYY-MM-DD (date)
+
+- `match_id` combination of `tourney_id` and `match_id` (character)
+
+- `league` one of "WTA" or "ATP" (character)
+
+`tournament` standardized tournament names (character)
+
+- `pointswon` total number of points player won (integer)
+
+- `gameswon` total number of games player won (integer)
+
+- `setswon` total number of sets player won (integer)
+
+- `total_points` total number of points player won (integer)
+
+- `did_win` indicator of whether player won 1 = Won, 0 = Lost
+
+
+Below is a summary of each of the variables.
+
+
+```{r summary-gs-players, echo = FALSE}
+gs_players %>% summary() %>% t() %>% 
+  kable(., format = "html",  
+      booktabs = TRUE, digits = 1, 
+      caption = "Summary of covariates in gs_players.",
+      escape = TRUE, linesep = "") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+## `gs_pbp`
+
+The data contained in `gs_pbp` referes to the grandslam point-by-point data that was recorded between 2013 and 2017.  This is *crowd-sourced* data and consists of `R nrow(gs_pbp)` matches for both leagues at the four grand slams.
+
+Each row in this data set is a match with summarized statistics such as number of winners or average serve speed.  This includes information for both players.  The covariates are
+
+- `match_id` unique match ID (character)
+
+- `player1` name of first player (character)
+
+- `player2` name of second player (character)
+
+- `tour` either "atp" or "wta" (character)
+
+- `slam` Grand slam name (character)
+
+- `year` (integer)
+
+- `tournament` standardized tournament name (character)
+
+- `ave_serve_speed_p{X}` average service speed in mph of player $X$ (numeric)
+
+- `n_{Y}_p{X}` number of trait Y for player X where $Y$ is one of `aces` (aces), `winners` (winners), `netpt_w` (net points won), `netpt` (total net points), `bp_w` (break points won), `bp` (total break points), `ue` (unforced errors), `sv_w` (service points won), and `sv` (total number of service points)
+
+- `aX` player names
+
+```{r summary-gs-pbp, echo = FALSE}
+gs_pbp %>% summary() %>% t() %>% 
+  kable(., format = "html",  
+      booktabs = TRUE, digits = 1, 
+      caption = "Summary of covariates in gs_pbp.",
+      escape = TRUE, linesep = "") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+
+
+## `gs_partial`
+ 
+The data contained in `gs_partial` consists of 3066 matches and 45 covariates.  It is created by joining `gs_players` and `gs_pbp` together.  Each row in this data set corresponds to one match.  
+
+All of the covariate descriptions above and covariates are prefixed by either `w_/l_` or `winner_/loser_` to indicate who won/lost, the match.
+
+The summary table of the covariates is displayed below.
+
+```{r summary-gs-partial, echo = FALSE}
+gs_partial %>% summary() %>% t() %>% 
+  kable(., format = "html",  
+      booktabs = TRUE, digits = 1, 
+      caption = "Summary of covariates in gs_partial.",
+      escape = TRUE, linesep = "") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed")) #%>%
+  ##kable_styling(latex_options = c("striped", "hold_position", "scale_down"))
+```
+
+
+## `gs_partial_players`
+
+The data contained in `gs_partial_players` contains 6132 observations and 33 covariates.  Each row corresponds to one match with one player.  It is created by taking `gs_partial` and separately looking at the covariates for each player in the match.  All the covariates are described above.
+
+
+The summary table of the covariates is displayed below.
+
+```{r summary-gs-partial-players, echo = FALSE}
+gs_partial_players %>% summary() %>% t() %>% 
+  kable(., format = "html",  
+      booktabs = TRUE, digits = 1, 
+      caption = "Summary of covariates in gs_partial_players}.",
+      escape = TRUE, linesep = "") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+ ## kable_styling(latex_options = c("striped", "hold_position", "scale_down"))
+```
+

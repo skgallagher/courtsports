@@ -17,7 +17,7 @@ devtools::install_github("shannong19/courtsports")
 
 ## Results
 
-The results of our paper may be reproduced by running the scripts in `paper_results`.  For user convenience, we have provided example code for each of the three sections.
+The results of our paper may be reproduced by running the .R/.Rmd files in `paper_results`.  For user convenience, we have provided example code for each of the three sections.
 
 ### EDA and Visualization
 
