@@ -2,9 +2,6 @@
 
 An `R` package to analyze tennis data and a reproducible workspace.
 
-Authors: Shannon Gallagher, Amanda Luby, and Kayla Frisoli
-
-Find our paper [here](https://github.com/shannong19/courtsports/blob/master/contest/surface-type/paper-tennis.pdf).
 
 
 # INSTRUCTIONS
@@ -21,10 +18,103 @@ The results of our paper may be reproduced by running the .R/.Rmd files in `pape
 
 ### EDA and Visualization
 
+```{r}
+library(courtsports)
+library(gridExtra)
+library(ggplot2)
+data(gs_players)
+
+## Colors
+tournament_colors <- c("#0297DB", "#b06835", "#0C2340", "#54008b")
+league_colors <- c("#0C2340", "#902BA3")
+win_colors <- c("#336699", "#339966")
+
+# with yellow for us
+tournament_colors <- c("#0297DB", "#b06835", "#ffe500", "#54008b")
+
+p2 <- ggplot(gs_players) + geom_density(aes(pointswon, color = tournament)) + 
+  labs(x = "Points") +
+  scale_color_manual("Tournament", values=tournament_colors)
+
+p3 <- ggplot(gs_players) + geom_density(aes(pointswon, color = league))+ 
+  labs(x = "Points") +
+  scale_color_manual("League", values=league_colors) 
+
+
+
+
+p1 <- ggplot(gs_players) + geom_density(aes(pointswon, color = factor(did_win))) + 
+  labs(x = "Points") +
+  scale_color_manual("Winner?", values=win_colors) +
+  facet_wrap(~league, ncol=1)
+
+grid.arrange(p1, p2, ncol=2,
+             top = grid::textGrob("Distribution of points per match",
+                            gp=grid::gpar(fontsize=20, fontfamily="serif")),
+              layout_matrix = rbind(c(NA, 1),
+                                    c(2, 1),
+                                    c(NA, 1)),
+             heights=c(1, 3, 1))
+```
+
 ### Hierarchical Modelling
 
+```{r}
+library(courtsports)
+library(tidyverse)
+library(broom)
+library(lme4)
+
+data(gs_players)
+data(gs_partial_players)
+
+## Define variables for modeling
+gs_players$name_int = as.integer(as.factor(gs_players$name))
+gs_players$name_fac = as.factor(gs_players$name)
+gs_players$hand_fac = as.factor(gs_players$hand)
+gs_players$ioc_fac = as.factor(gs_players$ioc)
+gs_players$atp = gs_players$league == "ATP"
+gs_players$year_fac = as.factor(gs_players$year)
+gs_players$late_round = gs_players$round >= "R16"
+gs_players$seeded = gs_players$rank <= 32
+gs_players$opponent_seeded = gs_players$opponent_rank <= 32
+
+gs_partial_players$name_int = as.integer(as.factor(gs_partial_players$name))
+gs_partial_players$name_fac = as.factor(gs_partial_players$name)
+gs_partial_players$ioc_fac = as.factor(gs_partial_players$ioc)
+gs_partial_players$atp = gs_partial_players$Tour == "atp"
+gs_partial_players$year_fac = as.factor(gs_partial_players$year)
+gs_partial_players$late_round = gs_partial_players$round >= "R16"
+gs_partial_players$seeded = gs_partial_players$rank <= 32
+gs_partial_players$opponent_seeded = gs_partial_players$opponent_rank <= 32
+
+## Fit models used in paper
+set.seed(091418)
+ind_logistic_noioc = lme4::glmer(did_win ~ late_round + log(rank) + log(opponent_rank) + year_fac + atp + (0 + tournament |name_int), data = gs_players, family = "binomial", nAGQ =0)
+n_aces_mod = lme4::lmer(n_aces ~ late_round + log(rank) + log(opponent_rank) + year_fac + atp + (0 + tournament |name_fac), data = gs_partial_players)
+n_winners_mod = lme4::lmer(n_winners ~ late_round + log(rank) + log(opponent_rank) + year_fac + atp + (0 + tournament |name_fac), data = gs_partial_players)
+n_net_mod = lme4::lmer(n_netpt_w ~ late_round + log(rank) + log(opponent_rank) + year_fac + atp + (0 + tournament |name_fac), data = gs_partial_players)
+n_ue_mod = lmer(n_ue ~ late_round + log(rank) + log(opponent_rank) + year_fac + atp + (0 + tournament |name_fac), data = gs_partial_players)
+```
 
 ### Individual Modelling
+
+```{r}
+library(courtsports)
+data(gs_partial_players)
+
+player_name <- "Andy Murray"
+ref <- "Wimbledon"
+start_lower = TRUE
+test_prop <- .50
+out_list <- courtsports::model_individual(
+                              player_name = player_name,
+                              data = gs_partial_players,
+                              ref = ref,
+                              start_lower = start_lower,
+                              test_prop = test_prop)
+summary(out_list$final_model)
+```
   
 ## Data Collection and Transformation
 
@@ -45,7 +135,7 @@ We transform the raw data to use in our analysis.  These complete transformation
 3. `data(gs_partial)` - Aggregated point by point data for the grand slams.  It is not complete.
 4. `data(gs_partial_players)` - Transformation of `gs_partial` to look at a single player.
 
-The **complete and full* data description and summaries of the data are available [here]().
+The **complete and full* data description and summaries of the data are available as .Rmd files [here](https://github.com/shannong19/courtsports/blob/master/paper_results/Data/data-description.Rmd).
   
 ## TROUBLESHOOTING
 
@@ -56,7 +146,6 @@ The **complete and full* data description and summaries of the data are availabl
 2. Make sure you have the following `R` packages installed (regular CRAN installation unless otherwise specified)
 
  + `broom`
- + `cowplot`
  + `deuce` (`install_github("skoval/deuce"`)
  + `dplyr`
  + `forcats`

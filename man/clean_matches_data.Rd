@@ -5,7 +5,7 @@
 \title{Clean the matches data from deuce atp_maches and wta_matches}
 \usage{
 clean_matches_data(atp_matches = NULL, wta_matches = NULL, start_year,
-  end_year, include_quals = FALSE, tourney_level = "Grand Slams")
+  end_year, include_quals = FALSE, level = "Grand Slams")
 }
 \arguments{
 \item{atp_matches}{atp_matches object from R package deuce (Men's).  Default is NULL}
@@ -18,10 +18,10 @@ clean_matches_data(atp_matches = NULL, wta_matches = NULL, start_year,
 
 \item{include_quals}{logical to include qualifying rounds.  Default is FALSE}
 
-\item{tourney_level}{level of tournament, corresponding to column from atp_matches/wta_matches.  Default is "Grand Slams"}
+\item{level}{level of tournament, corresponding to column from atp_matches/wta_matches.  Default is "Grand Slams"}
 }
 \value{
-cleaned and subsetted data set, combined if there is both an atp_matches and wta_data set.  A new column called "league" is added and has value "ATP" or "WTA"
+cleaned and subsetted data set, combined if there is both an atp_matches and wta_data set.  A new column called "league" is added and has value "ATP" or "WTA".  We also clean the tourney_name making a new column called tournament
 }
 \description{
 Clean the matches data from deuce atp_maches and wta_matches
