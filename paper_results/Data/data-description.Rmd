@@ -1,6 +1,6 @@
 ---
 title: "Data description"
-author: "Gallagher, Frisoli, and Luby"
+author: ""
 date: "September 5, 2019"
 output:
   html_document
