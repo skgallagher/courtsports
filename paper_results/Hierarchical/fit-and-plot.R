@@ -3,6 +3,9 @@ library(tidyverse)
 library(broom)
 library(lme4)
 
+# Need development version of tidyr (pivot_wider and pivot_longer)
+# devtools::install_github("tidyverse/tidyr")
+
 ## Define theme and colors
 
 my_theme <-  theme_bw() + # White background, black and white theme
@@ -37,11 +40,13 @@ gs_partial_players$opponent_seeded = gs_partial_players$opponent_rank <= 32
 
 ## Fit models used in paper
 set.seed(091418)
-ind_logistic_noioc = lme4::glmer(did_win ~ late_round + log(rank) + log(opponent_rank) + year_fac + atp + (0 + tournament |name_int), data = gs_players, family = "binomial", nAGQ =0)
-n_aces_mod = lme4::lmer(n_aces ~ late_round + log(rank) + log(opponent_rank) + year_fac + atp + (0 + tournament |name_fac), data = gs_partial_players)
-n_winners_mod = lme4::lmer(n_winners ~ late_round + log(rank) + log(opponent_rank) + year_fac + atp + (0 + tournament |name_fac), data = gs_partial_players)
-n_net_mod = lme4::lmer(n_netpt_w ~ late_round + log(rank) + log(opponent_rank) + year_fac + atp + (0 + tournament |name_fac), data = gs_partial_players)
-n_ue_mod = lmer(n_ue ~ late_round + log(rank) + log(opponent_rank) + year_fac + atp + (0 + tournament |name_fac), data = gs_partial_players)
+ind_logistic_noioc = lme4::glmer(did_win ~ late_round + log(rank) + log(opponent_rank) + year_fac + atp + (0 + tournament |name_fac), data = gs_players, family = "binomial", nAGQ =0)
+n_aces_mod = lme4::lmer(n_aces ~ late_round + log(rank) + log(opponent_rank) + year_fac + atp +
+                          (0 + tournament |name_fac), data = gs_partial_players)
+n_net_mod = lme4::lmer(n_netpt_w ~ late_round + log(rank) + log(opponent_rank) + year_fac + atp +
+                         (0 + tournament |name_fac), data = gs_partial_players, control = lmerControl(optimizer = "bobyqa"))
+n_ue_mod = lmer(n_ue ~ late_round + log(rank) + log(opponent_rank) + year_fac + atp + (0 + tournament |name_fac),
+                data = gs_partial_players, control = lmerControl(optimizer = "bobyqa"))
 
 
 model_names = c("nocourt_logistic", "base_logistic", "country_logistic", "ind_logistic",
@@ -99,17 +104,10 @@ fixed.effects.plot = model.ests %>%
   theme(panel.grid.major = element_blank(),
         panel.grid.minor = element_blank())
 
-ran_tourn = rbind(ranef(ind_logistic)$name_int, ranef(ind_logistic_noioc)$name_int)
-ran_tourn$model = c(rep("ind_logistic", nrow(ranef(ind_logistic)$name_int)), rep("ind_logistic_noioc", nrow(ranef(ind_logistic)$name_int)))
-
-name_lookup = unique(cbind(gs_players$name, gs_players$name_int))
-name_lookup = name_lookup[order(as.integer(name_lookup[,2])),]
-
 top_three_ranef = as.data.frame(ranef(ind_logistic_noioc, condVar = TRUE)) %>%
   mutate(tournament = gsub("tournament", "", term)) %>%
-  mutate(name = name_lookup[,1][as.integer(grp)]) %>%
-  filter(., name == "Serena Williams" | name == "Rafael Nadal" | name == "Roger Federer") %>%
-  ggplot(., aes(x = name, y = condval, ymin = condval- 2*condsd, ymax = condval + 2*condsd, color = tournament)) +
+  filter(., grp == "Serena Williams" | grp == "Rafael Nadal" | grp == "Roger Federer") %>%
+  ggplot(., aes(x = grp, y = condval, ymin = condval- 2*condsd, ymax = condval + 2*condsd, color = tournament)) +
   geom_errorbar(width = .5, position = "dodge",size = 1.5) +
   xlab("") +
   ylab("Coefficient") +
@@ -124,64 +122,13 @@ top_three_ranef = as.data.frame(ranef(ind_logistic_noioc, condVar = TRUE)) %>%
   theme(panel.grid.major = element_blank(),
         panel.grid.minor = element_blank())
 
-grid.arrange(fixed.effects.plot, top_three_ranef, nrow = 1, widths = c(.45, .55) #,
+ggarrange::grid.arrange(fixed.effects.plot, top_three_ranef, nrow = 1, widths = c(.45, .55) #,
              # top = textGrob("Parameter estimates from logistic model",
              #                gp=gpar(fontsize=20, fontfamily="serif"))
 )
 
-top_three_ranef = as.data.frame(ranef(ind_logistic_noioc, condVar = TRUE)) %>%
-  mutate(tournament = gsub("tournament", "", term)) %>%
-  mutate(name = name_lookup[,1][as.integer(grp)]) %>%
-  filter(., name == "Serena Williams" | name == "Rafael Nadal" | name == "Roger Federer") %>%
-  ggplot(., aes(x = name, y = condval, ymin = condval- 2*condsd, ymax = condval + 2*condsd, color = tournament)) +
-  geom_errorbar(width = .5, position = "dodge",size = 1.5) +
-  xlab("") +
-  ylab("Coefficient") +
-  scale_color_manual("", values=tournament_colors) +
-  my_theme +
-  coord_flip() +
-  ggtitle("Random Effects") +
-  theme(legend.position = "bottom") +
-  guides(col = guide_legend(nrow=2,
-                            override.aes = list(size = 7))) +
-  geom_hline(yintercept = 0, color = "grey") +
-  theme(panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank())
 
-largest_effects = as.data.frame(ranef(iln_fast_fac, condVar = TRUE)) %>%
-  mutate(tournament = gsub("tournament", "", term)) %>%
-  mutate(name = name_lookup[,1][as.integer(grp)]) %>%
-  filter(condval - 2*condsd > 0 | condval + 2*condsd < 0) %>%
-  ggplot(., aes(x = name, y = condval, ymin = condval- 2*condsd, ymax = condval + 2*condsd, color = tournament)) +
-  geom_errorbar(width = .5, position = "dodge",size = 1.5) +
-  xlab("") +
-  ylab("Coefficient") +
-  scale_color_manual("", values=tournament_colors) +
-  my_theme +
-  coord_flip() +
-  ggtitle("Random Effects") +
-  theme(legend.position = "bottom") +
-  guides(col = guide_legend(nrow=2,
-                            override.aes = list(size = 7))) +
-  geom_hline(yintercept = 0, color = "grey") +
-  theme(panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank())
-
-gs_players %>%
-  filter(name == "Serena Williams") %>%
-  select(year, tournament, rank, opponent_rank, did_win) %>% View()
-
-
-win_colors <- c("#336699", "#339966")
-
-mat <-
-
-colnames(mat) <- c("Aus. Open", "French Open", "US Open", "Wimbledon")
-rownames(mat) <- c("Aus. Open", "French Open", "US Open", "Wimbledon")
-#
-df <- melt(mat)
-#
-attr(VarCorr(ind_logistic_noioc)$name_int, "correlation") %>%
+attr(VarCorr(ind_logistic_noioc)$name_fac, "correlation") %>%
   tbl_df %>%
   transmute(
     `Aus. Open` = `tournamentAustralian Open`,
@@ -190,7 +137,7 @@ attr(VarCorr(ind_logistic_noioc)$name_int, "correlation") %>%
     `Wimbledon` = `tournamentWimbledon`,
     Var2 = c("Aus. Open", "French Open", "US Open", "Wimbledon")
   ) %>%
-  pivot_longer(-c(Var2), names_to = "Var1", values_to = "value") %>%
+  tidyr::pivot_longer(-c(Var2), names_to = "Var1", values_to = "value") %>%
   ggplot(aes(x = Var1, y = Var2, fill = value)) +
   geom_tile() +
   geom_tile(color = "white")+
@@ -198,9 +145,12 @@ attr(VarCorr(ind_logistic_noioc)$name_int, "correlation") %>%
                        midpoint = 0, limit = c(-1,1),
                        space = "Lab", name="Correlation") +
   # labels = c("-1.0", "-0.5", "  0.0", "  0.5", "  1.0")) +
+  geom_text(aes(label = round(value, 2), family = "serif", size = 14)) +
   labs(x = "", y = "",
-       title = "Correlation matrix for random effects")  +
-  my_theme
+       title = "Correlation Matrix for Random Effects")  +
+  my_theme +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1),
+        legend.position = "none")
 
 
 aces_ranef = as.data.frame(ranef(n_aces_mod, condVar = TRUE)) %>%
@@ -251,15 +201,6 @@ ggpubr::ggarrange(aces_ranef, nets_ranef, ue_ranef,
                   legend="bottom",
                   widths = c(.45, .27, .27))
 
-ggplot(data.frame(eta=predict(n_net_mod,type="link"),pearson=residuals(n_net_mod,type="pearson")),
-       aes(x=eta,y=pearson)) +
-  geom_point() +
-  theme_bw()
-
-qqnorm(residuals(n_net_mod))
-qqnorm(residuals(n_aces_mod))
-qqnorm(residuals(n_ue_mod))
-
 more_players = c(
   "Roger Federer",
   "Andy Murray",
@@ -282,7 +223,7 @@ more_players = c(
   "Victoria Azarenka"
 )
 
-as.data.frame(ranef(n_ue_mod, condVar = TRUE)) %>%
+ranef_ue_many = as.data.frame(ranef(n_ue_mod, condVar = TRUE)) %>%
   mutate(tournament = gsub("tournament", "", term)) %>%
   filter(grp %in% more_players) %>%
   ggplot(., aes(x = grp, y = condval, ymin = condval- 2*condsd, ymax = condval + 2*condsd, color = tournament)) +
@@ -298,9 +239,10 @@ as.data.frame(ranef(n_ue_mod, condVar = TRUE)) %>%
                             override.aes = list(size = 7))) +
   geom_hline(yintercept = 0, color = "grey") +
   theme(panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank())
+        panel.grid.minor = element_blank()) +
+  theme(axis.text.y = element_blank())
 
-as.data.frame(ranef(n_aces_mod, condVar = TRUE)) %>%
+ranef_aces_many = as.data.frame(ranef(n_aces_mod, condVar = TRUE)) %>%
   mutate(tournament = gsub("tournament", "", term)) %>%
   filter(grp %in% more_players) %>%
   ggplot(., aes(x = grp, y = condval, ymin = condval- 2*condsd, ymax = condval + 2*condsd, color = tournament)) +
@@ -318,7 +260,7 @@ as.data.frame(ranef(n_aces_mod, condVar = TRUE)) %>%
   theme(panel.grid.major = element_blank(),
         panel.grid.minor = element_blank())
 
-as.data.frame(ranef(n_net_mod, condVar = TRUE)) %>%
+ranef_net_many = as.data.frame(ranef(n_net_mod, condVar = TRUE)) %>%
   mutate(tournament = gsub("tournament", "", term)) %>%
   filter(grp %in% more_players) %>%
   ggplot(., aes(x = grp, y = condval, ymin = condval- 2*condsd, ymax = condval + 2*condsd, color = tournament)) +
@@ -334,4 +276,118 @@ as.data.frame(ranef(n_net_mod, condVar = TRUE)) %>%
                             override.aes = list(size = 7))) +
   geom_hline(yintercept = 0, color = "grey") +
   theme(panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank())
+        panel.grid.minor = element_blank()) +
+  theme(axis.text.y = element_blank())
+
+ggpubr::ggarrange(ranef_aces_many, ranef_net_many, ranef_ue_many,
+                  nrow =1,
+                  ncol = 3,
+                  common.legend = TRUE,
+                  legend="bottom",
+                  widths = c(.45, .27, .27))
+
+
+ue_corr = attr(VarCorr(n_ue_mod)$name_fac, "correlation") %>%
+  tbl_df %>%
+  transmute(
+    `Aus. Open` = `tournamentAustralian Open`,
+    `French Open` = `tournamentFrench Open`,
+    `US Open` = `tournamentUS Open`,
+    `Wimbledon` = `tournamentWimbledon`,
+    Var2 = c("Aus. Open", "French Open", "US Open", "Wimbledon")
+  ) %>%
+  tidyr::pivot_longer(-c(Var2), names_to = "Var1", values_to = "value") %>%
+  ggplot(aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile() +
+  geom_tile(color = "white")+
+  scale_fill_gradient2(low = win_colors[2], high = win_colors[1], mid = "white",
+                       midpoint = 0, limit = c(-1,1),
+                       space = "Lab", name="Correlation") +
+  # labels = c("-1.0", "-0.5", "  0.0", "  0.5", "  1.0")) +
+  geom_text(aes(label = round(value, 2), family = "serif", size = 14)) +
+  labs(x = "", y = "",
+       title = "Y = Unforced Errors")  +
+  my_theme +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1),
+        legend.position = "none")
+
+aces_corr = attr(VarCorr(n_aces_mod)$name_fac, "correlation") %>%
+  tbl_df %>%
+  transmute(
+    `Aus. Open` = `tournamentAustralian Open`,
+    `French Open` = `tournamentFrench Open`,
+    `US Open` = `tournamentUS Open`,
+    `Wimbledon` = `tournamentWimbledon`,
+    Var2 = c("Aus. Open", "French Open", "US Open", "Wimbledon")
+  ) %>%
+  tidyr::pivot_longer(-c(Var2), names_to = "Var1", values_to = "value") %>%
+  ggplot(aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile() +
+  geom_tile(color = "white")+
+  scale_fill_gradient2(low = win_colors[2], high = win_colors[1], mid = "white",
+                       midpoint = 0, limit = c(-1,1),
+                       space = "Lab", name="Correlation") +
+  # labels = c("-1.0", "-0.5", "  0.0", "  0.5", "  1.0")) +
+  geom_text(aes(label = round(value, 2), family = "serif", size = 14)) +
+  labs(x = "", y = "",
+       title = "Y = Aces")  +
+  my_theme +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1),
+        legend.position = "none")
+
+nets_corr = attr(VarCorr(n_net_mod)$name_fac, "correlation") %>%
+  tbl_df %>%
+  transmute(
+    `Aus. Open` = `tournamentAustralian Open`,
+    `French Open` = `tournamentFrench Open`,
+    `US Open` = `tournamentUS Open`,
+    `Wimbledon` = `tournamentWimbledon`,
+    Var2 = c("Aus. Open", "French Open", "US Open", "Wimbledon")
+  ) %>%
+  tidyr::pivot_longer(-c(Var2), names_to = "Var1", values_to = "value") %>%
+  ggplot(aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile() +
+  geom_tile(color = "white")+
+  scale_fill_gradient2(low = win_colors[2], high = win_colors[1], mid = "white",
+                       midpoint = 0, limit = c(-1,1),
+                       space = "Lab", name="Correlation") +
+  # labels = c("-1.0", "-0.5", "  0.0", "  0.5", "  1.0")) +
+  geom_text(aes(label = round(value, 2), family = "serif", size = 14)) +
+  labs(x = "", y = "",
+       title = "Y = Points won at net")  +
+  my_theme +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1),
+        legend.position = "none")
+
+ggpubr::ggarrange(aces_corr, nets_corr, ue_corr,
+                  nrow =1,
+                  ncol = 3,
+                  legend="none")
+
+## Appendix things
+
+model.ests %>%
+  filter(., !grepl("ioc", term)) %>%
+  filter(., model == 'ind_logistic_noioc') %>%
+  select(-model) %>%
+  knitr::kable(format = "latex", digits = 2)
+
+tidy(n_net_mod) %>%
+  filter(group == "fixed") %>%
+  select(-group) %>%
+  knitr::kable(format = "latex", digits = 2)
+
+tidy(n_aces_mod) %>%
+  filter(group == "fixed") %>%
+  select(-group) %>%
+  knitr::kable(format = "latex", digits = 2)
+
+tidy(n_ue_mod) %>%
+  filter(group == "fixed") %>%
+  select(-group) %>%
+  knitr::kable(format = "latex", digits = 2)
+
+iln_fast = ind_logistic_noioc
+iln_slow = lme4::glmer(did_win ~ late_round + log(rank) + log(opponent_rank) + year_fac + atp + (0 + tournament |name_fac), data = gs_players, family = "binomial", nAGQ =20)
+
+library(courtsports)
