@@ -29,6 +29,12 @@ my_theme <-  theme_bw() + # White background, black and white theme
         plot.title = element_text(hjust = 0.5, size=34),
         plot.subtitle = element_text(hjust = 0.5))
 
+my_theme <-  theme_bw() + # White background, black and white theme
+  theme(axis.text = element_text(size = 12),
+        text = element_text(size = 14,
+                            family="serif"),
+        plot.title = element_text( size=16))
+
 tournament_colors <- c("#0297DB", "#b06835", "#0C2340", "#54008b")
 league_colors <- c("#0C2340", "#902BA3")
 win_colors <- c("#336699", "#339966")
@@ -79,7 +85,7 @@ car::vif(out_list$final_model)
 g <- ggDiagnose(out_list$final_model, which = 1:6, return = TRUE)
 ggs <- g$ggout
 ggthm <- lapply(ggs, function(gg) gg + my_theme)
-pdf("fed_diags.pdf", width = 16, height = 10)
+pdf("../plots/fed_diags.pdf", width = 16, height = 10)
 do.call("grid.arrange", c(ggthm, ncol = 3))
 dev.off()
 
@@ -361,7 +367,7 @@ for(jj in 1:length(tours)){
     }
 
 if(save_graph){
-pdf("cor-slams-sub.pdf", width = 16, height = 10)
+pdf("../plots/cor-slams-sub.pdf", width = 16, height = 10)
 do.call("grid.arrange", c(g_list, ncol = 3))
 dev.off()
 }
