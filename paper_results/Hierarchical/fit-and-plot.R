@@ -51,19 +51,19 @@ gs_partial_players$opponent_seeded = gs_partial_players$opponent_rank <= 32
 ## Fit models used in paper
 set.seed(091418)
 ind_logistic_noioc = lme4::glmer(did_win ~ late_round + log(rank) + log(opponent_rank) +
-                                   year_fac + atp + (0 + tournament |name_fac), 
+                                   year_fac + atp + (0 + tournament |name_fac),
                                  data = gs_players, family = "binomial", nAGQ =0)
 
-n_aces_mod = lme4::lmer(n_aces ~ late_round + log(rank) + log(opponent_rank) + 
+n_aces_mod = lme4::lmer(n_aces ~ late_round + log(rank) + log(opponent_rank) +
                           year_fac + atp +
-                          (0 + tournament |name_fac), 
+                          (0 + tournament |name_fac),
                         data = gs_partial_players)
 
 n_net_mod = lme4::lmer(n_netpt_w ~ late_round + log(rank) + log(opponent_rank) +
-                         year_fac + atp + (0 + tournament |name_fac), 
+                         year_fac + atp + (0 + tournament |name_fac),
                        data = gs_partial_players, control = lmerControl(optimizer = "bobyqa"))
 
-n_ue_mod = lmer(n_ue ~ late_round + log(rank) + log(opponent_rank) + 
+n_ue_mod = lmer(n_ue ~ late_round + log(rank) + log(opponent_rank) +
                   year_fac + atp + (0 + tournament |name_fac),
                 data = gs_partial_players, control = lmerControl(optimizer = "bobyqa"))
 
@@ -195,9 +195,9 @@ ranef_net_many = as.data.frame(ranef(n_net_mod, condVar = TRUE)) %>%
   mutate(tournament = gsub("tournament", "", term)) %>%
   filter(grp %in% more_players) %>%
   ggplot(., aes(x = grp,
-                y = condval, 
-                ymin = condval- 2*condsd, 
-                ymax = condval + 2*condsd, 
+                y = condval,
+                ymin = condval- 2*condsd,
+                ymax = condval + 2*condsd,
                 color = tournament)) +
   geom_errorbar(width = .5, position = "dodge",size = 1.5) +
   xlab("") +
@@ -327,9 +327,3 @@ tidy(n_ue_mod) %>%
   dplyr::select(-group) %>%
   knitr::kable(format = "latex", digits = 2)
 
-iln_fast = ind_logistic_noioc
-iln_slow = lme4::glmer(did_win ~ late_round + log(rank) + log(opponent_rank) + 
-                         year_fac + atp + (0 + tournament |name_fac), 
-                       data = gs_players, family = "binomial", nAGQ =20)
-
-library(courtsports)
