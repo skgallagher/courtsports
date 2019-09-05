@@ -122,9 +122,9 @@ All data is freely available online from [Jeff Sackmann's data repositories](htt
 
 ## Raw data
 
-1. `data(atp_matches)` - Basic results of men's ATP matches including winner, loser, opponent, country of origin, court, and more (See `help(atp_matches)`) 
-2. `data(wta_matches)`  - Basic results of women's WTA matches including winner, loser, opponent, country of origin, court, and more (See `help(wta_matches)`)
-3. `data(gs_point_by_point)` Point by point data of men and women's matches with results on number of winners, unforced errors, net points won, and more.  This is not complete (See `help(gs_point_by_point)`)
+1. `data("atp_matches", package = "deuce")` - Basic results of men's ATP matches including winner, loser, opponent, country of origin, court, and more (See `help(atp_matches, package = "deuce")`) 
+2. `data(wta_matches, package = "deuce")`  - Basic results of women's WTA matches including winner, loser, opponent, country of origin, court, and more (See `help(wta_matches, package = "deuce")`)
+3. `data(gs_point_by_point, package = "deuce")` Point by point data of men and women's matches with results on number of winners, unforced errors, net points won, and more.  This is not complete (See `help(gs_point_by_point, package = "deuce")`)
 
 ## Data Transformation
 
@@ -132,10 +132,10 @@ We transform the raw data to use in our analysis.  These complete transformation
 
 1. `data(gs)` - Combined men and women's grand slam matches from 2013-2017
 2. `data(gs_players)` - Transformation of `gs` to look at a single player at a time, instead of pairs of opponents
-3. `data(gs_partial)` - Aggregated point by point data for the grand slams.  It is not complete.
+3. `data(gs_partial)` - Aggregated point by point data for the grand slams.  It is crowd-sourced and partial.
 4. `data(gs_partial_players)` - Transformation of `gs_partial` to look at a single player.
 
-The **complete and full* data description and summaries of the data are available as .Rmd files [here](https://github.com/shannong19/courtsports/blob/master/paper_results/Data/data-description.Rmd).
+The **complete and full** data description and summaries of the data are available as .Rmd files [here](https://github.com/shannong19/courtsports/blob/master/paper_results/Data/data-description.Rmd).
   
 ## TROUBLESHOOTING
 
