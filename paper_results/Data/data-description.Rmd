@@ -6,16 +6,9 @@ output:
   html_document
 ---
 
-```{r setup, eval = FALSE}
-library(courtsports)
-library(knitr)
-library(kableExtra)
-library(broom)
-library(tidyverse)
-```
-
 ```{r invis-setup, echo = FALSE, warning = FALSE, message = FALSE}
-devtools::load_all("~/courtsports")
+# devtools::install_github("shannong19/courtsports")
+library(courtsports)
 library(knitr)
 library(kableExtra)
 library(broom)

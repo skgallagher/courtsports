@@ -1,3 +1,4 @@
+# devtools::install_github("skoval/deuce")
 library(deuce)
 library(dplyr)
 

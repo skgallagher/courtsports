@@ -12,6 +12,8 @@ header-includes:
 knitr::opts_chunk$set(echo = FALSE)
 knitr::opts_chunk$set(warning=FALSE)
 knitr::opts_chunk$set(message = FALSE)
+
+# devtools::install_github("skoval/deuce")
 library(deuce)
 library(dplyr)
 library(tidyr)
@@ -29,9 +31,8 @@ library(lme4)
 library(cowplot)
 library(ggpubr)
 library(reshape2)
-
-## To change into library(courtsports)
-devtools::load_all("../..")
+# devtools::install_github("shannong19/courtsports")
+library(courtsports)
 ```
 
 ```{r graphing-parameters, include = FALSE}
@@ -42,10 +43,8 @@ my_theme <-  theme_bw() + # White background, black and white theme
         plot.title = element_text(hjust = 0.5, size=34),
         plot.subtitle = element_text(hjust = 0.5))
 
-tournament_colors <- c("#0297DB", "#b06835", "#0C2340", "#54008b")
 league_colors <- c("#0C2340", "#902BA3")
 win_colors <- c("#336699", "#339966")
-
 # with yellow for us
 tournament_colors <- c("#0297DB", "#b06835", "#ffe500", "#54008b")
 
@@ -151,7 +150,7 @@ ggarrange(aces_ranef, nets_ranef, ue_ranef, nrow=1, ncol=3,
 if(save_graph){
 ggarrange(aces_ranef, nets_ranef, ue_ranef, nrow=1, ncol=3,
           common.legend = TRUE, legend="bottom", widths = c(.42, .29, .29)) %>%
-ggsave("plots/player_effects.jpg", ., height=6, width = graphic_width_long)
+ggsave("../plots/player_effects.jpg", ., height=6, width = graphic_width_long)
 }
 ```
 
@@ -256,7 +255,7 @@ ggplot(df, aes(x = coeff, y = ave, col = player)) +
         panel.grid.minor = element_blank())
   
 if(save_graph){
-ggsave("plots/ref-courts-eff.jpg", height=6, width = graphic_width_short)
+ggsave("../plots/ref-courts-eff.jpg", height=6, width = graphic_width_short)
 }
 ```
   
@@ -264,109 +263,108 @@ ggsave("plots/ref-courts-eff.jpg", height=6, width = graphic_width_short)
 ## Logistic parameter effects
 
 ```{r, fig.height=7, fig.width=16, fig.align='center'}
-win_colors <- c("#336699", "#339966")
-
-model_names = c("nocourt_logistic", "base_logistic", "country_logistic", "ind_logistic", 
-                "ind_logistic_noioc", "ind_int_logistic", "ind_year_logistic")
-
-model.sums = data.frame(model = model_names, 
-                        aic = rep(NA, length(model_names)), 
-                        edf = rep(NA,length(model_names)))
-model.ests = data.frame()
-ran.effects = data.frame()
-for(mod in 1:nrow(model.sums)){
-  name = model_names[mod]
-  model.sums$aic[mod] = extractAIC(get(name))[2]
-  model.sums$edf[mod] = extractAIC(get(name))[1]
-  betas = tidy(get(name))
-  betas$model = name
-  if("group" %in% colnames(betas)){
-    model.ests = rbind(model.ests, filter(betas, group == "fixed") %>%
-                         dplyr::select(., -c("group")))
-  }
-  else model.ests = rbind(model.ests, betas)
-}
-
-model.sums$name = c("no_court", "no_random_ef", "country_ef", "ind_ef",
-                    "ind_no_ioc", "ind_intercept", "ind_year_ef")
-model.sums$fixed = c("No country, no tournament",
-                     "all",
-                     "no country, no tournament",
-                     "no tournament",
-                     "no country, no tournament",
-                     "no country",
-                     "no country, no year")
-model.sums$random = c("none",
-                      "none",
-                      "tournament (by country)",
-                      "tournament (by individual)",
-                      "tournament (by individual)",
-                      "intercept (by individual)",
-                      "year (by individual)")
-
-fixed.effects.plot = model.ests %>%
-  filter(., !grepl("ioc", term)) %>% 
-  filter(., model == 'ind_logistic_noioc') %>%
-  ggplot(., aes(x = term,
-                y = estimate,
-                col = model,
-                ymin = estimate - 2*std.error,
-                ymax = estimate + 2*std.error)) +
-  geom_errorbar(width = .7, position = position_dodge(), size = 1.5) +
-  my_theme +
-  theme(axis.text.x=element_text(angle = 35, hjust = 1)) +
-  ggtitle("Fixed effects") +
-  scale_color_brewer("",palette = "Dark2") +
-  theme(legend.position = "none") + 
-  xlab("") +
-  ylab("Coefficient") +
-  scale_x_discrete("", breaks = waiver(), 
-                   labels = c("Intercept", "ATP", "Late round", "Op Rank (log)",
-                              "Rank (log)", "2014", "2015", "2016", "2017")) +
-  guides(col = guide_legend(nrow=2)) +
-  geom_hline(yintercept = 0, color = "grey") + 
-  theme(panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank())
-
-ran_tourn = rbind(ranef(ind_logistic)$name_int, ranef(ind_logistic_noioc)$name_int)
-ran_tourn$model = c(rep("ind_logistic", 
-                        nrow(ranef(ind_logistic)$name_int)), 
-                    rep("ind_logistic_noioc",
-                        nrow(ranef(ind_logistic)$name_int)))
-
-gs_players$name_int = as.integer(as.factor(gs_players$name))
-name_lookup = unique(cbind(gs_players$name, gs_players$name_int))
-name_lookup = name_lookup[order(as.integer(name_lookup[,2])), ]
-
-top_three_ranef = as.data.frame(ranef(ind_logistic_noioc, condVar = TRUE)) %>%
-  mutate(tournament = gsub("tournament", "", term)) %>%
-  mutate(name = name_lookup[,1][as.integer(grp)]) %>% 
-  filter(., name == "Serena Williams" | name == "Rafael Nadal" | name == "Roger Federer") %>%
-  ggplot(., aes(x = name, 
-                y = condval, 
-                ymin = condval- 2*condsd, 
-                ymax = condval + 2*condsd, 
-                color = tournament)) +
-  geom_errorbar(width = .5, position = "dodge",size = 1.5) + 
-  xlab("") + 
-  ylab("Coefficient") + 
-  scale_color_manual("", values=tournament_colors) +
-  my_theme +
-  coord_flip() +
-  ggtitle("Random Effects") +
-  theme(legend.position = "bottom") + 
-  guides(col = guide_legend(nrow=2,
-                            override.aes = list(size = 7))) +
-  geom_hline(yintercept = 0, color = "grey") + 
-  theme(panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank())
-
-grid.arrange(fixed.effects.plot, top_three_ranef, nrow = 1, widths = c(.45, .55))
-
-if(save_graph){
-grid.arrange(fixed.effects.plot, top_three_ranef, nrow = 1, widths = c(.45, .55)) %>%
-ggsave("plots/logistic-parameter-effects.jpg",., height=7, width=graphic_width_long)
-}
+# win_colors <- c("#336699", "#339966")
+# 
+# model_names = c("nocourt_logistic", "base_logistic", "country_logistic", "ind_logistic", 
+#                 "ind_logistic_noioc", "ind_int_logistic", "ind_year_logistic")
+# 
+# model.sums = data.frame(model = model_names, 
+#                         aic = rep(NA, length(model_names)), 
+#                         edf = rep(NA,length(model_names)))
+# model.ests = data.frame()
+# ran.effects = data.frame()
+# for(mod in 1:nrow(model.sums)){
+#   our_name = model_names[mod]
+#   model.sums$aic[mod] = extractAIC(get(our_name))[2]
+#   model.sums$edf[mod] = extractAIC(get(our_name))[1]
+#   betas = tidy(get(our_name))
+#   betas$model = our_name
+#   if("group" %in% colnames(betas)){
+#     model.ests = rbind(model.ests, filter(betas, group == "fixed") %>%
+#                          dplyr::select(., -c("group")))
+#   } else model.ests = rbind(model.ests, betas)
+# }
+# 
+# model.sums$our_name = c("no_court", "no_random_ef", "country_ef", "ind_ef",
+#                     "ind_no_ioc", "ind_intercept", "ind_year_ef")
+# model.sums$fixed = c("No country, no tournament",
+#                      "all",
+#                      "no country, no tournament",
+#                      "no tournament",
+#                      "no country, no tournament",
+#                      "no country",
+#                      "no country, no year")
+# model.sums$random = c("none",
+#                       "none",
+#                       "tournament (by country)",
+#                       "tournament (by individual)",
+#                       "tournament (by individual)",
+#                       "intercept (by individual)",
+#                       "year (by individual)")
+# 
+# fixed.effects.plot = model.ests %>%
+#   filter(., !grepl("ioc", term)) %>% 
+#   filter(., model == 'ind_logistic_noioc') %>%
+#   ggplot(., aes(x = term,
+#                 y = estimate,
+#                 col = model,
+#                 ymin = estimate - 2*std.error,
+#                 ymax = estimate + 2*std.error)) +
+#   geom_errorbar(width = .7, position = position_dodge(), size = 1.5) +
+#   my_theme +
+#   theme(axis.text.x=element_text(angle = 35, hjust = 1)) +
+#   ggtitle("Fixed effects") +
+#   scale_color_brewer("",palette = "Dark2") +
+#   theme(legend.position = "none") + 
+#   xlab("") +
+#   ylab("Coefficient") +
+#   scale_x_discrete("", breaks = waiver(), 
+#                    labels = c("Intercept", "ATP", "Late round", "Op Rank (log)",
+#                               "Rank (log)", "2014", "2015", "2016", "2017")) +
+#   guides(col = guide_legend(nrow=2)) +
+#   geom_hline(yintercept = 0, color = "grey") + 
+#   theme(panel.grid.major = element_blank(),
+#         panel.grid.minor = element_blank())
+# 
+# ran_tourn = rbind(ranef(ind_logistic)$name_int, ranef(ind_logistic_noioc)$name_int)
+# ran_tourn$model = c(rep("ind_logistic", 
+#                         nrow(ranef(ind_logistic)$name_int)), 
+#                     rep("ind_logistic_noioc",
+#                         nrow(ranef(ind_logistic)$name_int)))
+# 
+# gs_players$name_int = as.integer(as.factor(gs_players$our_name))
+# name_lookup = unique(cbind(gs_players$name, gs_players$name_int))
+# name_lookup = name_lookup[order(as.integer(name_lookup[,2])), ]
+# 
+# top_three_ranef = as.data.frame(ranef(ind_logistic_noioc, condVar = TRUE)) %>%
+#   mutate(tournament = gsub("tournament", "", term)) %>%
+#   mutate(our_name = name_lookup[,1][as.integer(grp)]) %>% 
+#   filter(., our_name == "Serena Williams" | our_name == "Rafael Nadal" | our_name == "Roger Federer") %>%
+#   ggplot(., aes(x = our_name, 
+#                 y = condval, 
+#                 ymin = condval- 2*condsd, 
+#                 ymax = condval + 2*condsd, 
+#                 color = tournament)) +
+#   geom_errorbar(width = .5, position = "dodge",size = 1.5) + 
+#   xlab("") + 
+#   ylab("Coefficient") + 
+#   scale_color_manual("", values=tournament_colors) +
+#   my_theme +
+#   coord_flip() +
+#   ggtitle("Random Effects") +
+#   theme(legend.position = "bottom") + 
+#   guides(col = guide_legend(nrow=2,
+#                             override.aes = list(size = 7))) +
+#   geom_hline(yintercept = 0, color = "grey") + 
+#   theme(panel.grid.major = element_blank(),
+#         panel.grid.minor = element_blank())
+# 
+# grid.arrange(fixed.effects.plot, top_three_ranef, nrow = 1, widths = c(.45, .55))
+# 
+# if(save_graph){
+# grid.arrange(fixed.effects.plot, top_three_ranef, nrow = 1, widths = c(.45, .55)) %>%
+# ggsave("../plots/logistic-parameter-effects.jpg",., height=7, width=graphic_width_long)
+# }
 ```
 
 ### Linear fixed effects
@@ -409,7 +407,7 @@ fixed.effects.plot.linear <- tidy(n_aces_mod) %>%
         panel.grid.minor = element_blank())
   
 if(save_graph){
-ggsave("plots/linear-fixed-effects.jpg", fixed.effects.plot.linear,
+ggsave("../plots/linear-fixed-effects.jpg", fixed.effects.plot.linear,
        height=6, width = graphic_width_short)
 }
 ```
@@ -439,7 +437,7 @@ ggplot(df, aes(x = Var1, y = Var2, fill = value)) + geom_tile() +
   my_theme
 
 if(save_graph){
-ggsave("plots/correlation.jpg", 
+ggsave("../plots/correlation.jpg", 
        height=6, width = graphic_width_short)
 }
 ```

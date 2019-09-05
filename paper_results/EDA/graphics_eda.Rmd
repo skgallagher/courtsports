@@ -12,6 +12,8 @@ header-includes:
 knitr::opts_chunk$set(echo = FALSE)
 knitr::opts_chunk$set(warning=FALSE)
 knitr::opts_chunk$set(message = FALSE)
+
+# devtools::install_github("skoval/deuce")
 library(deuce)
 library(dplyr)
 library(tidyr)
@@ -29,9 +31,8 @@ library(lme4)
 library(cowplot)
 library(ggpubr)
 library(reshape2)
-
-## To change into library(courtsports)
-devtools::load_all("../..")
+# devtools::install_github("shannong19/courtsports")
+library(courtsports)
 ```
 
 ```{r graphing-parameters, include = FALSE}
@@ -42,11 +43,9 @@ my_theme <-  theme_bw() + # White background, black and white theme
         plot.title = element_text(hjust = 0.5, size=34),
         plot.subtitle = element_text(hjust = 0.5))
 
-tournament_colors <- c("#0297DB", "#b06835", "#0C2340", "#54008b")
 league_colors <- c("#0C2340", "#902BA3")
 win_colors <- c("#336699", "#339966")
-
-# with yellow for us
+# with yellow for USA
 tournament_colors <- c("#0297DB", "#b06835", "#ffe500", "#54008b")
 
 graphic_width_long <- 16
@@ -109,7 +108,7 @@ grid.arrange(p2, p1, ncol=2)
 
 if(save_graph){
   grid.arrange(p2, p1, ncol=2) %>%
-  ggsave("plots/points_per_match.jpg", ., height=8, width=graphic_width_long)
+  ggsave("../plots/points_per_match.jpg", ., height=8, width=graphic_width_long)
 }
 ```
 
@@ -243,7 +242,7 @@ grid.arrange(.,
              bottom = textGrob("Note: we only look at the first 4 rounds due to decreasing sample size",
                            just = "left",
                            gp=gpar(fontfamily="serif", fontsize = 20))) %>%
-  ggsave("plots/home_court.jpg", ., height=5.5, width=graphic_width_long)
+  ggsave("../plots/home_court.jpg", ., height=5.5, width=graphic_width_long)
 }
 ```
 
@@ -359,7 +358,7 @@ grid.arrange(.,
              bottom = textGrob("Note: we only look at the first 4 rounds due to decreasing sample size",
                            just = "left",
                            gp=gpar(fontfamily="serif", fontsize = 20))) %>%
-  ggsave("plots/home_court_all4.jpg", ., height=5, width=graphic_width_long)
+  ggsave("../plots/home_court_all4.jpg", ., height=5, width=graphic_width_long)
 }
 ```
 
@@ -431,7 +430,7 @@ ggarrange( p1, p2, nrow=1, ncol=2, common.legend = TRUE, legend="bottom")
 
 if(save_graph){
 ggarrange( p1, p2, nrow=1, ncol=2, common.legend = TRUE, legend="bottom") %>%
-  ggsave("plots/spainards.jpg", ., height=6, width=graphic_width_long)
+  ggsave("../plots/spainards.jpg", ., height=6, width=graphic_width_long)
 }
 
 ```
@@ -455,7 +454,7 @@ ggplot(gs_partial, aes(w_n_ue + l_n_ue, w_n_aces + l_n_aces,
   guides(color = guide_legend(override.aes = list(size = 7, shape=15))) 
 
 if(save_graph){
-ggsave("plots/errors_aces2.jpg", height = 6, width = graphic_width_short)
+ggsave("../plots/errors_aces2.jpg", height = 6, width = graphic_width_short)
 }
 ```
 
@@ -520,7 +519,7 @@ ggplot(aes(log(ht+1), log(ace+1))) +
 ggarrange(p_atp, p_wta, common.legend = TRUE, legend="bottom") 
 
 if(save_graph){
-ggsave("plots/aces2.jpg", height=7, width=graphic_width_long)
+ggsave("../plots/aces2.jpg", height=7, width=graphic_width_long)
 }
 ```
 
@@ -585,6 +584,6 @@ ggplot(aes(log(ht+1), ace/svpt)) +
 ggarrange(p_atp_percent, p_wta_percent, common.legend = TRUE, legend="bottom") 
 
 if(save_graph){
-ggsave("plots/aces2_percent.jpg", height=8, width=graphic_width_long)
+ggsave("../plots/aces2_percent.jpg", height=8, width=graphic_width_long)
 }
 ```

@@ -1,8 +1,8 @@
 ## Script to get Federer individual model
 ## SKG July 20, 2019
 
-
-
+# devtools::install_github("skoval/deuce")
+# devtools::install_github("shannong19/courtsports")
 
 library("courtsports")
 library(ggplot2)
@@ -14,18 +14,20 @@ library(gridExtra)
 library(knitr)
 library(broom)
 library(kableExtra)
+# devtools::install_github("benjaminleroy/ggDiagnose")
 library(ggDiagnose)
 
 
 data(gs_partial_players)
 
-########################3
+########################################################################
 ## THeme
 my_theme <-  theme_bw() + # White background, black and white theme
-  theme(axis.text = element_text(size = 12),
-        text = element_text(size = 14,
-        family="serif"),
-        plot.title = element_text( size=16))
+  theme(axis.text = element_text(size = 24),
+        text = element_text(size = 28,
+                            family="serif"),
+        plot.title = element_text(hjust = 0.5, size=34),
+        plot.subtitle = element_text(hjust = 0.5))
 
 tournament_colors <- c("#0297DB", "#b06835", "#0C2340", "#54008b")
 league_colors <- c("#0C2340", "#902BA3")
@@ -33,7 +35,13 @@ win_colors <- c("#336699", "#339966")
 
 # with yellow for us
 tournament_colors <- c("#0297DB", "#b06835", "#ffe500", "#54008b")
-########################################
+
+graphic_width_long <- 16
+graphic_width_short <- 12
+
+# write/save graphs locally?
+save_graph <- FALSE
+###########################################################################
 
 player_name <- "Roger Federer"
 data <- gs_partial_players
@@ -144,7 +152,7 @@ print(top_players, n = 45)
 
 
 ## Build a list of data frames
-devtools::load_all("~/courtsports")
+# devtools::load_all("~/courtsports")
 L <- nrow(top_players)
 player_list <- vector(mode = "list", length = L)
 mods <- vector(mode = "list", length = L)
@@ -262,8 +270,9 @@ ggplot(data = na.omit(gdf[, -which(colnames(gdf) == "pos_bonf")]),
          x = "Court and interaction") +
     my_theme
 
-ggsave("individual-models-coef-signs-sub.pdf", width = 8, height = 10)
-
+if(save_graph){
+ggsave("../plots/individual-models-coef-signs-sub.jpg", width = graphic_width_short, height = 10)
+}
 
 ## C
 gdf2 <- player_df %>% group_by(tour, var, pos) %>%
@@ -290,7 +299,7 @@ df_wide <- spread(df, key = var, val = val)
 df_wide <-  df_wide %>% replace(., is.na(.), 0)
 ## Tomorrow
 #
-cor <- df_wide %>% select(-c("tour", "name", "(Intercept)")) %>% cor()
+cor <- df_wide %>% dplyr::select(-c("tour", "name", "(Intercept)")) %>% cor()
 ggcorrplot(cor, hc.order = FALSE, type = "lower",
            outline.col = "black") + my_theme +
     theme(axis.text.x = element_text(angle = 90, vjust = 0)) +
@@ -298,11 +307,13 @@ ggcorrplot(cor, hc.order = FALSE, type = "lower",
          title = "Correlation matrix for selected coefficients",
          subtitle = "For top players individual models")
 
-ggsave("individual-models-cor-mat-sub.pdf", width = 8, height = 8)
+if(save_graph){
+ggsave("../plots/individual-models-cor-mat-sub.pdf", width = 8, height = 8)
+}
 
 ## Men's
 df_wide_m <- df_wide %>% filter(tour == "atp")
-cor <- df_wide_m %>% select(-c("tour", "name", "(Intercept)")) %>% cor()
+cor <- df_wide_m %>% dplyr::select(-c("tour", "name", "(Intercept)")) %>% cor()
 ggcorrplot(cor, hc.order = FALSE, type = "lower",
            outline.col = "black") + my_theme +
     theme(axis.text.x = element_text(angle = 90, vjust = 0)) +
@@ -310,7 +321,9 @@ ggcorrplot(cor, hc.order = FALSE, type = "lower",
          title = "Correlation matrix for selected coefficients",
          subtitle = "For top ATP players individual models")
 #
-ggsave("individual-models-cor-mat-atp-sub.pdf", width = 8, height = 8)
+if(save_graph){
+ggsave("../plots/individual-models-cor-mat-atp-sub.pdf", width = 8, height = 8)
+}
 
 ## Women's
 df_wide_w <- df_wide %>% filter(tour == "wta")
@@ -322,8 +335,9 @@ ggcorrplot(cor, hc.order = FALSE, type = "lower",
          title = "Correlation matrix for selected coefficients",
          subtitle = "For top WTA players individual models")
 #
-ggsave("individual-models-cor-mat-wta-sub.pdf", width = 8, height = 8)
-
+if(save_graph){
+ggsave("../plots/individual-models-cor-mat-wta-sub.pdf", width = 8, height = 8)
+}
 
 ## AO
 slam_abb <- c("AO", "WIM", "USO")
@@ -346,10 +360,11 @@ for(jj in 1:length(tours)){
             }
     }
 
+if(save_graph){
 pdf("cor-slams-sub.pdf", width = 16, height = 10)
 do.call("grid.arrange", c(g_list, ncol = 3))
 dev.off()
-
+}
 
 ##########################################
 ## A
@@ -367,8 +382,6 @@ player <- sub_player_df %>% group_by(name, tour, slam) %>%
 
 effects <- player %>% group_by(slam, tour) %>%
     summarize(npos = sum(npos), nneg = sum(nneg))
-
-
 
 
 #############################################
@@ -450,7 +463,9 @@ ggplot(data = ggdf, aes(y = fit, x = name, col = court, group = court)) +
     labs(x = "", y = "Expected % of points won",
          title = "Individual model predictions",
          subtitle = "Opponent rank = 10; reference court = French Open")
-ggsave("individual-models-results-mod-sub.pdf", width = 10, height = 14)
+if(save_graph){
+ggsave("../plots/individual-models-results-mod-sub.pdf", width = 10, height = 14)
+}
 ## 0
 ###################3
 ## Make above graph prettier
