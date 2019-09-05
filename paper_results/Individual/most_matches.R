@@ -327,7 +327,7 @@ ggsave("../plots/individual-models-cor-mat-atp-sub.pdf", width = 8, height = 8)
 
 ## Women's
 df_wide_w <- df_wide %>% filter(tour == "wta")
-cor <- df_wide_w %>% select(-c("tour", "name", "(Intercept)")) %>% cor()
+cor <- df_wide_w %>% dplyr::select(-c("tour", "name", "(Intercept)")) %>% cor()
 ggcorrplot(cor, hc.order = FALSE, type = "lower",
            outline.col = "black") + my_theme +
     theme(axis.text.x = element_text(angle = 90, vjust = 0)) +
@@ -349,7 +349,7 @@ for(jj in 1:length(tours)){
     for(ii in 1:length(slam_abb)){
         slam_vars <- grep(slam_abb[ii], colnames(df_wide), value = TRUE)
         tour <- tours[jj]
-        cor <- df_wide_w %>% select(slam_vars) %>% cor()
+        cor <- df_wide_w %>% dplyr::select(slam_vars) %>% cor()
         g_list[[length(slam_abb) * (jj -1) + ii]] <- ggcorrplot(cor, hc.order = FALSE, type = "lower",
                                              outline.col = "black") + my_theme +
             theme(axis.text.x = element_text(angle = 90, vjust = 0)) +
