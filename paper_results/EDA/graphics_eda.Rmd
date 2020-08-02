@@ -381,7 +381,8 @@ spain_wins <- filter(gs_players_v2, ioc == "ESP", round < "QF") %>%
             win_prop_se = sqrt(win_prop*(1-win_prop)/n()),
             avg_ranking = mean(rank),
             rank_se = sd(rank)/sqrt(n()),
-            n_size = n())
+            n_size = n(),
+            med_ranking = median(rank, na.rm = TRUE))
 
 prop.table(with(filter(gs_players_v2, ioc == "ESP", round == "R128"),
                 table(did_win, tournament)), 2)
@@ -442,6 +443,20 @@ if(save_graph){
 ggarrange( p1, p2, nrow=1, ncol=2, common.legend = TRUE, legend="bottom") %>%
   ggsave("../plots/spainards_v2.jpg", ., height=6, width=graphic_width_long)
 }
+
+
+ggplot(spain_wins, aes(round, med_ranking, color=tournament, group=tournament, fill = tournament)) + 
+  geom_line(size=3) + 
+  labs(title = "Median ranking among Spaniards",
+       x = " ",
+       y = "Median rank") + 
+  scale_color_manual(" ", values=tournament_colors,
+                                labels = c("Australian Open\n(Plexicushion)",
+                                           "French Open\n(Clay)",
+                                           "US Open\n(DecoTurf)",
+                                           "Wimbledon\n(Grass)")) + my_theme +
+  guides(color = guide_legend(override.aes = list(size = 7))) 
+
 
 ```
 
@@ -747,13 +762,13 @@ ggplot( aes(ht, med_ace_perc)) +
   geom_label_repel(data=dplyr::filter(atp_ace_ht, name %in% atp_servers),
             aes(ht, med_ace_perc, label=name),
             alpha=.8, seed=1234, show.legend=FALSE, size = 6,
-            nudge_y = c(-.025, 0, 0, -0.05,0.02),
-            nudge_x = c(6, -2, -2, -3, -1)) +
+            nudge_y = c(-.025, 0, -.01, -0.05,0.02),
+            nudge_x = c(6, -2, 0, -3, -1)) +
   geom_label_repel(data=dplyr::filter(atp_ace_ht, name %in% atp_servers),
             aes(ht, med_ace_perc, label = name),
             seed=1234, fill=NA, show.legend=FALSE, size = 6,
-            nudge_y = c(-.025, 0, 0, -0.05,0.02),
-            nudge_x = c(6, -2, -2, -3, -1)) +
+            nudge_y = c(-.025, 0, -0.01, -0.05,0.02),
+            nudge_x = c(6, -2, 0, -3, -1)) +
   labs(x = "Height in cm", y = "Median ace% per match", title = "ATP") +
   my_theme 
 # + 
@@ -768,12 +783,12 @@ ggplot( aes(ht, med_ace_perc)) +
   geom_label_repel(data=dplyr::filter(wta_ace_ht, name %in% wta_servers),
             aes(ht, med_ace_perc, label=name),
             alpha=.8, seed=1234, show.legend=FALSE, size = 6,
-            nudge_y = c(-.02, .01, 0.01, -0.01, -0.02 ),
+            nudge_y = c(-.02, .01, 0.01, -0.01, -0.03 ),
             nudge_x = c(-3, 5, -3, 0, 0)) + 
   geom_label_repel(data=dplyr::filter(wta_ace_ht, name %in% wta_servers),
             aes(ht, med_ace_perc, label = name),
             seed=1234, fill=NA, show.legend=FALSE, size = 6,
-            nudge_y = c(-.02, .01, 0.01, -0.01, -0.02 ),
+            nudge_y = c(-.02, .01, 0.01, -0.01, -0.03 ),
             nudge_x = c(-3, 5, -3, 0, 0)) +
   labs(x = "Height in cm", y = "Median ace% per match", title = "WTA") +
   my_theme
@@ -816,12 +831,12 @@ ggplot( aes(ht, med_ace_perc)) +
   geom_label_repel(data=dplyr::filter(wta_ace_ht, name %in% wta_servers),
             aes(ht, med_ace_perc, label=name),
             alpha=.8, seed=1234, show.legend=FALSE, size = 5,
-            nudge_y = c(-.02, .01, 0.01, -0.01, -0.02 ),
+            nudge_y = c(-.02, .01, 0.01, -0.01, -0.01),
             nudge_x = c(-1, 5, 5, 0, 0)) + 
   geom_label_repel(data=dplyr::filter(wta_ace_ht, name %in% wta_servers),
             aes(ht, med_ace_perc, label = name),
             seed=1234, fill=NA, show.legend=FALSE, size = 5,
-            nudge_y = c(-.02, .01, 0.01, -0.01, -0.02 ),
+            nudge_y = c(-.02, .01, 0.01, -0.01, -0.01),
             nudge_x = c(-1, 5, 5, 0, 0)) +
   labs(x = "Height in cm", y = " ", title = "WTA") +
   my_theme +
@@ -834,6 +849,58 @@ ggplot( aes(ht, med_ace_perc)) +
 # if(save_graph){
 # ggsave("../plots/aces_median_percent_BW1_v2.jpg", height=8, width=graphic_width_long)
 # }
+
+
+
+
+p_atp_percent <- atp_ace_ht %>% # could also try median
+ggplot( aes(ht, avg_ave_perc)) + 
+  geom_jitter(size=1.5, width = 0.8) + 
+  geom_smooth( method = "lm", color="black") + 
+  geom_label_repel(data=dplyr::filter(atp_ace_ht, name %in% atp_servers),
+            aes(ht, avg_ave_perc, label=name),
+            alpha=.8, seed=1234, show.legend=FALSE, size = 6,
+            nudge_y = c(-.025, 0, -.01, -0.05,0.02),
+            nudge_x = c(6, -2, 0, -3, -1)) +
+  geom_label_repel(data=dplyr::filter(atp_ace_ht, name %in% atp_servers),
+            aes(ht, avg_ave_perc, label = name),
+            seed=1234, fill=NA, show.legend=FALSE, size = 6,
+            nudge_y = c(-.025, 0, -0.01, -0.05,0.02),
+            nudge_x = c(6, -2, 0, -3, -1)) +
+  labs(x = "Height in cm", y = "Mean ace% per match", title = "ATP") +
+  my_theme 
+# + 
+#   ylim(c(0, 0.25))
+p_atp_percent
+
+
+p_wta_percent <- wta_ace_ht %>% # could also try median
+ggplot( aes(ht, avg_ave_perc)) + 
+  geom_jitter(size=1.5, width=.6) + 
+  geom_smooth( method = "lm", color="black") + 
+  geom_label_repel(data=dplyr::filter(wta_ace_ht, name %in% wta_servers),
+            aes(ht, avg_ave_perc, label=name),
+            alpha=.8, seed=1234, show.legend=FALSE, size = 6,
+            nudge_y = c(-.02, .01, 0.01, -0.01, -0.03 ),
+            nudge_x = c(-3, 5, -3, 0, 0)) + 
+  geom_label_repel(data=dplyr::filter(wta_ace_ht, name %in% wta_servers),
+            aes(ht, avg_ave_perc, label = name),
+            seed=1234, fill=NA, show.legend=FALSE, size = 6,
+            nudge_y = c(-.02, .01, 0.01, -0.01, -0.03 ),
+            nudge_x = c(-3, 5, -3, 0, 0)) +
+  labs(x = "Height in cm", y = "Mean ace% per match", title = "WTA") +
+  my_theme
+# + 
+#   ylim(c(0, 0.25))
+
+p_wta_percent
+
+
+ggarrange(p_atp_percent, NULL, p_wta_percent, common.legend = TRUE, legend="bottom", widths = c(1, 0.08, 1), nrow = 1) 
+
+if(save_graph){
+ggsave("../plots/aces_mean_percent_v2.jpg", height=8, width=graphic_width_long)
+}
 
 ```
 
