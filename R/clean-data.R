@@ -157,9 +157,16 @@ summarize_pbp <- function(pbp,
 
     ## Omit non-complete columns
     na_col_inds <- colSums(is.na(pbp))
-    complete_cols <- which(na_col_inds == 0)
+    complete_cols <- which(na_col_inds <= 1000)
     pbp <- pbp %>% dplyr::select(names(pbp[complete_cols])) %>%
-        filter(year >= start_year& year <= end_year)
+        dplyr::filter(year >= start_year& year <= end_year)
+    ## Of these, which rows have NAs?
+    na_row_inds <- which(rowSums(is.na(pbp)) > 0)
+    ## Find matches associated with NAs
+    missing_match_ids <- unique(pbp$match_id[na_row_inds])
+    ## Exclude entire matches which have any missing values of above relevant columns
+    pbp <- pbp %>% dplyr::filter(!(match_id %in% missing_match_ids))
+    
 
     ## Change tournament to match the names of gs data
     pbp$tournament <- factor(pbp$slam) %>%
@@ -171,7 +178,8 @@ summarize_pbp <- function(pbp,
 
 
     ## Group by unique matches
-    pbp_matches <- pbp %>% group_by(match_id, player1, player2, Tour,
+
+    pbp_matches <- pbp %>% group_by(match_id, player1, player2, 
                                     slam, year, tournament) %>%
         dplyr::summarize(ave_serve_speed_p1 = mean(Speed_MPH[PointServer == 1]),
                          ave_serve_speed_p2 = mean(Speed_MPH[PointServer == 2]),
