@@ -587,3 +587,358 @@ if(save_graph){
 ggsave("../plots/aces2_percent.jpg", height=8, width=graphic_width_long)
 }
 ```
+
+
+
+#### Using ace percentage.... one dot per tournament (colored)
+
+```{r, fig.width=16, fig.height=8, fig.align='center'}
+set.seed(8)
+
+maxish <- function(x){
+  xx <- na.omit(unique(x))
+  return(ifelse(length(xx) > 1, max(xx), xx))
+}
+
+atp_servers <- c("Ivo Karlovic", "John Isner", "Rafael Nadal",
+                 "Roger Federer", "Andy Murray")
+
+wta_servers <- c("Karolina Pliskova", "Caroline Wozniacki",
+                 "Venus Williams", "Serena Williams", "Madison Keys")
+
+
+atp_ace_ht_tour <-   gs_players %>% 
+  filter(league == "ATP") %>%
+  dplyr::group_by(name, tournament) %>%
+  dplyr::summarise(ht = maxish(ht),
+                   avg_ace_perc = mean(ace/svpt, na.rm=TRUE),
+                   med_ace_perc = median(ace/svpt, na.rm=TRUE),
+                   count_n = n())
+
+wta_ace_ht_tour <-   gs_players %>% 
+  filter(league == "WTA") %>%
+  dplyr::group_by(name, tournament) %>%
+  dplyr::summarise(ht = maxish(ht),
+                   avg_ace_perc = mean(ace/svpt, na.rm=TRUE),
+                   med_ace_perc = median(ace/svpt, na.rm=TRUE),
+                   count_n = n())
+
+# atp_servers <- sapply(ungroup(atp_ace_ht_tour),
+#                       function(x) return(sample(which(ungroup(atp_ace_ht_tour)$name == x), 2))) %>%
+#   as.numeric() %>% ungroup(atp_ace_ht_tour)[., ]
+# 
+# wta_servers <- sapply(wta_ace_ht_tour,
+#                       function(x) return(sample(which(wta_ace_ht_tour$name == x), 2))) %>%
+#   as.numeric() %>% gs_players[., ]
+
+
+p_atp_percent <- 
+atp_ace_ht_tour %>% # could also try median
+ggplot(aes(ht, med_ace_perc)) + 
+  geom_jitter(aes(color = tournament), size=1.5) + 
+  # scale_color_manual(" ", values = tournament_colors) +
+  geom_smooth(aes(color = tournament), method = "lm") + 
+  geom_label_repel(data=dplyr::filter(atp_ace_ht_tour, name %in% atp_servers),
+            aes(ht, med_ace_perc, label=name, color = tournament),
+            alpha=.8, seed=1234, show.legend=FALSE, size = 5,
+            nudge_y = c(-.075, 0, 0, -0.05,0.02 ),
+            nudge_x = c(5, 5, -5, -3, 0)) + 
+  geom_label_repel(data=dplyr::filter(atp_ace_ht_tour, name %in% atp_servers),
+            aes(ht, med_ace_perc, label = name, color = tournament),
+            seed=1234, fill=NA, show.legend=FALSE, size = 5,
+            nudge_y = c(-.075, 0, 0, -0.05,0.02 ),
+            nudge_x = c(5, 5, -5, -3, 0)) +
+  labs(x = "Height in cm", y = "Median ace% per match", title = "ATP") +
+  my_theme +
+  scale_color_manual("Tournament",
+                                values = tournament_colors,
+                                labels = c("Australian Open\n(Plexicushion)\n",
+                                           "French Open\n(Clay)\n",
+                                           "US Open\n(DecoTurf)\n",
+                                           "Wimbledon\n(Grass)\n")) +
+# +
+#   guides(color = guide_legend(override.aes = list(size = 7, shape=15))) + 
+facet_wrap(~tournament) +
+theme(legend.position="none")
+
+p_atp_percent
+
+if(save_graph){
+ggsave("../plots/ace_ht_facet_atp.jpg", height=8, width=graphic_width_short)
+}
+
+p_wta_percent <- 
+wta_ace_ht_tour %>% # could also try median
+ggplot(aes(ht, med_ace_perc)) + 
+  geom_jitter(aes(color = tournament), size=1.5) + 
+  # scale_color_manual(" ", values = tournament_colors) +
+  geom_smooth(aes(color = tournament), method = "lm") + 
+  geom_label_repel(data=dplyr::filter(wta_ace_ht_tour, name %in% wta_servers),
+            aes(ht, med_ace_perc, label=name, color = tournament),
+            seed=1234, fill=NA, show.legend=FALSE, size = 5,
+            nudge_y = rep(c(-.1, .06, 0.06, 0.08, -0.1), 4),
+            nudge_x = rep(c(-5, 0, 0, -7, 0), 4)) +
+  geom_label_repel(data=dplyr::filter(wta_ace_ht_tour, name %in% wta_servers),
+            aes(ht, med_ace_perc, label = name, color = tournament),
+            seed=1234, fill=NA, show.legend=FALSE, size = 5,
+            nudge_y = rep(c(-.1, .06, 0.06, 0.08, -0.1), 4),
+            nudge_x = rep(c(-5, 0, 0, -7, 0), 4)) +
+  labs(x = "Height in cm", y = "Median ace% per match", title = "WTA") +
+  my_theme +
+  scale_color_manual("Tournament",
+                                values = tournament_colors,
+                                labels = c("Australian Open\n(Plexicushion)\n",
+                                           "French Open\n(Clay)\n",
+                                           "US Open\n(DecoTurf)\n",
+                                           "Wimbledon\n(Grass)\n")) +
+# +
+#   guides(color = guide_legend(override.aes = list(size = 7, shape=15))) + 
+facet_wrap(~tournament) +
+theme(legend.position="none") + 
+  ylim(c(-0.02, 0.2))
+
+p_wta_percent
+
+if(save_graph){
+ggsave("../plots/ace_ht_facet_wta.jpg", height=8, width=graphic_width_short)
+}
+
+```
+
+
+<!-- #### Using ace percentage.... one dot per tournament (black white) -->
+
+<!-- ```{r, fig.width=16, fig.height=8, fig.align='center'} -->
+<!-- set.seed(8) -->
+
+<!-- maxish <- function(x){ -->
+<!--   xx <- na.omit(unique(x)) -->
+<!--   return(ifelse(length(xx) > 1, max(xx), xx)) -->
+<!-- } -->
+
+<!-- atp_servers <- c("Ivo Karlovic", "John Isner", "Rafael Nadal", -->
+<!--                  "Roger Federer", "Andy Murray") -->
+
+<!-- wta_servers <- c("Karolina Pliskova", "Caroline Wozniacki", -->
+<!--                  "Venus Williams", "Serena Williams", "Madison Keys") -->
+
+
+<!-- atp_ace_ht_tour <-   gs_players %>%  -->
+<!--   filter(league == "ATP") %>% -->
+<!--   dplyr::group_by(name, tournament) %>% -->
+<!--   dplyr::summarise(ht = maxish(ht), -->
+<!--                    avg_ace_perc = mean(ace/svpt, na.rm=TRUE), -->
+<!--                    med_ace_perc = median(ace/svpt, na.rm=TRUE), -->
+<!--                    count_n = n()) -->
+
+<!-- wta_ace_ht_tour <-   gs_players %>%  -->
+<!--   filter(league == "WTA") %>% -->
+<!--   dplyr::group_by(name, tournament) %>% -->
+<!--   dplyr::summarise(ht = maxish(ht), -->
+<!--                    avg_ace_perc = mean(ace/svpt, na.rm=TRUE), -->
+<!--                    med_ace_perc = median(ace/svpt, na.rm=TRUE), -->
+<!--                    count_n = n()) -->
+
+<!-- atp_servers <- sapply(atp_servers, -->
+<!--                       function(x) return(sample(which(gs_players$name == x), 2))) %>% -->
+<!--   as.numeric() %>%  -->
+<!--   gs_players[., ]  %>% -->
+<!--   dplyr::mutate(med_ace_perc = median(ace/svpt, na.rm=TRUE)) -->
+
+<!-- wta_servers <- sapply(wta_servers, -->
+<!--                       function(x) return(sample(which(gs_players$name == x), 2))) %>% -->
+<!--   as.numeric() %>% gs_players[., ] %>% -->
+<!--   dplyr::mutate(med_ace_perc = median(ace/svpt, na.rm=TRUE)) -->
+
+
+<!-- p_atp_percent <-  -->
+<!-- atp_ace_ht_tour %>% # could also try median -->
+<!-- ggplot(aes(ht, med_ace_perc)) +  -->
+<!--   geom_jitter( size=1.5) +  -->
+<!--   # scale_color_manual(" ", values = tournament_colors) + -->
+<!--   geom_smooth( method = "lm", color = "black") +  -->
+<!--   geom_label_repel(data=atp_servers, -->
+<!--             aes(ht, med_ace_perc, label=name), -->
+<!--             alpha=.8, seed=1234, show.legend=FALSE, size = 7, -->
+<!--             nudge_y = c(-.075, 0, 0, -0.05,0.02 ), -->
+<!--             nudge_x = c(5, 5, -5, -3, 0)) +  -->
+<!--   geom_label_repel(data=atp_servers, -->
+<!--             aes(ht, med_ace_perc, label = name), -->
+<!--             seed=1234, fill=NA, show.legend=FALSE, size = 7, -->
+<!--             nudge_y = c(-.075, 0, 0, -0.05,0.02 ), -->
+<!--             nudge_x = c(5, 5, -5, -3, 0)) + -->
+<!--   labs(x = "Height in cm", y = "Median ace% per match", title = "ATP") + -->
+<!--    my_theme # + -->
+<!-- #   scale_color_manual("Tournament", -->
+<!-- #                                 values = tournament_colors, -->
+<!-- #                                 labels = c("Australian Open\n(Plexicushion)\n", -->
+<!-- #                                            "French Open\n(Clay)\n", -->
+<!-- #                                            "US Open\n(DecoTurf)\n", -->
+<!-- #                                            "Wimbledon\n(Grass)\n")) + -->
+<!-- # # + -->
+<!-- # #   guides(color = guide_legend(override.aes = list(size = 7, shape=15))) +  -->
+<!-- # facet_wrap(~tournament) + -->
+<!-- # theme(legend.position="none") -->
+
+<!-- p_atp_percent -->
+
+<!-- p_wta_percent <-  -->
+<!-- wta_ace_ht_tour %>% # could also try median -->
+<!-- ggplot(aes(ht, med_ace_perc)) +  -->
+<!--   geom_jitter(size=1.5) +  -->
+<!--   # scale_color_manual(" ", values = tournament_colors) + -->
+<!--   geom_smooth(method = "lm", color = "black") +  -->
+<!--   geom_label_repel(data=wta_servers, -->
+<!--             aes(ht, med_ace_perc, label=name), -->
+<!--             seed=1234, fill=NA, show.legend=FALSE, size = 5) + -->
+<!--             # nudge_y = rep(c(-.1, .06, 0.06, 0.08, -0.1), 4), -->
+<!--             # nudge_x = rep(c(-5, 0, 0, -7, 0), 4)) + -->
+<!--   geom_label_repel(data=wta_servers, -->
+<!--             aes(ht, med_ace_perc, label = name), -->
+<!--             seed=1234, fill=NA, show.legend=FALSE, size = 5) + -->
+<!--             # nudge_y = c(-.1, .06, 0.06, 0.08, -0.1), -->
+<!--             # nudge_x = c(-5, 0, 0, -7, 0)) + -->
+<!--   labs(x = "Height in cm", y = "Median ace% per match", title = "WTA") + -->
+<!--   my_theme # + -->
+<!-- #   scale_color_manual("Tournament", -->
+<!-- #                                 values = tournament_colors, -->
+<!-- #                                 labels = c("Australian Open\n(Plexicushion)\n", -->
+<!-- #                                            "French Open\n(Clay)\n", -->
+<!-- #                                            "US Open\n(DecoTurf)\n", -->
+<!-- #                                            "Wimbledon\n(Grass)\n")) + -->
+<!-- # # + -->
+<!-- # #   guides(color = guide_legend(override.aes = list(size = 7, shape=15))) +  -->
+<!-- # facet_wrap(~tournament) + -->
+<!-- # theme(legend.position="none") +  -->
+<!-- #   ylim(c(-0.02, 0.2)) -->
+
+<!-- p_wta_percent -->
+
+
+<!-- ggarrange(p_atp_percent, NULL, p_wta_percent, common.legend = TRUE, legend="bottom", widths = c(1, 0.08, 1), nrow = 1)  -->
+
+<!-- if(save_graph){ -->
+<!-- ggsave("../plots/aces_median_percent_BW2.jpg", height=8, width=graphic_width_long) -->
+<!-- } -->
+
+<!-- ``` -->
+
+
+
+#### Using ace percentage.... one dot per player - black white
+
+```{r, fig.width=16, fig.height=8, fig.align='center'}
+set.seed(8)
+
+atp_ace_ht <-   gs_players %>% 
+  filter(league == "ATP") %>%
+  dplyr::group_by(name) %>%
+  dplyr::summarise(ht = maxish(ht),
+                   avg_ave_perc = mean(ace/svpt, na.rm=TRUE),
+                   med_ace_perc = median(ace/svpt, na.rm=TRUE),
+                   count_n = n())
+
+wta_ace_ht <-   gs_players %>% 
+  filter(league == "WTA") %>%
+  dplyr::group_by(name) %>%
+  dplyr::summarise(ht = maxish(ht),
+                   avg_ave_perc = mean(ace/svpt, na.rm=TRUE),
+                   med_ace_perc = median(ace/svpt, na.rm=TRUE),
+                   count_n = n())
+
+p_atp_percent <- atp_ace_ht %>% # could also try median
+ggplot( aes(ht, med_ace_perc)) + 
+  geom_jitter(size=1.5) + 
+  geom_smooth( method = "lm", color="black") + 
+  geom_label_repel(data=dplyr::filter(atp_ace_ht, name %in% atp_servers),
+            aes(ht, med_ace_perc, label=name),
+            alpha=.8, seed=1234, show.legend=FALSE, size = 5,
+            nudge_y = c(-.075, 0, 0, -0.05,0.02 ),
+            nudge_x = c(5, 5, -5, -3, 0)) +
+  geom_label_repel(data=dplyr::filter(atp_ace_ht, name %in% atp_servers),
+            aes(ht, med_ace_perc, label = name),
+            seed=1234, fill=NA, show.legend=FALSE, size = 5,
+            nudge_y = c(-.075, 0, 0, -0.05,0.02 ),
+            nudge_x = c(5, 5, -5, -3, 0)) +
+  labs(x = "Height in cm", y = "Median ace% per match", title = "ATP") +
+  my_theme 
+# + 
+#   ylim(c(0, 0.25))
+p_atp_percent
+
+
+p_wta_percent <- wta_ace_ht %>% # could also try median
+ggplot( aes(ht, med_ace_perc)) + 
+  geom_jitter(size=1.5) + 
+  geom_smooth( method = "lm", color="black") + 
+  geom_label_repel(data=dplyr::filter(wta_ace_ht, name %in% wta_servers),
+            aes(ht, med_ace_perc, label=name),
+            alpha=.8, seed=1234, show.legend=FALSE, size = 5,
+            nudge_y = c(-.02, .01, 0.01, -0.01, -0.02 ),
+            nudge_x = c(-1, 5, 5, 0, 0)) + 
+  geom_label_repel(data=dplyr::filter(wta_ace_ht, name %in% wta_servers),
+            aes(ht, med_ace_perc, label = name),
+            seed=1234, fill=NA, show.legend=FALSE, size = 5,
+            nudge_y = c(-.02, .01, 0.01, -0.01, -0.02 ),
+            nudge_x = c(-1, 5, 5, 0, 0)) +
+  labs(x = "Height in cm", y = "Median ace% per match", title = "WTA") +
+  my_theme
+# + 
+#   ylim(c(0, 0.25))
+
+p_wta_percent
+
+
+ggarrange(p_atp_percent, NULL, p_wta_percent, common.legend = TRUE, legend="bottom", widths = c(1, 0.08, 1), nrow = 1) 
+
+if(save_graph){
+ggsave("../plots/aces_median_percent_BW2.jpg", height=8, width=graphic_width_long)
+}
+
+
+p_atp_percent <- atp_ace_ht %>% # could also try median
+ggplot( aes(ht, med_ace_perc)) + 
+  geom_jitter(size=1.5) + 
+  geom_smooth( method = "lm", color="black") + 
+  geom_label_repel(data=dplyr::filter(atp_ace_ht, name %in% atp_servers),
+            aes(ht, med_ace_perc, label=name),
+            alpha=.8, seed=1234, show.legend=FALSE, size = 5,
+            nudge_y = c(-.075, 0, 0, -0.05,0.02 ),
+            nudge_x = c(5, 5, -5, -3, 0)) +
+  geom_label_repel(data=dplyr::filter(atp_ace_ht, name %in% atp_servers),
+            aes(ht, med_ace_perc, label = name),
+            seed=1234, fill=NA, show.legend=FALSE, size = 5,
+            nudge_y = c(-.075, 0, 0, -0.05,0.02 ),
+            nudge_x = c(5, 5, -5, -3, 0)) +
+  labs(x = "Height in cm", y = "Median ace% per match", title = "ATP") +
+  my_theme +
+  ylim(c(0, 0.25))
+
+
+p_wta_percent <- wta_ace_ht %>% # could also try median
+ggplot( aes(ht, med_ace_perc)) + 
+  geom_jitter(size=1.5) + 
+  geom_smooth( method = "lm", color="black") + 
+  geom_label_repel(data=dplyr::filter(wta_ace_ht, name %in% wta_servers),
+            aes(ht, med_ace_perc, label=name),
+            alpha=.8, seed=1234, show.legend=FALSE, size = 5,
+            nudge_y = c(-.02, .01, 0.01, -0.01, -0.02 ),
+            nudge_x = c(-1, 5, 5, 0, 0)) + 
+  geom_label_repel(data=dplyr::filter(wta_ace_ht, name %in% wta_servers),
+            aes(ht, med_ace_perc, label = name),
+            seed=1234, fill=NA, show.legend=FALSE, size = 5,
+            nudge_y = c(-.02, .01, 0.01, -0.01, -0.02 ),
+            nudge_x = c(-1, 5, 5, 0, 0)) +
+  labs(x = "Height in cm", y = " ", title = "WTA") +
+  my_theme +
+  ylim(c(0, 0.25))
+
+
+ggarrange(p_atp_percent, p_wta_percent, common.legend = TRUE, legend="bottom",
+          nrow=1) 
+
+if(save_graph){
+ggsave("../plots/aces_median_percent_BW1.jpg", height=8, width=graphic_width_long)
+}
+
+```
