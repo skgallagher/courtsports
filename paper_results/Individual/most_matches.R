@@ -2,7 +2,7 @@
 ## SKG July 20, 2019
 
 # devtools::install_github("skoval/deuce")
-# devtools::install_github("shannong19/courtsports")
+# devtools::install_github("skgallagher/courtsports")
 
 library("courtsports")
 library(ggplot2)
@@ -18,8 +18,7 @@ library(kableExtra)
 library(ggDiagnose)
 
 
-data(gs_partial_players)
-
+data(gs_partial_players_v2)
 ########################################################################
 ## THeme
 my_theme <-  theme_bw() + # White background, black and white theme
@@ -50,14 +49,14 @@ save_graph <- FALSE
 ###########################################################################
 
 player_name <- "Roger Federer"
-data <- gs_partial_players
+data <- gs_partial_players_v2
 ref <- "Wimbledon"
 start_lower <- TRUE
 min_year <- 2013
-max_year <- 2017
+max_year <- 2020
 seed <- 2020
 set.seed(seed)
-test_prop <- 0
+test_prop <- 0.5
 #
 out_list <- courtsports::model_individual(
                               player_name = player_name,
@@ -70,16 +69,58 @@ out_list <- courtsports::model_individual(
                               seed = seed)
 #
 summary(out_list$final_model)
+r2 <- with(summary(out_list$final_model), 1 - deviance/null.deviance)
+## double check
+best_mod <- lm(out_list$step_model$formula, data = out_list$data_sub[-out_list$train_inds,])
+summary(best_mod)$r.squared
+summary(best_mod)$adj.r.squared
+print(r2)
 par(mfrow = c(2,2))
 plot(out_list$final_model)
 print(out_list$n_obs)
-df <- tidy(out_list$final_model)
+df <- broom::tidy(out_list$final_model)
 kable(df[,-4], format = "latex",
       row.names = FALSE, col.names = c("Coef.", "Est.",
                                        "Std. Err.", "p-value"),
              caption = "\\label{tab:fed-ind-coef} Modeling coefficients for Federer's best fit individual model using Wimbledon as a reference court.",
       booktabs = TRUE, digits = 4) %>% kable_styling(latex_options = "striped", "hold_position")
 car::vif(out_list$final_model)
+
+## QUANTILES
+out_list$data_sub %>%
+  summarize_if(is.numeric, quantile, na.rm = TRUE, probs = .25)
+out_list$data_sub %>%
+  summarize_if(is.numeric, quantile, na.rm = TRUE, probs = .5)
+out_list$data_sub %>%
+  summarize_if(is.numeric, quantile, na.rm = TRUE, probs = .75)
+
+## Intrepretations of coefficients
+coefs <- out_list$final_model$coefficients
+cov_f <- vcov(out_list$final_model)
+abs(coefs["log(opponent_rank)"])
+coefs["log(opponent_rank)"]
+sqrt(cov_f["log(opponent_rank)", "log(opponent_rank)"])
+## break points
+.1 * coefs["pct_bp"]
+.1 *sqrt(cov_f["pct_bp", "pct_bp"])
+## interactions
+cov_mat <- vcov(out_list$final_model)
+## AO
+aus_vars <- c("I(court)Australian Open", "I(court)Australian Open:wue_ratio")
+cov_AO <- cov_mat[aus_vars, aus_vars]
+coefs[aus_vars[1]]
+coefs[aus_vars[2]]
+## FO
+aus_vars <- c("I(court)French Open", "I(court)French Open:wue_ratio")
+cov_AO <- cov_mat[aus_vars, aus_vars]
+coefs[aus_vars[1]]
+coefs[aus_vars[2]]
+## USO
+aus_vars <- c("I(court)US Open", "I(court)US Open:wue_ratio")
+cov_AO <- cov_mat[aus_vars, aus_vars]
+coefs[aus_vars[1]]
+coefs[aus_vars[2]]
+
 
 ## plot diags
 g <- ggDiagnose(out_list$final_model, which = 1:6, return = TRUE)
@@ -91,7 +132,7 @@ dev.off()
 
 ## outliers
 fed_df <- out_list$final_model$data
-fed_df[c(38,66,48),]
+fed_df[c(31,40,94),]
 sort(fed_df$wue, de = FALSE)
 ind <- which(fed_df$pct_bp == 0)
 fed_df[ind,]
@@ -113,9 +154,10 @@ delta_sd <- function(b, m, sigma){
 
 ## Aus open
 cov_mat <- vcov(out_list$final_model)
-cov_AO <- cov_mat[c(2,10), c(2, 10)]
-df$estimate[2] + df$estimate[10] + 2 * c(-1, 0, 1) * sd_AO
-b <- df$estimate[2]
+aus_vars <- c("I(court)Australian Open", "I(court)Australian Open:wue_ratio")
+cov_AO <- cov_mat[aus_vars, aus_vars]
+coefs[aus_vars[1]]
+coefs[aus_vars[2]]
 m <- df$estimate[10]
 sd_AO <- sqrt(sum(cov_mat[c(2,10), c(2,10)]))
 h <- c(1 / m, b / m^2)
@@ -152,8 +194,15 @@ df$estimate[4] / df$estimate[12]
 
 #######################################3
 ## The rest
-top_players <- gs_partial_players %>% group_by(name, Tour) %>% tally() %>%
-    filter(n >= 32 & Tour == "wta" | n >=40 & Tour == "atp")
+
+tours <- gs_partial_players %>% select(name, Tour) %>%
+  group_by(name) %>% summarize(Tour = Tour[1]) %>% ungroup()
+
+gs_partial_players_t <- left_join(gs_partial_players_v2, tours, by = "name")
+
+top_players <- gs_partial_players_t %>% group_by(name, Tour) %>% tally() %>%
+    filter(n >= 48 & Tour == "wta" | n >=56 & Tour == "atp") %>%
+  arrange(desc(n))
 print(top_players, n = 45)
 
 
@@ -177,12 +226,12 @@ for(ii in 1:L){
     tour <- top_players$Tour[ii]
     out_list <- courtsports::model_individual(
                               player_name = player_name,
-                              data = gs_partial_players,
+                              data = gs_partial_players_t,
                               ref = ref,
                               start_lower = start_lower,
-                              test_prop = test_prop,
-                              min_year = min_year,
-                              max_year = max_year,
+                              test_prop = 0,
+                              min_year = 2013,
+                              max_year = 2020,
                               seed = seed)
     mod <- out_list$final_model
     mods[[ii]] <- mod
@@ -233,7 +282,8 @@ kable(out,
                                        "Adj. $R^2$",
                                        "Max VIF"),
              caption = "\\label{tab:ind-sum}Summary of best-fit individual models.",
-      booktabs = TRUE, digits = 2, escape = FALSE) %>% kable_styling(latex_options = "striped", "hold_position")
+      booktabs = TRUE, digits = 2, escape = FALSE, linesep = "") %>%
+  kable_styling(latex_options = "striped", "hold_position")
 
 
 player_df <- do.call('rbind', player_list[inds])
@@ -398,12 +448,12 @@ L <- length(inds)
 player_list <- vector(mode = "list", length = L)
 slams <- c("Australian Open", "French Open", "US Open", "Wimbledon")
 quant <-  .5
-pred_df <- gs_partial_players %>% group_by(name) %>%
+pred_df <- gs_partial_players_t %>% group_by(name) %>%
     filter(name %in% top_players$name) %>%
     summarize_if(is.numeric, quantile, na.rm = TRUE, probs = quant)
 
 ## rank difference
-gs_partial_players %>%
+gs_partial_players_t %>%
     filter(name %in% top_players$name)  %>%
     group_by(name) %>%
     summarize( diff = (max(rank, na.rm = TRUE) - min(rank, na.rm = TRUE))) %>%
@@ -413,6 +463,9 @@ pred_list <- vector(mode = "list", length = L)
 for(ll in 1:L){
     ii <- which(top_players$name == as.character(unique(player_df$name))[ll])
     player_name <- top_players$name[ii]
+    if(player_name == "Roger Federer"){
+      print(ii)
+    }
     mod <- mods[[ii]]
     df0 <- data[ii]
     df <- data[[ii]]
@@ -472,6 +525,11 @@ ggplot(data = ggdf, aes(y = fit, x = name, col = court, group = court)) +
 if(save_graph){
 ggsave("../plots/individual-models-results-mod-sub.pdf", width = 10, height = 14)
 }
+
+## FED QUARTILE PRED
+fed <- ggdf
+
+
 ## 0
 ###################3
 ## Make above graph prettier

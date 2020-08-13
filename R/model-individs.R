@@ -43,7 +43,7 @@ model_individual <- function(player_name = "Roger Federer",
 
     ## Make the tournament of reference
     data_sub$court <- relevel(data_sub$tournament, ref = ref)
-    
+
     ## Split into train and test data
     if(test_prop > 0){
         n_obs <- nrow(data_sub)
@@ -61,12 +61,12 @@ model_individual <- function(player_name = "Roger Federer",
         n_test <- n_obs
         inds <- 1:n_obs
     }
-    
 
-    mod_data_sub_low <- glm(pct_pts ~ I(court) + opponent_rank,
+
+    mod_data_sub_low <- glm(pct_pts ~ I(court) + log(opponent_rank),
                             data = data_train, family = gaussian)
 
-    mod_data_sub_full <- glm(pct_pts ~ I(court) + opponent_rank  +
+    mod_data_sub_full <- glm(pct_pts ~ I(court) + log(opponent_rank)  +
                                  wue_ratio +
                                  ave_serve_speed +
                                  pct_ace +
