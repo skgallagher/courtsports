@@ -23,6 +23,12 @@ graphic_width_short <- 12
 # write/save graphs locally?
 save_graph <- FALSE
 
+load("data/gs_players_v2.rda")
+load("data/gs_partial_players_v2.rda")
+
+gs_players <- gs_players_v2
+gs_partial_players <- gs_partial_players_v2
+
 ## Define variables for modeling
 gs_players$name_int = as.integer(as.factor(gs_players$name))
 gs_players$name_fac = as.factor(gs_players$name)
@@ -34,12 +40,13 @@ gs_players$late_round = gs_players$round >= "R16"
 gs_players$seeded = gs_players$rank <= 32
 gs_players$opponent_seeded = gs_players$opponent_rank <= 32
 
+atp_players = gs_players$name[gs_players$league == "ATP"]
 gs_partial_players %>%
   mutate(
     name_int = as.integer(as.factor(name)),
     name_fac = as.factor(name),
     ioc_fac = as.factor(ioc),
-    atp = (Tour == "atp"),
+    atp = ifelse(name %in% atp_players, 1, 0),
     year_fac = as.factor(year),
     late_round = round >= "R16",
     seeded = rank <= 32,
@@ -57,27 +64,15 @@ logistic_newmod = lme4::glmer(did_win ~ 0 + late_round + log(rank) + log(opponen
                                    age + (0 + tournament |name_fac),
                                  data = gs_players, family = "binomial", nAGQ =0)
 
-n_aces_mod = lme4::lmer(n_aces ~ late_round + log(rank) + log(opponent_rank) +
-                          year_fac + atp + (0 + tournament |name_fac),
-                        data = gs_partial_players)
-
-aces_new = lme4::glmer(cbind(n_aces, total_points - n_aces) ~ late_round + log(rank) + log(opponent_rank) + age + atp + 
+aces_new = lme4::glmer(cbind(n_aces, total_points - n_aces) ~ late_round + log(rank) + log(opponent_rank) + age + atp +
                         (0 + tournament |name_fac),
                       data = gs_partial_players, family = "binomial", nAGQ = 0)
 
-n_net_mod = lme4::lmer(n_netpt_w ~ late_round + log(rank) + log(opponent_rank) +
-                         year_fac + atp + (0 + tournament |name_fac),
-                       data = gs_partial_players, control = lmerControl(optimizer = "bobyqa"))
-
-nets_new = lme4::glmer(cbind(n_netpt_w, total_points - n_netpt_w) ~ late_round + log(rank) + log(opponent_rank) + age + atp + 
+nets_new = lme4::glmer(cbind(n_netpt_w, total_points - n_netpt_w) ~ late_round + log(rank) + log(opponent_rank) + age + atp +
                          (0 + tournament |name_fac),
                        data = gs_partial_players, family = "binomial", nAGQ = 0)
 
-n_ue_mod = lmer(n_ue ~ late_round + log(rank) + log(opponent_rank) +
-                  year_fac + atp + (0 + tournament |name_fac),
-                data = gs_partial_players, control = lmerControl(optimizer = "bobyqa"))
-
-ue_new = lme4::glmer(cbind(n_ue, total_points - n_ue) ~ late_round + log(rank) + log(opponent_rank) + age + atp + 
+ue_new = lme4::glmer(cbind(n_ue, total_points - n_ue) ~ late_round + log(rank) + log(opponent_rank) + age + atp +
                          (0 + tournament |name_fac),
                        data = gs_partial_players, family = "binomial", nAGQ = 0)
 
@@ -102,23 +97,46 @@ ue_new = lme4::glmer(cbind(n_ue, total_points - n_ue) ~ late_round + log(rank) +
    theme(axis.text.x=element_text(angle = 35, hjust = 1)) +
    ggtitle("Fixed effects") +
    scale_color_brewer("",palette = "Dark2") +
-   theme(legend.position = "none") + 
+   theme(legend.position = "none") +
    xlab("") +
    ylab("Coefficient") +
    guides(col = guide_legend(nrow=2)) +
-   geom_hline(yintercept = 0, color = "grey") + 
+   geom_hline(yintercept = 0, color = "grey") +
    theme(panel.grid.major = element_blank(),
          panel.grid.minor = element_blank())
- 
+
  logistic = function(x) return(1/(1+exp(-x)))
- 
+
+ more_players = c(
+   "Roger Federer",
+   "Andy Murray",
+   "David Ferrer",
+   "Fernando Verdasco",
+   "Grigor Dimitrov",
+   "Kei Nishikori",
+   "Kevin Anderson",
+   "Marin Cilic",
+   "Nick Kyrgios",
+   "Novak Djokovic",
+   "Rafael Nadal",
+   "Roberto Bautista Agut",
+   "Sam Querrey",
+   "Agnieszka Radwanska",
+   "Angelique Kerber",
+   "Petra Kvitova",
+   "Serena Williams",
+   "Venus Williams",
+   "Victoria Azarenka"
+ )
+
+
  as.data.frame(ranef(logistic_newmod, condVar = TRUE)) %>%
    mutate(tournament = gsub("tournament", "", term)) %>%
    filter(grp %in% more_players) %>%
    ggplot(., aes(x = grp, y = condval, ymin = condval- 2*condsd, ymax = condval + 2*condsd, color = tournament)) +
-   geom_errorbar(width = .5, position = "dodge",size = 1.5) +
+   geom_linerange(position = position_dodge(width = .5), size = 1.5) +
    scale_color_manual("", values=tournament_colors) +
-   gghighlight::gghighlight((condval- 2*condsd > 0) | (condval + 2*condsd < 0)) + 
+   gghighlight::gghighlight((condval- 2*condsd > 0) | (condval + 2*condsd < 0)) +
    my_theme +
    coord_flip() +
    labs(title = "Logistic Regression Coefficients",
@@ -132,8 +150,8 @@ ue_new = lme4::glmer(cbind(n_ue, total_points - n_ue) ~ late_round + log(rank) +
                              override.aes = list(size = 7))) +
    geom_hline(yintercept = 0, color = "grey") +
    theme(panel.grid.major = element_blank(),
-         panel.grid.minor = element_blank()) 
- 
+         panel.grid.minor = element_blank())
+
 attr(VarCorr(logistic_newmod)$name_fac, "correlation") %>%
   tbl_df %>%
   transmute(
@@ -177,49 +195,27 @@ tidy(aces_new) %>%
       term == "log(rank)" ~ "Rank (log)",
       term == "log(opponent_rank)" ~ "Opp. Rank (log)",
       term == "age" ~ "Age",
-      term == "atpTRUE" ~ "ATP"
+      term == "atp" ~ "ATP"
     )
     ) %>%
-  ggplot(., aes(x = name, y = estimate, 
-                ymin = estimate - 2*std.error, 
+  ggplot(., aes(x = name, y = estimate,
+                ymin = estimate - 2*std.error,
                 ymax = estimate + 2*std.error,
                 col = model,
-                group = model)) + 
+                group = model)) +
   geom_errorbar(width = .7, position = position_dodge(), size = 1.5) +
   my_theme +
   # coord_flip() +
   theme(axis.text.x=element_text(angle = 35, hjust = 1)) +
   ggtitle("Fixed effects") +
   scale_color_brewer("",palette = "Dark2") +
-  theme(legend.position = "bottom") + 
+  theme(legend.position = "bottom") +
   xlab("") +
   ylab("Coefficient") +
   guides(color = guide_legend(override.aes = list(size = 7)))  +
-  geom_hline(yintercept = 0, color = "grey") + 
+  geom_hline(yintercept = 0, color = "grey") +
   theme(panel.grid.major = element_blank(),
         panel.grid.minor = element_blank())
-
-more_players = c(
-  "Roger Federer",
-  "Andy Murray",
-  "David Ferrer",
-  "Fernando Verdasco",
-  "Grigor Dimitrov",
-  "Kei Nishikori",
-  "Kevin Anderson",
-  "Marin Cilic",
-  "Nick Kyrgios",
-  "Novak Djokovic",
-  "Rafael Nadal",
-  "Roberto Bautista Agut",
-  "Sam Querrey",
-  "Agnieszka Radwanska",
-  "Angelique Kerber",
-  "Petra Kvitova",
-  "Serena Williams",
-  "Venus Williams",
-  "Victoria Azarenka"
-)
 
 ranef_ue_many = as.data.frame(ranef(ue_new, condVar = TRUE)) %>%
   mutate(tournament = gsub("tournament", "", term)) %>%
@@ -229,7 +225,7 @@ ranef_ue_many = as.data.frame(ranef(ue_new, condVar = TRUE)) %>%
   xlab("") +
   ylab("Coefficient") +
   scale_color_manual("", values=tournament_colors) +
-  gghighlight::gghighlight((condval- 2*condsd > 0) | (condval + 2*condsd < 0)) + 
+  gghighlight::gghighlight((condval- 2*condsd > 0) | (condval + 2*condsd < 0)) +
   my_theme +
   coord_flip() +
   labs(title = "Unforced Errors",
@@ -250,7 +246,7 @@ ranef_aces_many = as.data.frame(ranef(aces_new, condVar = TRUE)) %>%
   xlab("") +
   ylab("Coefficient") +
   scale_color_manual("", values=tournament_colors) +
-  gghighlight::gghighlight((condval- 2*condsd > 0) | (condval + 2*condsd < 0)) + 
+  gghighlight::gghighlight((condval- 2*condsd > 0) | (condval + 2*condsd < 0)) +
   my_theme +
   coord_flip() +
   labs(title = "Aces",
@@ -274,7 +270,7 @@ ranef_net_many = as.data.frame(ranef(nets_new, condVar = TRUE)) %>%
   xlab("") +
   ylab("Coefficient") +
   scale_color_manual("", values=tournament_colors) +
-  gghighlight::gghighlight((condval- 2*condsd > 0) | (condval + 2*condsd < 0)) + 
+  gghighlight::gghighlight((condval- 2*condsd > 0) | (condval + 2*condsd < 0)) +
   my_theme +
   coord_flip() +
   labs(title = "Points won at net",
@@ -392,3 +388,85 @@ tidy(ue_new) %>%
   filter(group == "fixed") %>%
   dplyr::select(-group) %>%
   knitr::kable(format = "latex", digits = 3)
+
+## Model Selection
+
+set.seed(091418)
+logistic_newmod = lme4::glmer(did_win ~ 0 + late_round + log(rank) + log(opponent_rank) +
+                                age + (0 + tournament |name_fac),
+                              data = gs_players, family = "binomial", nAGQ =0)
+nocourt_logistic = glm(did_win ~ 0 + ioc_fac + late_round + log(rank) + log(opponent_rank) + age,
+                       data = gs_players, family = "binomial")
+base_logistic = glm(did_win ~ 0 + ioc_fac +  tournament + late_round + log(rank) + log(opponent_rank) + age,
+                    data = gs_players, family = "binomial")
+country_logistic = lme4::glmer(did_win ~ 0 + late_round + log(rank) + log(opponent_rank) + age + (0 + tournament |ioc_fac),
+                               data = gs_players, family = "binomial", nAGQ =0)
+ind_logistic =  lme4::glmer(did_win ~  0 + ioc_fac + late_round + log(rank) + log(opponent_rank) + age + (0 + tournament |name_int),
+                            data = gs_players, family = "binomial", nAGQ =0)
+ind_logistic_noioc =  lme4::glmer(did_win ~ 0 + late_round + log(rank) + log(opponent_rank) + age + (0 + tournament |name_int),
+                                  data = gs_players, family = "binomial", nAGQ =0)
+ind_int_logistic =  lme4::glmer(did_win ~ 0 + late_round + log(rank) + log(opponent_rank) + tournament + age + (1|name_int),
+                                data = gs_players, family = "binomial", nAGQ =0)
+ind_year_logistic =  lme4::glmer(did_win ~ 0 + late_round + log(rank) + log(opponent_rank) + tournament + age + (0+year_fac|name_int),
+                                 data = gs_players, family = "binomial", nAGQ =0)
+
+
+model_names = c("nocourt_logistic", "base_logistic", "country_logistic", "ind_logistic",
+                "ind_logistic_noioc", "ind_int_logistic", "ind_year_logistic")
+model.sums = data.frame(model = model_names, aic = rep(NA, length(model_names)), edf = rep(NA,length(model_names)))
+model.ests = data.frame()
+ran.effects = data.frame()
+for(mod in 1:nrow(model.sums)){
+  name = model_names[mod]
+  model.sums$aic[mod] = extractAIC(get(name))[2]
+  model.sums$edf[mod] = extractAIC(get(name))[1]
+  betas = tidy(get(name))
+  betas$model = name
+  if("group" %in% colnames(betas)){
+    model.ests = rbind(model.ests, filter(betas, group == "fixed") %>%
+                         dplyr::select(., -c("group")))
+  }
+  else model.ests = rbind(model.ests, betas)
+}
+
+model.sums$name = c("no_court", "no_random_ef", "country_ef", "ind_ef", "ind_no_ioc", "ind_intercept", "ind_year_ef")
+model.sums$fixed = c("No country, no tournament",
+                     "all",
+                     "no country, no tournament",
+                     "no tournament",
+                     "no country, no tournament",
+                     "no country",
+                     "no country, no year")
+model.sums$random = c("none",
+                      "none",
+                      "tournament (by country)",
+                      "tournament (by individual)",
+                      "tournament (by individual)",
+                      "intercept (by individual)",
+                      "year (by individual)")
+
+knitr::kable(model.sums[,c("name", "fixed", "random", "aic", "edf")], format = "latex",
+             row.names = FALSE, col.names = c("Model", "Fixed Effects", "Random Effects", "AIC", "EDF"),
+             caption = "\\label{tab:model.sums}AIC summary of the seven logistic regression models fitted. Including individual effects for each grand slam, without including any country effects, leads to the best model fit according to AIC.",
+             booktabs = TRUE) %>%
+  kableExtra::kable_styling(latex_options = "striped")
+
+
+model.ests %>%
+  filter(., !grepl("ioc", term)) %>%
+  ggplot(., aes(x = term, y = estimate, col = model, ymin = estimate - 2*std.error, ymax = estimate + 2*std.error)) +
+  geom_errorbar(width = .7, position = position_dodge()) +
+  my_theme +
+  # coord_flip() +
+  theme(axis.text.x=element_text(angle = 30, hjust = 1)) +
+  ggtitle("Fixed effects") +
+  scale_color_brewer("",palette = "Dark2") +
+  theme(legend.position = "bottom", legend.text=element_text(size=8),
+        # legend.margin=margin(0, 0, 0, 0),
+        legend.margin=margin(t = 0, unit='cm'),
+        legend.box.margin=margin(-10,-10,-10,-10)) +
+  xlab("") +
+  ylab("Estimate") +
+  guides(col = guide_legend(nrow=2))
+
+
