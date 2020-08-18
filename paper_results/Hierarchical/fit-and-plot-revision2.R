@@ -105,52 +105,89 @@ ue_new = lme4::glmer(cbind(n_ue, total_points - n_ue) ~ late_round + log(rank) +
    theme(panel.grid.major = element_blank(),
          panel.grid.minor = element_blank())
 
- logistic = function(x) return(1/(1+exp(-x)))
+ranef_plot = as.data.frame(ranef(logistic_newmod, condVar = TRUE)) %>%
+   mutate(tournament = gsub("tournament", "", term)) %>%
+   filter(grp %in% c("Roger Federer", "Rafael Nadal", "Serena Williams")) %>%
+   left_join(., more_players_tour, by = c("grp" = "name")) %>%
+   ggplot(., aes(x = grp, y = condval, ymin = condval- 2*condsd, ymax = condval + 2*condsd, color = tournament, group = tournament)) +
+   geom_errorbar(position = position_dodge(width = .5), size = 1.5) +
+   scale_color_manual("", values=tournament_colors) +
+   #gghighlight::gghighlight((condval- 2*condsd > 0) | (condval + 2*condsd < 0)) +
+   my_theme +
+   coord_flip() +
+   labs(title = "Random Effects",
+        xlab = " ",
+        ylab = "Coefficient") +
+   xlab("") +
+   ylab("Coefficient") +
+   theme(legend.position = "bottom") +
+   guides(col = guide_legend(nrow=2,
+                             override.aes = list(size = 7))) +
+   geom_hline(yintercept = 0, color = "grey") +
+   theme(panel.grid.major = element_blank(),
+         panel.grid.minor = element_blank())
+
+fixed.effects.plot + ranef_plot + plot_layout(widths = 1)
+ggsave("paper_results/plots/logistic-parameter-effects.jpg", width = 16, height = 8)
+
+
+logistic = function(x) return(1/(1+exp(-x)))
 
  more_players = c(
    "Roger Federer",
    "Andy Murray",
    "David Ferrer",
-   "Fernando Verdasco",
    "Grigor Dimitrov",
    "Kei Nishikori",
    "Kevin Anderson",
    "Marin Cilic",
    "Nick Kyrgios",
    "Novak Djokovic",
+   "Stan Wawrinka",
+   "John Isner",
+   "David Goffin",
    "Rafael Nadal",
-   "Roberto Bautista Agut",
-   "Sam Querrey",
-   "Agnieszka Radwanska",
    "Angelique Kerber",
-   "Petra Kvitova",
+   "Sloane Stephens",
+   "Simona Halep",
+   "Madison Keys",
+   "Elina Svitolina",
    "Serena Williams",
-   "Venus Williams",
-   "Victoria Azarenka"
+   "Venus Williams"
+ )
+
+ more_players_tour = tibble(
+   name = more_players,
+   tour = c(rep("ATP", 13), rep("WTA", 7))
  )
 
 
- as.data.frame(ranef(logistic_newmod, condVar = TRUE)) %>%
+logistic_ranef = as.data.frame(ranef(logistic_newmod, condVar = TRUE)) %>%
    mutate(tournament = gsub("tournament", "", term)) %>%
    filter(grp %in% more_players) %>%
-   ggplot(., aes(x = grp, y = condval, ymin = condval- 2*condsd, ymax = condval + 2*condsd, color = tournament)) +
-   geom_linerange(position = position_dodge(width = .5), size = 1.5) +
+   left_join(., more_players_tour, by = c("grp" = "name")) %>%
+   ggplot(., aes(x = grp, y = condval, ymin = condval- 2*condsd, ymax = condval + 2*condsd, color = tournament, group = tournament)) +
+   geom_errorbar(position = position_dodge(width = .5), size = 1.5) +
    scale_color_manual("", values=tournament_colors) +
-   gghighlight::gghighlight((condval- 2*condsd > 0) | (condval + 2*condsd < 0)) +
+   #gghighlight::gghighlight((condval- 2*condsd > 0) | (condval + 2*condsd < 0)) +
    my_theme +
    coord_flip() +
    labs(title = "Logistic Regression Coefficients",
-        subtitle = "Random Player Effect",
+        subtitle = "Random Player Effects",
         xlab = " ",
         ylab = "Coefficient") +
    xlab("") +
    ylab("Coefficient") +
    theme(legend.position = "bottom") +
+   facet_wrap(vars(tour), scales = "free_y", ncol = 2) +
    guides(col = guide_legend(nrow=1,
                              override.aes = list(size = 7))) +
    geom_hline(yintercept = 0, color = "grey") +
    theme(panel.grid.major = element_blank(),
          panel.grid.minor = element_blank())
+
+ggsave("paper_results/plots/logistic-ranef-many.jpg", width = 12, height = 12)
+
 
 attr(VarCorr(logistic_newmod)$name_fac, "correlation") %>%
   tbl_df %>%
@@ -174,6 +211,9 @@ attr(VarCorr(logistic_newmod)$name_fac, "correlation") %>%
   my_theme +
   theme(axis.text.x = element_text(angle = 30, hjust = 1),
         legend.position = "none")
+
+#logistic_ranef / (plot_spacer() + logistic_corr + plot_spacer()) + plot_layout(heights = c(2,1))
+ggsave("paper_results/plots/correlation.jpg", width = 12, height = 6)
 
 tidy(aces_new) %>%
   filter(., group == 'fixed') %>%
@@ -213,9 +253,13 @@ tidy(aces_new) %>%
   xlab("") +
   ylab("Coefficient") +
   guides(color = guide_legend(override.aes = list(size = 7)))  +
+  ylim(c(-4.5, 2)) +
   geom_hline(yintercept = 0, color = "grey") +
   theme(panel.grid.major = element_blank(),
         panel.grid.minor = element_blank())
+
+ggsave("paper_results/plots/linear-fixed-effects.jpg", width = 12, height = 8)
+
 
 ranef_ue_many = as.data.frame(ranef(ue_new, condVar = TRUE)) %>%
   mutate(tournament = gsub("tournament", "", term)) %>%
@@ -225,11 +269,10 @@ ranef_ue_many = as.data.frame(ranef(ue_new, condVar = TRUE)) %>%
   xlab("") +
   ylab("Coefficient") +
   scale_color_manual("", values=tournament_colors) +
-  gghighlight::gghighlight((condval- 2*condsd > 0) | (condval + 2*condsd < 0)) +
+  #gghighlight::gghighlight((condval- 2*condsd > 0) | (condval + 2*condsd < 0)) +
   my_theme +
   coord_flip() +
-  labs(title = "Unforced Errors",
-       subtitle = "Random Player Effect") +
+  labs(subtitle = "Unforced Errors") +
   theme(legend.position = "bottom") +
   guides(col = guide_legend(nrow=1,
                             override.aes = list(size = 7))) +
@@ -246,11 +289,10 @@ ranef_aces_many = as.data.frame(ranef(aces_new, condVar = TRUE)) %>%
   xlab("") +
   ylab("Coefficient") +
   scale_color_manual("", values=tournament_colors) +
-  gghighlight::gghighlight((condval- 2*condsd > 0) | (condval + 2*condsd < 0)) +
+  #gghighlight::gghighlight((condval- 2*condsd > 0) | (condval + 2*condsd < 0)) +
   my_theme +
   coord_flip() +
-  labs(title = "Aces",
-       subtitle = "Random Player Effect") +
+  labs(subtitle = "Aces") +
   theme(legend.position = "bottom") +
   guides(col = guide_legend(nrow=1,
                             override.aes = list(size = 7))) +
@@ -270,11 +312,10 @@ ranef_net_many = as.data.frame(ranef(nets_new, condVar = TRUE)) %>%
   xlab("") +
   ylab("Coefficient") +
   scale_color_manual("", values=tournament_colors) +
-  gghighlight::gghighlight((condval- 2*condsd > 0) | (condval + 2*condsd < 0)) +
+  #gghighlight::gghighlight((condval- 2*condsd > 0) | (condval + 2*condsd < 0)) +
   my_theme +
   coord_flip() +
-  labs(title = "Points won at net",
-       subtitle = "Random Player Effect") +
+  labs(subtitle = "Net Points Won") +
   theme(legend.position = "bottom") +
   guides(col = guide_legend(nrow=1,
                             override.aes = list(size = 7))) +
@@ -283,12 +324,12 @@ ranef_net_many = as.data.frame(ranef(nets_new, condVar = TRUE)) %>%
         panel.grid.minor = element_blank()) +
   theme(axis.text.y = element_blank())
 
-ggpubr::ggarrange(ranef_aces_many, ranef_net_many, ranef_ue_many,
-                  nrow =1,
-                  ncol = 3,
-                  common.legend = TRUE,
-                  legend="bottom",
-                  widths = c(.45, .27, .27))
+ranef_aces_many + ranef_net_many + ranef_ue_many +
+  plot_annotation(title = 'Random Player Effects',
+                  theme = my_theme) +
+  plot_layout(widths = 1, guides = "collect") & theme(legend.position = 'bottom')
+
+ggsave("paper_results/plots/linear-ranef-many.jpg", width = 12, height = 12)
 
 ue_corr = attr(VarCorr(ue_new)$name_fac, "correlation") %>%
   tbl_df %>%
@@ -366,6 +407,9 @@ ggpubr::ggarrange(aces_corr, nets_corr, ue_corr,
                   nrow =1,
                   ncol = 3,
                   legend="none")
+
+aces_corr + nets_corr + ue_corr + plot_layout(widths = 1)
+ggsave("paper_results/plots/linear-models-corr-matrices.jpg", width = 20, height = 6)
 
 ## Appendix things
 
