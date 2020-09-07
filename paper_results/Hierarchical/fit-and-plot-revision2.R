@@ -3,6 +3,7 @@ library(tidyverse)
 library(broom)
 library(lme4)
 library(dplyr)
+library(patchwork)
 
 my_theme <-  theme_bw() + # White background, black and white theme
   theme(axis.text = element_text(size = 24),
@@ -61,23 +62,52 @@ ind_logistic_noioc = lme4::glmer(did_win ~ late_round + log(rank) + log(opponent
                                  data = gs_players, family = "binomial", nAGQ =0)
 
 logistic_newmod = lme4::glmer(did_win ~ 0 + late_round + log(rank) + log(opponent_rank) +
-                                   age + (0 + tournament |name_fac),
+                                    scale(age) + (0 + tournament |name_fac),
                                  data = gs_players, family = "binomial", nAGQ =0)
 
-aces_new = lme4::glmer(cbind(n_aces, total_points - n_aces) ~ late_round + log(rank) + log(opponent_rank) + age + atp +
+aces_new = lme4::glmer(cbind(n_aces, total_points - n_aces) ~ late_round + log(rank) + log(opponent_rank) + scale(age) + atp +
                         (0 + tournament |name_fac),
                       data = gs_partial_players, family = "binomial", nAGQ = 0)
 
-nets_new = lme4::glmer(cbind(n_netpt_w, total_points - n_netpt_w) ~ late_round + log(rank) + log(opponent_rank) + age + atp +
+nets_new = lme4::glmer(cbind(n_netpt_w, total_points - n_netpt_w) ~ late_round + log(rank) + log(opponent_rank) + scale(age) + atp +
                          (0 + tournament |name_fac),
                        data = gs_partial_players, family = "binomial", nAGQ = 0)
 
-ue_new = lme4::glmer(cbind(n_ue, total_points - n_ue) ~ late_round + log(rank) + log(opponent_rank) + age + atp +
-                         (0 + tournament |name_fac),
+ue_new = lme4::glmer(cbind(n_ue, total_points - n_ue) ~ late_round + log(rank) + log(opponent_rank) + scale(age) + atp +
+                        (0 + tournament |name_fac),
                        data = gs_partial_players, family = "binomial", nAGQ = 0)
 
+logistic = function(x) return(1/(1+exp(-x)))
 
- fixed.effects.plot = tidy(logistic_newmod) %>%
+more_players = c(
+  "Roger Federer",
+  "Andy Murray",
+  "David Ferrer",
+  "Grigor Dimitrov",
+  "Kei Nishikori",
+  "Kevin Anderson",
+  "Marin Cilic",
+  "Nick Kyrgios",
+  "Novak Djokovic",
+  "Stan Wawrinka",
+  "John Isner",
+  "David Goffin",
+  "Rafael Nadal",
+  "Angelique Kerber",
+  "Sloane Stephens",
+  "Simona Halep",
+  "Madison Keys",
+  "Elina Svitolina",
+  "Serena Williams",
+  "Venus Williams"
+)
+
+more_players_tour = tibble(
+  name = more_players,
+  tour = c(rep("ATP", 13), rep("WTA", 7))
+)
+
+fixed.effects.plot = tidy(logistic_newmod) %>%
    filter(group == "fixed") %>%
    mutate(
      name = case_when(
@@ -85,7 +115,8 @@ ue_new = lme4::glmer(cbind(n_ue, total_points - n_ue) ~ late_round + log(rank) +
        term == "late_roundTRUE" ~ "Late Round (T)",
        term == "log(rank)" ~ "Rank (log)",
        term == "log(opponent_rank)" ~ "Opp. Rank (log)",
-       term == "age" ~ "Age"
+       term == "scale(age)" ~ "Age (scaled)",
+       TRUE ~ term
      )
    ) %>%
    ggplot(., aes(x = name,
@@ -128,38 +159,10 @@ ranef_plot = as.data.frame(ranef(logistic_newmod, condVar = TRUE)) %>%
          panel.grid.minor = element_blank())
 
 fixed.effects.plot + ranef_plot + plot_layout(widths = 1)
-ggsave("paper_results/plots/logistic-parameter-effects.jpg", width = 16, height = 8)
+if(save_graph) ggsave("paper_results/plots/logistic-parameter-effects.jpg", width = 16, height = 8)
 
 
-logistic = function(x) return(1/(1+exp(-x)))
 
- more_players = c(
-   "Roger Federer",
-   "Andy Murray",
-   "David Ferrer",
-   "Grigor Dimitrov",
-   "Kei Nishikori",
-   "Kevin Anderson",
-   "Marin Cilic",
-   "Nick Kyrgios",
-   "Novak Djokovic",
-   "Stan Wawrinka",
-   "John Isner",
-   "David Goffin",
-   "Rafael Nadal",
-   "Angelique Kerber",
-   "Sloane Stephens",
-   "Simona Halep",
-   "Madison Keys",
-   "Elina Svitolina",
-   "Serena Williams",
-   "Venus Williams"
- )
-
- more_players_tour = tibble(
-   name = more_players,
-   tour = c(rep("ATP", 13), rep("WTA", 7))
- )
 
 
 logistic_ranef = as.data.frame(ranef(logistic_newmod, condVar = TRUE)) %>%
@@ -186,7 +189,8 @@ logistic_ranef = as.data.frame(ranef(logistic_newmod, condVar = TRUE)) %>%
    theme(panel.grid.major = element_blank(),
          panel.grid.minor = element_blank())
 
-ggsave("paper_results/plots/logistic-ranef-many.jpg", width = 12, height = 12)
+logistic_ranef
+if(save_graph) ggsave("paper_results/plots/logistic-ranef-many.jpg", width = 12, height = 12)
 
 
 attr(VarCorr(logistic_newmod)$name_fac, "correlation") %>%
@@ -213,7 +217,7 @@ attr(VarCorr(logistic_newmod)$name_fac, "correlation") %>%
         legend.position = "none")
 
 #logistic_ranef / (plot_spacer() + logistic_corr + plot_spacer()) + plot_layout(heights = c(2,1))
-ggsave("paper_results/plots/correlation.jpg", width = 12, height = 6)
+if(save_graph) ggsave("paper_results/plots/correlation.jpg", width = 12, height = 6)
 
 tidy(aces_new) %>%
   filter(., group == 'fixed') %>%
@@ -234,8 +238,9 @@ tidy(aces_new) %>%
       term == "late_roundTRUE" ~ "Late Round",
       term == "log(rank)" ~ "Rank (log)",
       term == "log(opponent_rank)" ~ "Opp. Rank (log)",
-      term == "age" ~ "Age",
-      term == "atp" ~ "ATP"
+      term == "scale(age)" ~ "Age (scaled)",
+      term == "atp" ~ "ATP",
+      TRUE ~ term
     )
     ) %>%
   ggplot(., aes(x = name, y = estimate,
@@ -258,7 +263,7 @@ tidy(aces_new) %>%
   theme(panel.grid.major = element_blank(),
         panel.grid.minor = element_blank())
 
-ggsave("paper_results/plots/linear-fixed-effects.jpg", width = 12, height = 8)
+if(save_graph) ggsave("paper_results/plots/linear-fixed-effects.jpg", width = 12, height = 8)
 
 
 ranef_ue_many = as.data.frame(ranef(ue_new, condVar = TRUE)) %>%
@@ -329,7 +334,7 @@ ranef_aces_many + ranef_net_many + ranef_ue_many +
                   theme = my_theme) +
   plot_layout(widths = 1, guides = "collect") & theme(legend.position = 'bottom')
 
-ggsave("paper_results/plots/linear-ranef-many.jpg", width = 12, height = 12)
+if(save_graph) ggsave("paper_results/plots/linear-ranef-many.jpg", width = 12, height = 12)
 
 ue_corr = attr(VarCorr(ue_new)$name_fac, "correlation") %>%
   tbl_df %>%
@@ -411,6 +416,31 @@ ggpubr::ggarrange(aces_corr, nets_corr, ue_corr,
 aces_corr + nets_corr + ue_corr + plot_layout(widths = 1)
 ggsave("paper_results/plots/linear-models-corr-matrices.jpg", width = 20, height = 6)
 
+
+## why is Nadal bad now?
+
+gs_partial_players_v2 %>%
+  filter(name == "Rafael Nadal") %>%
+  group_by(tournament) %>%
+  summarize(avg_n_net = mean(n_netpt_w),
+            avg_n_ace = mean(n_aces),
+            avg_n_ue = mean(n_ue),
+            avg_p_net = mean(n_netpt_w/total_points),
+            avg_p_ace = mean(n_aces/total_points),
+            avg_p_ue = mean(n_ue/total_points),
+            avg_length = mean(total_points))
+
+gs_partial_players_v2 %>%
+  filter(name == "Roger Federer") %>%
+  group_by(tournament) %>%
+  summarize(avg_n_net = mean(n_netpt_w),
+            avg_n_ace = mean(n_aces),
+            avg_n_ue = mean(n_ue),
+            avg_p_net = mean(n_netpt_w/total_points),
+            avg_p_ace = mean(n_aces/total_points),
+            avg_p_ue = mean(n_ue/total_points),
+            avg_length = mean(total_points))
+
 ## Appendix things
 
 tidy(logistic_newmod) %>%
@@ -418,12 +448,12 @@ tidy(logistic_newmod) %>%
   dplyr::select(-group) %>%
   knitr::kable(format = "latex", digits = 3)
 
-tidy(aces_new) %>%
+tidy(nets_new) %>%
   filter(group == "fixed") %>%
   dplyr::select(-group) %>%
   knitr::kable(format = "latex", digits = 3)
 
-tidy(nets_new) %>%
+tidy(aces_new) %>%
   filter(group == "fixed") %>%
   dplyr::select(-group) %>%
   knitr::kable(format = "latex", digits = 3)
