@@ -61,19 +61,18 @@ ind_logistic_noioc = lme4::glmer(did_win ~ late_round + log(rank) + log(opponent
                                    year_fac + atp + (0 + tournament |name_fac),
                                  data = gs_players, family = "binomial", nAGQ =0)
 
-logistic_newmod = lme4::glmer(did_win ~ 0 + late_round + log(rank) + log(opponent_rank) +
-                                    scale(age) + (0 + tournament |name_fac),
-                                 data = gs_players, family = "binomial", nAGQ =0)
+logistic_newmod = lme4::glmer(did_win ~ 0 + log(rank) + log(opponent_rank) + scale(age) + (0 + tournament |name_fac),
+                              data = gs_players, family = "binomial", nAGQ =0)
 
-aces_new = lme4::glmer(cbind(n_aces, total_points - n_aces) ~ late_round + log(rank) + log(opponent_rank) + scale(age) + atp +
+aces_new = lme4::glmer(cbind(n_aces, total_points - n_aces) ~ late_round + log(rank) + log(opponent_rank) + scale(age) +  atp +
                         (0 + tournament |name_fac),
                       data = gs_partial_players, family = "binomial", nAGQ = 0)
 
-nets_new = lme4::glmer(cbind(n_netpt_w, total_points - n_netpt_w) ~ late_round + log(rank) + log(opponent_rank) + scale(age) + atp +
+nets_new = lme4::glmer(cbind(n_netpt_w, total_points - n_netpt_w) ~ late_round + log(rank) + log(opponent_rank) + scale(age) +  atp +
                          (0 + tournament |name_fac),
                        data = gs_partial_players, family = "binomial", nAGQ = 0)
 
-ue_new = lme4::glmer(cbind(n_ue, total_points - n_ue) ~ late_round + log(rank) + log(opponent_rank) + scale(age) + atp +
+ue_new = lme4::glmer(cbind(n_ue, total_points - n_ue) ~ late_round + log(rank) + log(opponent_rank) + scale(age) +  atp +
                         (0 + tournament |name_fac),
                        data = gs_partial_players, family = "binomial", nAGQ = 0)
 
@@ -125,6 +124,7 @@ fixed.effects.plot = tidy(logistic_newmod) %>%
                  ymax = estimate + 2*std.error)) +
    geom_errorbar(width = .7, position = position_dodge(), size = 1.5) +
    my_theme +
+   coord_flip() +
    theme(axis.text.x=element_text(angle = 35, hjust = 1)) +
    ggtitle("Fixed effects") +
    scale_color_brewer("",palette = "Dark2") +
@@ -159,7 +159,7 @@ ranef_plot = as.data.frame(ranef(logistic_newmod, condVar = TRUE)) %>%
          panel.grid.minor = element_blank())
 
 fixed.effects.plot + ranef_plot + plot_layout(widths = 1)
-if(save_graph) ggsave("paper_results/plots/logistic-parameter-effects.jpg", width = 16, height = 8)
+if(save_graph) ggsave("paper_results/plots/logistic-parameter-effects.jpg", width = graphic_width_long, height = 8)
 
 
 
@@ -190,7 +190,7 @@ logistic_ranef = as.data.frame(ranef(logistic_newmod, condVar = TRUE)) %>%
          panel.grid.minor = element_blank())
 
 logistic_ranef
-if(save_graph) ggsave("paper_results/plots/logistic-ranef-many.jpg", width = 12, height = 12)
+if(save_graph) ggsave("paper_results/plots/logistic-ranef-many.jpg", width = graphic_width_long, height = 12)
 
 
 attr(VarCorr(logistic_newmod)$name_fac, "correlation") %>%
@@ -217,7 +217,7 @@ attr(VarCorr(logistic_newmod)$name_fac, "correlation") %>%
         legend.position = "none")
 
 #logistic_ranef / (plot_spacer() + logistic_corr + plot_spacer()) + plot_layout(heights = c(2,1))
-if(save_graph) ggsave("paper_results/plots/correlation.jpg", width = 12, height = 6)
+if(save_graph) ggsave("paper_results/plots/correlation.jpg", width = graphic_width_short, height = 6)
 
 tidy(aces_new) %>%
   filter(., group == 'fixed') %>%
@@ -251,7 +251,7 @@ tidy(aces_new) %>%
   geom_errorbar(width = .7, position = position_dodge(), size = 1.5) +
   my_theme +
   # coord_flip() +
-  theme(axis.text.x=element_text(angle = 35, hjust = 1)) +
+  #theme(axis.text.x=element_text(angle = 35, hjust = 1)) +
   ggtitle("Fixed effects") +
   scale_color_brewer("",palette = "Dark2") +
   theme(legend.position = "bottom") +
@@ -261,9 +261,10 @@ tidy(aces_new) %>%
   ylim(c(-4.5, 2)) +
   geom_hline(yintercept = 0, color = "grey") +
   theme(panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank())
+        panel.grid.minor = element_blank()) +
+  coord_flip()
 
-if(save_graph) ggsave("paper_results/plots/linear-fixed-effects.jpg", width = 12, height = 8)
+if(save_graph) ggsave("paper_results/plots/linear-fixed-effects.jpg", width = graphic_width_short, height = 6)
 
 
 ranef_ue_many = as.data.frame(ranef(ue_new, condVar = TRUE)) %>%
@@ -334,7 +335,7 @@ ranef_aces_many + ranef_net_many + ranef_ue_many +
                   theme = my_theme) +
   plot_layout(widths = 1, guides = "collect") & theme(legend.position = 'bottom')
 
-if(save_graph) ggsave("paper_results/plots/linear-ranef-many.jpg", width = 12, height = 12)
+if(save_graph) ggsave("paper_results/plots/linear-ranef-many.jpg", width = graphic_width_long, height = 12)
 
 ue_corr = attr(VarCorr(ue_new)$name_fac, "correlation") %>%
   tbl_df %>%
@@ -355,7 +356,7 @@ ue_corr = attr(VarCorr(ue_new)$name_fac, "correlation") %>%
   # labels = c("-1.0", "-0.5", "  0.0", "  0.5", "  1.0")) +
   geom_text(aes(label = round(value, 2), family = "serif", size = 14)) +
   labs(x = "", y = "",
-       title = "Y = Unforced Errors")  +
+       title = "Y= UEs")  +
   my_theme +
   theme(axis.text.x = element_text(angle = 30, hjust = 1),
         legend.position = "none")
@@ -379,7 +380,7 @@ aces_corr = attr(VarCorr(aces_new)$name_fac, "correlation") %>%
   # labels = c("-1.0", "-0.5", "  0.0", "  0.5", "  1.0")) +
   geom_text(aes(label = round(value, 2), family = "serif", size = 14)) +
   labs(x = "", y = "",
-       title = "Y = Aces")  +
+       title = "Y= Aces")  +
   my_theme +
   theme(axis.text.x = element_text(angle = 30, hjust = 1),
         legend.position = "none")
@@ -403,18 +404,14 @@ nets_corr = attr(VarCorr(nets_new)$name_fac, "correlation") %>%
   # labels = c("-1.0", "-0.5", "  0.0", "  0.5", "  1.0")) +
   geom_text(aes(label = round(value, 2), family = "serif", size = 14)) +
   labs(x = "", y = "",
-       title = "Y = Points won at net")  +
+       title = "Y= Net Pts Won")  +
   my_theme +
   theme(axis.text.x = element_text(angle = 30, hjust = 1),
         legend.position = "none")
 
-ggpubr::ggarrange(aces_corr, nets_corr, ue_corr,
-                  nrow =1,
-                  ncol = 3,
-                  legend="none")
 
 aces_corr + nets_corr + ue_corr + plot_layout(widths = 1)
-ggsave("paper_results/plots/linear-models-corr-matrices.jpg", width = 20, height = 6)
+if(save_graph) ggsave("paper_results/plots/linear-models-corr-matrices.jpg", width = graphic_width_long, height = 6)
 
 
 ## why is Nadal bad now?
@@ -446,42 +443,39 @@ gs_partial_players_v2 %>%
 tidy(logistic_newmod) %>%
   filter(group == "fixed") %>%
   dplyr::select(-group) %>%
-  knitr::kable(format = "latex", digits = 3)
+  knitr::kable(format = "latex", digits = 3, booktabs = TRUE)
 
 tidy(nets_new) %>%
   filter(group == "fixed") %>%
   dplyr::select(-group) %>%
-  knitr::kable(format = "latex", digits = 3)
+  knitr::kable(format = "latex", digits = 3, booktabs = TRUE)
 
 tidy(aces_new) %>%
   filter(group == "fixed") %>%
   dplyr::select(-group) %>%
-  knitr::kable(format = "latex", digits = 3)
+  knitr::kable(format = "latex", digits = 3, booktabs = TRUE)
 
 tidy(ue_new) %>%
   filter(group == "fixed") %>%
   dplyr::select(-group) %>%
-  knitr::kable(format = "latex", digits = 3)
+  knitr::kable(format = "latex", digits = 3, booktabs = TRUE)
 
 ## Model Selection
 
 set.seed(091418)
-logistic_newmod = lme4::glmer(did_win ~ 0 + late_round + log(rank) + log(opponent_rank) +
-                                age + (0 + tournament |name_fac),
-                              data = gs_players, family = "binomial", nAGQ =0)
-nocourt_logistic = glm(did_win ~ 0 + ioc_fac + late_round + log(rank) + log(opponent_rank) + age,
+nocourt_logistic = glm(did_win ~ 0 + ioc_fac + log(rank) + log(opponent_rank) + scale(age)  ,
                        data = gs_players, family = "binomial")
-base_logistic = glm(did_win ~ 0 + ioc_fac +  tournament + late_round + log(rank) + log(opponent_rank) + age,
+base_logistic = glm(did_win ~ 0 + ioc_fac +  tournament + log(rank) + log(opponent_rank) + scale(age)  ,
                     data = gs_players, family = "binomial")
-country_logistic = lme4::glmer(did_win ~ 0 + late_round + log(rank) + log(opponent_rank) + age + (0 + tournament |ioc_fac),
+country_logistic = lme4::glmer(did_win ~ 0 + log(rank) + log(opponent_rank) + scale(age) + (0 + tournament |ioc_fac),
                                data = gs_players, family = "binomial", nAGQ =0)
-ind_logistic =  lme4::glmer(did_win ~  0 + ioc_fac + late_round + log(rank) + log(opponent_rank) + age + (0 + tournament |name_int),
+ind_logistic =  lme4::glmer(did_win ~  0 + ioc_fac + log(rank) + log(opponent_rank) + scale(age) + (0 + tournament |name_int),
                             data = gs_players, family = "binomial", nAGQ =0)
-ind_logistic_noioc =  lme4::glmer(did_win ~ 0 + late_round + log(rank) + log(opponent_rank) + age + (0 + tournament |name_int),
+ind_logistic_noioc =  lme4::glmer(did_win ~ 0 + log(rank) + log(opponent_rank) + scale(age) +  (0 + tournament |name_int),
                                   data = gs_players, family = "binomial", nAGQ =0)
-ind_int_logistic =  lme4::glmer(did_win ~ 0 + late_round + log(rank) + log(opponent_rank) + tournament + age + (1|name_int),
+ind_int_logistic =  lme4::glmer(did_win ~ 0 + log(rank) + log(opponent_rank) + scale(age) +  (1 |name_int),
                                 data = gs_players, family = "binomial", nAGQ =0)
-ind_year_logistic =  lme4::glmer(did_win ~ 0 + late_round + log(rank) + log(opponent_rank) + tournament + age + (0+year_fac|name_int),
+ind_year_logistic =  lme4::glmer(did_win ~ 0 + log(rank) + log(opponent_rank) + tournament + scale(age) +  (0+year_fac|name_int),
                                  data = gs_players, family = "binomial", nAGQ =0)
 
 
@@ -504,12 +498,12 @@ for(mod in 1:nrow(model.sums)){
 }
 
 model.sums$name = c("no_court", "no_random_ef", "country_ef", "ind_ef", "ind_no_ioc", "ind_intercept", "ind_year_ef")
-model.sums$fixed = c("No country, no tournament",
+model.sums$fixed = c("no tournament",
                      "all",
                      "no country, no tournament",
                      "no tournament",
                      "no country, no tournament",
-                     "no country",
+                     "no country, no tournament",
                      "no country, no year")
 model.sums$random = c("none",
                       "none",
