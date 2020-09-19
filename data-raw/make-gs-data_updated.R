@@ -1,3 +1,4 @@
+## Updated in August 2020 to get data up through 2019
 ## Script to make data used in our analysis, specifically
 ##
 ## 1. gs.rda

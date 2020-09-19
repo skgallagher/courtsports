@@ -224,7 +224,7 @@ join_gs_pbp <- function(gs_pbp, gs){
                               loser_rank, winner_age, winner_ioc, Retirement,
                               w_pointswon, w_gameswon, w_setswon,
                               l_pointswon, l_gameswon, l_setswon,
-                              round) %>%
+                              round, league) %>%
         summarize(a1 = sort(c(winner_name, loser_name))[1],
                   a2 = sort(c(winner_name, loser_name), decreasing = TRUE)[1])
 
