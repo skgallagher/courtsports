@@ -124,6 +124,8 @@ coefs[aus_vars[2]]
 
 
 ## plot diags
+my_theme <-  theme_bw(base_size = 20) + # White background, black and white theme
+  theme(text = element_text(family="serif"))
 g <- ggDiagnose(out_list$final_model, which = 1:6, return = TRUE)
 ggs <- g$ggout
 ggthm <- lapply(ggs, function(gg) gg + my_theme)
