@@ -16,7 +16,7 @@ library(knitr)
 library(broom)
 library(kableExtra)
 # devtools::install_github("benjaminleroy/ggDiagnose")
-library(ggDiagnose)
+#library(ggDiagnose)
 
 
 data(gs_partial_players_v2)
@@ -49,10 +49,10 @@ graphic_width_short <- 12
 save_graph <- FALSE
 ###########################################################################
 
-player_name <- "Roger Federer"
+player_name <- "Rafael Nadal"
 data <- gs_partial_players_v2
-ref <- "Wimbledon"
-start_lower <- TRUE
+ref <- "French Open"
+start_lower <- FALSE
 min_year <- 2013
 max_year <- 2020
 seed <- 2020
@@ -72,7 +72,10 @@ out_list <- courtsports::model_individual(
 summary(out_list$final_model)
 r2 <- with(summary(out_list$final_model), 1 - deviance/null.deviance)
 ## double check
-best_mod <- lm(out_list$step_model$formula, data = out_list$data_sub[-out_list$train_inds,])
+best_mod <- glm(out_list$step_model$formula,
+               data = out_list$data_sub[-out_list$train_inds,],
+               family = binomial,
+               weights = total_points)
 summary(best_mod)$r.squared
 summary(best_mod)$adj.r.squared
 print(r2)
@@ -80,10 +83,18 @@ par(mfrow = c(2,2))
 plot(out_list$final_model)
 print(out_list$n_obs)
 df <- broom::tidy(out_list$final_model)
-kable(df[,-4], format = "latex",
-      row.names = FALSE, col.names = c("Coef.", "Est.",
-                                       "Std. Err.", "p-value"),
-             caption = "\\label{tab:fed-ind-coef} Modeling coefficients for Federer's best fit individual model using Wimbledon as a reference court.",
+df <- df %>%
+  mutate(OR = exp(estimate),
+         lower = exp(estimate - 1.96 * std.error),
+         upper = exp(estimate + 1.96 * std.error))
+kable(df %>%
+        select(term, OR, lower, upper,
+               p.value), format = "latex",
+      row.names = FALSE, col.names = c("Coef.", "Odds Ratio",
+                                       "Lower 95% CI",
+                                       "Upper 95% CI",
+                                       "p-value"),
+             caption = "\\label{tab:fed-ind-coef} Modeling coefficients for Nadal's best fit individual model using the French Open as a reference court.",
       booktabs = TRUE, digits = 4) %>% kable_styling(latex_options = "striped", "hold_position")
 car::vif(out_list$final_model)
 
@@ -197,21 +208,39 @@ df$estimate[4] / df$estimate[12]
 
 #######################################3
 ## The rest
+data(gs_players_v2)
+top_player_names <- gs_players %>%
+  group_by(name, league) %>% tally() %>%
+  arrange(desc(n)) %>%
+  group_by(league) %>%
+  top_n(n = 10, wt = n) %>%
+  arrange(league) %>%
+  rename(Tour = league)
+usethis::use_data(top_player_names, overwrite = TRUE)
 
-tours <- gs_partial_players %>% select(name, Tour) %>%
-  group_by(name) %>% summarize(Tour = Tour[1]) %>% ungroup()
 
-gs_partial_players_t <- left_join(gs_partial_players_v2, tours, by = "name")
+data(gs_partial_players_v2)
+gs_partial_players_v2 <- gs_partial_players_v2 %>%
+  rename(Tour = league)
 
-top_players <- gs_partial_players_t %>% group_by(name, Tour) %>% tally() %>%
-    filter(n >= 48 & Tour == "wta" | n >=56 & Tour == "atp") %>%
-  arrange(desc(n))
+with(gs_partial_players_v2, table(year, tournament, Tour))
+
+
+## women is 19 * 2 = (4 missing in 2015, 2 in 2018, 2 in 2019)
+## men is 23 * 2
+top_players <- gs_partial_players_v2 %>%
+  filter(name %in% top_player_names$name[top_player_names$n > 40])
+
 print(top_players, n = 45)
 
+top_player_names <- top_players %>%
+  group_by(name, Tour) %>%
+  tally() %>%
+  filter(n > 40)
 
 ## Build a list of data frames
 # devtools::load_all("~/courtsports")
-L <- nrow(top_players)
+L <- nrow(top_player_names %>% filter(n > 40))
 player_list <- vector(mode = "list", length = L)
 mods <- vector(mode = "list", length = L)
 data <- mods <- vector(mode = "list", length = L)
@@ -224,12 +253,17 @@ sum_df <- data.frame(name = rep("nm", L),
                      R2 = 0,
                      max_vif = 0, stringsAsFactors = FALSE)
 for(ii in 1:L){
-    player_name <- top_players$name[ii]
+    player_name <- top_player_names$name[ii]
     print(player_name)
-    tour <- top_players$Tour[ii]
+    tour <- top_player_names$Tour[ii]
+    data_train <- top_players %>% filter(name == player_name)
+    if(nrow(data_train) < 40){
+      print("Not enough observations to fit a model")
+      next
+    }
     out_list <- courtsports::model_individual(
                               player_name = player_name,
-                              data = gs_partial_players_t,
+                              data = top_players,
                               ref = ref,
                               start_lower = start_lower,
                               test_prop = 0,
@@ -291,140 +325,6 @@ kable(out,
 
 player_df <- do.call('rbind', player_list[inds])
 
-## Simple player effects graph
-gdf <- player_df %>% group_by(tour, var, pos, pos_bonf) %>%
-    summarize(times = abs(sum(pos, na.rm = TRUE)))
-gdf$var <- as.character(gdf$var)
-gdf <- gdf %>% filter(grepl(":", var))
-gdf$Tour <-  fct_recode(gdf$tour, WTA = "wta", ATP = "atp")
-
-gdf$var_pretty <- gdf$var
-gdf$var_pretty <- gsub("I\\(court\\)", "", gdf$var_pretty)
-gdf$slam <- gsub(":.*", "", gdf$var_pretty)
-gdf$interaction <- gsub(".*:", "", gdf$var_pretty)
-gdf$interaction <- factor(gdf$interaction, labels = c("% Break pts. won",
-                                                      "% Net pts. won",
-                                                      "W/UE",
-                                                      "Ave. serve speed",
-                                                      "% Aces"))
-
-library(ggplot2)
-ggplot(data = na.omit(gdf[, -which(colnames(gdf) == "pos_bonf")]),
-                      aes(x = interaction,
-                       y = times,
-                       group = pos,
-                       fill = factor(pos))) +
-    geom_bar(stat = "identity",
-             position = position_dodge(preserve = "single")) +
-    facet_wrap(slam~Tour, ncol = 2) +
-    coord_flip() +
-    scale_fill_manual(values = c("red", "blue"),
-                      guide = guide_legend(reverse = TRUE),
-                      name = "Effect sign",
-                      labels = rev(c("Pos. (+)", "Neg. (-)"))) +
-    labs(title = "Number of times selected and sign of coefficient",
-         subtitle = paste0("In final individual model for top players; reference court: ",
-                          ref),
-         y = "Times selected",
-         x = "Court and interaction") +
-    my_theme
-
-if(save_graph){
-ggsave("../plots/individual-models-coef-signs-sub.jpg", width = graphic_width_short, height = 10)
-}
-
-## C
-gdf2 <- player_df %>% group_by(tour, var, pos) %>%
-    summarize(times = abs(sum(pos)))
-gdf2$var <- as.character(gdf2$var)
-cnms <- unique(gdf2$var)[-1]
-
-
-## hmm
-df <- player_df[, c("tour", "name", "var", "val")]
-df$var <- gsub("I\\(court\\)", "", df$var)
-df$var <- gsub("\\:", " : ", df$var)
-df$var <- gsub("\\_", " ", df$var)
-df$var <- gsub("pct", "%", df$var)
-df$var <- gsub("netpt", "Net points won", df$var)
-df$var <- gsub("bp", "Break points won", df$var)
-df$var <- gsub("wue", "W/UE", df$var)
-df$var <- gsub("US Open", "USO", df$var)
-df$var <- gsub("Australian Open", "AO", df$var)
-df$var <- gsub("Wimbledon", "WIM", df$var)
-df$var <- gsub("ave", "Ave.", df$var)
-df$var <- gsub("opponent", "Opponent", df$var)
-df_wide <- spread(df, key = var, val = val)
-df_wide <-  df_wide %>% replace(., is.na(.), 0)
-## Tomorrow
-#
-cor <- df_wide %>% dplyr::select(-c("tour", "name", "(Intercept)")) %>% cor()
-ggcorrplot(cor, hc.order = FALSE, type = "lower",
-           outline.col = "black") + my_theme +
-    theme(axis.text.x = element_text(angle = 90, vjust = 0)) +
-    labs(x = "", y = "",
-         title = "Correlation matrix for selected coefficients",
-         subtitle = "For top players individual models")
-
-if(save_graph){
-ggsave("../plots/individual-models-cor-mat-sub.pdf", width = 8, height = 8)
-}
-
-## Men's
-df_wide_m <- df_wide %>% filter(tour == "atp")
-cor <- df_wide_m %>% dplyr::select(-c("tour", "name", "(Intercept)")) %>% cor()
-ggcorrplot(cor, hc.order = FALSE, type = "lower",
-           outline.col = "black") + my_theme +
-    theme(axis.text.x = element_text(angle = 90, vjust = 0)) +
-    labs(x = "", y = "",
-         title = "Correlation matrix for selected coefficients",
-         subtitle = "For top ATP players individual models")
-#
-if(save_graph){
-ggsave("../plots/individual-models-cor-mat-atp-sub.pdf", width = 8, height = 8)
-}
-
-## Women's
-df_wide_w <- df_wide %>% filter(tour == "wta")
-cor <- df_wide_w %>% dplyr::select(-c("tour", "name", "(Intercept)")) %>% cor()
-ggcorrplot(cor, hc.order = FALSE, type = "lower",
-           outline.col = "black") + my_theme +
-    theme(axis.text.x = element_text(angle = 90, vjust = 0)) +
-    labs(x = "", y = "",
-         title = "Correlation matrix for selected coefficients",
-         subtitle = "For top WTA players individual models")
-#
-if(save_graph){
-ggsave("../plots/individual-models-cor-mat-wta-sub.pdf", width = 8, height = 8)
-}
-
-## AO
-slam_abb <- c("AO", "WIM", "USO")
-tours <- c("wta", "atp")
-titles <- c("Australian Open", "Wimbledon", "US Open")
-g_list <- vector(mode = "list", length = length(slam_abb) *  length(tours))
-
-for(jj in 1:length(tours)){
-    for(ii in 1:length(slam_abb)){
-        slam_vars <- grep(slam_abb[ii], colnames(df_wide), value = TRUE)
-        tour <- tours[jj]
-        cor <- df_wide_w %>% dplyr::select(slam_vars) %>% cor()
-        g_list[[length(slam_abb) * (jj -1) + ii]] <- ggcorrplot(cor, hc.order = FALSE, type = "lower",
-                                             outline.col = "black") + my_theme +
-            theme(axis.text.x = element_text(angle = 90, vjust = 0)) +
-            labs(x = "", y = "",
-                 title = paste0(titles[ii], " coefficients corr."),
-                 subtitle = paste0("For top ", toupper(tour), " players ind. models"))
-                                        #
-            }
-    }
-
-if(save_graph){
-pdf("../plots/cor-slams-sub.pdf", width = 16, height = 10)
-do.call("grid.arrange", c(g_list, ncol = 3))
-dev.off()
-}
-
 ##########################################
 ## A
 #########################################
@@ -447,11 +347,11 @@ effects <- player %>% group_by(slam, tour) %>%
 ## B
 ###############################
 
-L <- length(inds)
+L <- nrow(top_player_names)
 player_list <- vector(mode = "list", length = L)
 slams <- c("Australian Open", "French Open", "US Open", "Wimbledon")
 quant <-  .5
-pred_df <- gs_partial_players_t %>% group_by(name) %>%
+pred_df <- top_players %>% group_by(name) %>%
     filter(name %in% top_players$name) %>%
     summarize_if(is.numeric, quantile, na.rm = TRUE, probs = quant)
 
@@ -464,10 +364,15 @@ gs_partial_players_t %>%
 
 pred_list <- vector(mode = "list", length = L)
 for(ll in 1:L){
-    ii <- which(top_players$name == as.character(unique(player_df$name))[ll])
-    player_name <- top_players$name[ii]
+    ii <- ll
+    player_name <- top_player_names$name[ii]
     if(player_name == "Roger Federer"){
       print(ii)
+    }
+    data_train <- top_players %>% filter(name == player_name)
+    if(nrow(data_train) < 40){
+      print("Not enough observations to fit a model")
+      next
     }
     mod <- mods[[ii]]
     df0 <- data[ii]
@@ -499,7 +404,7 @@ for(ll in 1:L){
              caption = "\\label{tab:quart-preds} Data used to predicted expected percent of points won for individual models using different quartiles of predictors.",
       booktabs = TRUE, digits = 2) %>% kable_styling(latex_options = "striped", "hold_position"))
     }
-    pred <- predict.lm(mod, newdata = df, interval = "predict")
+    pred <- predict.glm(mod, newdata = df, se.fit = TRUE)
     pred_df <- as.data.frame(pred)
     pred_df$name <- player_name
     pred_df$court <- df$court
@@ -510,21 +415,23 @@ for(ll in 1:L){
 }
 
 
-
+library(extrafont)
+loadfonts()
 
 my_theme <-  theme_bw(base_size = 20) + # White background, black and white theme
-    theme(text = element_text(family="serif"),
+    theme(text = element_text(family="FreeSerif"),
           strip.text = element_text(size = 12))
 ggdf <- do.call('rbind', pred_list)
-ggdf$upr <- ifelse(ggdf$upr > 1, 1, ggdf$upr)
-ggdf$lwr <- ifelse(ggdf$lwr < 0, 0, ggdf$lwr)
-ggdf$fit <- ifelse(ggdf$fit > 1, 1, ggdf$fit)
-ggdf$fit <- ifelse(ggdf$fit < 0, 0, ggdf$fit)
+ggdf$pred <- boot::inv.logit(ggdf$fit)
+ggdf$upr <- with(ggdf, boot::inv.logit(fit + 1.96 * se.fit))
+ggdf$lwr <- with(ggdf, boot::inv.logit(fit- 1.96 * se.fit))
+
 ggdf$my_new_facet <- paste(ggdf$tour, "-", ggdf$name)
-ggplot(data = ggdf, aes(y = fit, x = quant, col = court, group = court)) +
+ggplot(data = ggdf, aes(y = pred, x = quant, col = court, group = court)) +
     facet_wrap(~my_new_facet, scales = "free_y",
                ncol = 3) +
     scale_color_manual(values = tournament_colors, name = "Tournament") +
+  geom_hline(yintercept = .5, linetype = "dashed") +
     geom_errorbar(aes(ymin = lwr,
                       ymax = upr), position = position_dodge(width = .5)) +
     geom_point(position = position_dodge(width = .5), size = .5) +
@@ -533,6 +440,7 @@ ggplot(data = ggdf, aes(y = fit, x = quant, col = court, group = court)) +
     labs(x = "Level of play", y = "Expected % of points won",
          title = "Individual model predictions",
          subtitle = "Opponent rank = 10; reference court = French Open")
+
 if(save_graph){
 ggsave("../plots/individual-models-results-mod-sub.pdf", width = 10, height = 14)
 }

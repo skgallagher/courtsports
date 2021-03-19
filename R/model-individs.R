@@ -1,5 +1,5 @@
 
-#' Model the individuals using stepwise linear regression
+#' Model the individuals using stepwise logistic regression
 #'
 #' @param player_name player name
 #' @param data default is gs_partial_players
@@ -27,16 +27,16 @@ model_individual <- function(player_name = "Roger Federer",
                               ) %>%
         dplyr::mutate(pct_ace = ifelse( n_sv > 0,
                                        n_aces / n_sv,
-                                       0),
+                                       0) * 10,
                       pct_netpt = ifelse(n_netpt > 0,
                                          n_netpt_w / n_netpt,
-                                         0),
+                                         0) * 10,
                       pct_bp = ifelse(n_bp > 0,
                                       n_bp_w / n_bp,
-                                      0),
+                                      0) * 10 ,
                       wue_ratio = ifelse(n_ue > 0,
                                          n_winners / n_ue,
-                                         100), ## magic number
+                                         10), ## magic number
                       pct_pts = ifelse(total_points > 0,
                                        pointswon / total_points,
                                        0))
@@ -62,9 +62,13 @@ model_individual <- function(player_name = "Roger Federer",
         inds <- 1:n_obs
     }
 
+    #browser()
 
-    mod_data_sub_low <- glm(pct_pts ~ I(court) + log(opponent_rank),
-                            data = data_train, family = gaussian)
+  #  browser()
+
+    mod_data_sub_low <- glm(pct_pts~ I(court) + log(opponent_rank),
+                            data = data_train, family = binomial,
+                            weights = total_points)
 
     mod_data_sub_full <- glm(pct_pts ~ I(court) + log(opponent_rank)  +
                                  wue_ratio +
@@ -77,7 +81,8 @@ model_individual <- function(player_name = "Roger Federer",
                           pct_ace* I(court) +
                           pct_bp * I(court) +
                           pct_netpt * I(court),
-                        data = data_train, family = gaussian)
+                        data = data_train, family = binomial,
+                        weights = total_points)
 
   object <- mod_data_sub_full
   if(start_lower){
@@ -90,7 +95,8 @@ model_individual <- function(player_name = "Roger Federer",
                                 trace = FALSE)
 
     final_model <- glm(data = data_test, formula = step_model$formula,
-                       family = gaussian)
+                       family = binomial,
+                       weights = total_points)
 
     out_list <- list(step_model = step_model,
                      final_model = final_model,
