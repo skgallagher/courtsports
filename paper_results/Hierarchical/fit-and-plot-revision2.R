@@ -1,6 +1,7 @@
 library(courtsports)
 library(tidyverse)
 library(broom)
+library(broom.mixed)
 library(lme4)
 library(dplyr)
 library(patchwork)
@@ -25,7 +26,7 @@ graphic_width_short <- 12
 save_graph <- FALSE
 
 load("data/gs_players_v2.rda")
-load("data/gs_partial_players_v2.rda")
+load("data/gs_partial_players_v3.rda")
 
 gs_players <- gs_players_v2
 gs_partial_players <- gs_partial_players_v2
@@ -78,6 +79,8 @@ ue_new = lme4::glmer(cbind(n_ue, total_points - n_ue) ~ late_round + log(rank) +
 
 logistic = function(x) return(1/(1+exp(-x)))
 
+load("data/top_player_names.rda")
+
 more_players = c(
   "Roger Federer",
   "Andy Murray",
@@ -101,13 +104,17 @@ more_players = c(
   "Venus Williams"
 )
 
-more_players_tour = tibble(
-  name = more_players,
-  tour = c(rep("ATP", 13), rep("WTA", 7))
-)
+more_players = top_players$name
+
+#more_players_tour = tibble(
+#  name = more_players,
+#  tour = c(rep("ATP", 13), rep("WTA", 7))
+#)
+
+more_players_tour = top_player_names
 
 fixed.effects.plot = tidy(logistic_newmod) %>%
-   filter(group == "fixed") %>%
+   filter(effect == "fixed") %>%
    mutate(
      name = case_when(
        term == "late_roundFALSE" ~ "Late Round (F)",
@@ -140,7 +147,7 @@ ranef_plot = as.data.frame(ranef(logistic_newmod, condVar = TRUE)) %>%
    mutate(tournament = gsub("tournament", "", term)) %>%
    filter(grp %in% c("Roger Federer", "Rafael Nadal", "Serena Williams")) %>%
    left_join(., more_players_tour, by = c("grp" = "name")) %>%
-   ggplot(., aes(x = grp, y = condval, ymin = condval- 2*condsd, ymax = condval + 2*condsd, color = tournament, group = tournament)) +
+   ggplot(., aes(x = grp, y = exp(condval), ymin = exp(condval- 2*condsd), ymax = exp(condval + 2*condsd), color = tournament, group = tournament)) +
    geom_errorbar(position = position_dodge(width = .5), size = 1.5) +
    scale_color_manual("", values=tournament_colors) +
    #gghighlight::gghighlight((condval- 2*condsd > 0) | (condval + 2*condsd < 0)) +
@@ -167,27 +174,27 @@ if(save_graph) ggsave("paper_results/plots/logistic-parameter-effects.jpg", widt
 
 logistic_ranef = as.data.frame(ranef(logistic_newmod, condVar = TRUE)) %>%
    mutate(tournament = gsub("tournament", "", term)) %>%
-   filter(grp %in% more_players) %>%
+   filter(grp %in% top_player_names$name) %>%
    left_join(., more_players_tour, by = c("grp" = "name")) %>%
-   ggplot(., aes(x = grp, y = condval, ymin = condval- 2*condsd, ymax = condval + 2*condsd, color = tournament, group = tournament)) +
+   ggplot(., aes(x = grp, y = exp(condval), ymin = exp(condval- 2*condsd), ymax = exp(condval + 2*condsd), color = tournament, group = tournament)) +
    geom_errorbar(position = position_dodge(width = .5), size = 1.5) +
    scale_color_manual("", values=tournament_colors) +
    #gghighlight::gghighlight((condval- 2*condsd > 0) | (condval + 2*condsd < 0)) +
    my_theme +
    coord_flip() +
-   labs(title = "Logistic Regression Coefficients",
-        subtitle = "Random Player Effects",
+   labs(title = "Random Player Effects",
         xlab = " ",
-        ylab = "Coefficient") +
+        ylab = "Log Odds") +
    xlab("") +
-   ylab("Coefficient") +
+   ylab("Log Odds") +
    theme(legend.position = "bottom") +
-   facet_wrap(vars(tour), scales = "free_y", ncol = 2) +
+   facet_wrap(vars(Tour), scales = "free_y", ncol = 2) +
    guides(col = guide_legend(nrow=1,
                              override.aes = list(size = 7))) +
-   geom_hline(yintercept = 0, color = "grey") +
+   geom_hline(yintercept = 1, color = "grey") +
    theme(panel.grid.major = element_blank(),
-         panel.grid.minor = element_blank())
+         panel.grid.minor = element_blank()) +
+  scale_y_log10()
 
 logistic_ranef
 if(save_graph) ggsave("paper_results/plots/logistic-ranef-many.jpg", width = graphic_width_long, height = 12)
@@ -219,17 +226,17 @@ attr(VarCorr(logistic_newmod)$name_fac, "correlation") %>%
 #logistic_ranef / (plot_spacer() + logistic_corr + plot_spacer()) + plot_layout(heights = c(2,1))
 if(save_graph) ggsave("paper_results/plots/correlation.jpg", width = graphic_width_short, height = 6)
 
-tidy(aces_new) %>%
-  filter(., group == 'fixed') %>%
+fixef_3 = tidy(aces_new) %>%
+  filter(., effect == 'fixed') %>%
   mutate(., model = "Aces") %>%
   bind_rows(
     tidy(ue_new) %>%
-      filter(., group == 'fixed') %>%
+      filter(., effect == 'fixed') %>%
       mutate(., model = "UE")
   ) %>%
   bind_rows(
     tidy(nets_new) %>%
-      filter(., group == 'fixed') %>%
+      filter(., effect == 'fixed') %>%
       mutate(., model = "Net")
   ) %>%
   mutate(
@@ -241,28 +248,29 @@ tidy(aces_new) %>%
       term == "scale(age)" ~ "Age (scaled)",
       term == "atp" ~ "ATP",
       TRUE ~ term
-    )
+    ),
+    intercept = ifelse(term == "(Intercept)", TRUE, FALSE)
     ) %>%
-  ggplot(., aes(x = name, y = estimate,
-                ymin = estimate - 2*std.error,
-                ymax = estimate + 2*std.error,
+  ggplot(., aes(y = name, x = estimate,
+                xmin = estimate - 2*std.error,
+                xmax = estimate + 2*std.error,
                 col = model,
                 group = model)) +
   geom_errorbar(width = .7, position = position_dodge(), size = 1.5) +
   my_theme +
-  # coord_flip() +
-  #theme(axis.text.x=element_text(angle = 35, hjust = 1)) +
   ggtitle("Fixed effects") +
   scale_color_brewer("",palette = "Dark2") +
   theme(legend.position = "bottom") +
   xlab("") +
   ylab("Coefficient") +
   guides(color = guide_legend(override.aes = list(size = 7)))  +
-  ylim(c(-4.5, 2)) +
-  geom_hline(yintercept = 0, color = "grey") +
+  geom_vline(xintercept = 0, color = "grey") +
   theme(panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank()) +
-  coord_flip()
+        panel.grid.minor = element_blank(),
+        strip.background = element_blank(),
+        strip.text.x = element_blank())
+
+fixef_3 + ggforce::facet_col(vars(intercept), scales = 'free', space = 'free')
 
 if(save_graph) ggsave("paper_results/plots/linear-fixed-effects.jpg", width = graphic_width_short, height = 6)
 
@@ -270,10 +278,10 @@ if(save_graph) ggsave("paper_results/plots/linear-fixed-effects.jpg", width = gr
 ranef_ue_many = as.data.frame(ranef(ue_new, condVar = TRUE)) %>%
   mutate(tournament = gsub("tournament", "", term)) %>%
   filter(grp %in% more_players) %>%
-  ggplot(., aes(x = grp, y = condval, ymin = condval- 2*condsd, ymax = condval + 2*condsd, color = tournament)) +
+  ggplot(., aes(x = grp, y = exp(condval), ymin = exp(condval- 2*condsd), ymax = exp(condval + 2*condsd), color = tournament)) +
   geom_errorbar(width = .5, position = "dodge",size = 1.5) +
   xlab("") +
-  ylab("Coefficient") +
+  ylab("Log Odds") +
   scale_color_manual("", values=tournament_colors) +
   #gghighlight::gghighlight((condval- 2*condsd > 0) | (condval + 2*condsd < 0)) +
   my_theme +
@@ -282,18 +290,19 @@ ranef_ue_many = as.data.frame(ranef(ue_new, condVar = TRUE)) %>%
   theme(legend.position = "bottom") +
   guides(col = guide_legend(nrow=1,
                             override.aes = list(size = 7))) +
-  geom_hline(yintercept = 0, color = "grey") +
+  geom_hline(yintercept = 1, color = "grey") +
   theme(panel.grid.major = element_blank(),
         panel.grid.minor = element_blank()) +
-  theme(axis.text.y = element_blank())
+  theme(axis.text.y = element_blank()) +
+  scale_y_log10()
 
 ranef_aces_many = as.data.frame(ranef(aces_new, condVar = TRUE)) %>%
   mutate(tournament = gsub("tournament", "", term)) %>%
   filter(grp %in% more_players) %>%
-  ggplot(., aes(x = grp, y = condval, ymin = condval- 2*condsd, ymax = condval + 2*condsd, color = tournament)) +
+  ggplot(., aes(x = grp, y = exp(condval), ymin = exp(condval- 2*condsd), ymax = exp(condval + 2*condsd), color = tournament)) +
   geom_errorbar(width = .5, position = "dodge",size = 1.5) +
   xlab("") +
-  ylab("Coefficient") +
+  ylab("Log Odds") +
   scale_color_manual("", values=tournament_colors) +
   #gghighlight::gghighlight((condval- 2*condsd > 0) | (condval + 2*condsd < 0)) +
   my_theme +
@@ -302,21 +311,22 @@ ranef_aces_many = as.data.frame(ranef(aces_new, condVar = TRUE)) %>%
   theme(legend.position = "bottom") +
   guides(col = guide_legend(nrow=1,
                             override.aes = list(size = 7))) +
-  geom_hline(yintercept = 0, color = "grey") +
+  geom_hline(yintercept = 1, color = "grey") +
   theme(panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank())
+        panel.grid.minor = element_blank()) +
+  scale_y_log10()
 
 ranef_net_many = as.data.frame(ranef(nets_new, condVar = TRUE)) %>%
   mutate(tournament = gsub("tournament", "", term)) %>%
   filter(grp %in% more_players) %>%
   ggplot(., aes(x = grp,
-                y = condval,
-                ymin = condval- 2*condsd,
-                ymax = condval + 2*condsd,
+                y = exp(condval),
+                ymin = exp(condval- 2*condsd),
+                ymax = exp(condval + 2*condsd),
                 color = tournament)) +
   geom_errorbar(width = .5, position = "dodge",size = 1.5) +
   xlab("") +
-  ylab("Coefficient") +
+  ylab("Log Odds") +
   scale_color_manual("", values=tournament_colors) +
   #gghighlight::gghighlight((condval- 2*condsd > 0) | (condval + 2*condsd < 0)) +
   my_theme +
@@ -325,7 +335,7 @@ ranef_net_many = as.data.frame(ranef(nets_new, condVar = TRUE)) %>%
   theme(legend.position = "bottom") +
   guides(col = guide_legend(nrow=1,
                             override.aes = list(size = 7))) +
-  geom_hline(yintercept = 0, color = "grey") +
+  geom_hline(yintercept = 1, color = "grey") +
   theme(panel.grid.major = element_blank(),
         panel.grid.minor = element_blank()) +
   theme(axis.text.y = element_blank())
@@ -441,7 +451,7 @@ gs_partial_players_v2 %>%
 ## Appendix things
 
 tidy(logistic_newmod) %>%
-  filter(group == "fixed") %>%
+  filter(effect == "fixed") %>%
   dplyr::select(-group) %>%
   knitr::kable(format = "latex", digits = 3, booktabs = TRUE)
 
