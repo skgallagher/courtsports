@@ -41,6 +41,7 @@ model_individual <- function(player_name = "Roger Federer",
                                        pointswon / total_points,
                                        0))
 
+   # browser()
     ## Make the tournament of reference
     data_sub$court <- relevel(data_sub$tournament, ref = ref)
 

@@ -22,10 +22,12 @@ library(kableExtra)
 data(gs_partial_players_v2)
 ########################################################################
 ## THeme
+#library(extrafont)
+#font_import()
 my_theme <-  theme_bw() + # White background, black and white theme
   theme(axis.text = element_text(size = 24),
         text = element_text(size = 28,
-                            family="serif"),
+                            family="serif"), #"FreeSerif"
         plot.title = element_text(hjust = 0.5, size=34),
         plot.subtitle = element_text(hjust = 0.5))
 
@@ -76,135 +78,6 @@ best_mod <- glm(out_list$step_model$formula,
                data = out_list$data_sub[-out_list$train_inds,],
                family = binomial,
                weights = total_points)
-summary(best_mod)$r.squared
-summary(best_mod)$adj.r.squared
-print(r2)
-par(mfrow = c(2,2))
-plot(out_list$final_model)
-print(out_list$n_obs)
-df <- broom::tidy(out_list$final_model)
-df <- df %>%
-  mutate(OR = exp(estimate),
-         lower = exp(estimate - 1.96 * std.error),
-         upper = exp(estimate + 1.96 * std.error))
-kable(df %>%
-        select(term, OR, lower, upper,
-               p.value), format = "latex",
-      row.names = FALSE, col.names = c("Coef.", "Odds Ratio",
-                                       "Lower 95% CI",
-                                       "Upper 95% CI",
-                                       "p-value"),
-             caption = "\\label{tab:fed-ind-coef} Modeling coefficients for Nadal's best fit individual model using the French Open as a reference court.",
-      booktabs = TRUE, digits = 4) %>% kable_styling(latex_options = "striped", "hold_position")
-car::vif(out_list$final_model)
-
-## QUANTILES
-out_list$data_sub %>%
-  summarize_if(is.numeric, quantile, na.rm = TRUE, probs = .25)
-out_list$data_sub %>%
-  summarize_if(is.numeric, quantile, na.rm = TRUE, probs = .5)
-out_list$data_sub %>%
-  summarize_if(is.numeric, quantile, na.rm = TRUE, probs = .75)
-
-## Intrepretations of coefficients
-coefs <- out_list$final_model$coefficients
-cov_f <- vcov(out_list$final_model)
-abs(coefs["log(opponent_rank)"])
-coefs["log(opponent_rank)"]
-sqrt(cov_f["log(opponent_rank)", "log(opponent_rank)"])
-## break points
-.1 * coefs["pct_bp"]
-.1 *sqrt(cov_f["pct_bp", "pct_bp"])
-## interactions
-cov_mat <- vcov(out_list$final_model)
-## AO
-aus_vars <- c("I(court)Australian Open", "I(court)Australian Open:wue_ratio")
-cov_AO <- cov_mat[aus_vars, aus_vars]
-coefs[aus_vars[1]]
-coefs[aus_vars[2]]
-## FO
-aus_vars <- c("I(court)French Open", "I(court)French Open:wue_ratio")
-cov_AO <- cov_mat[aus_vars, aus_vars]
-coefs[aus_vars[1]]
-coefs[aus_vars[2]]
-## USO
-aus_vars <- c("I(court)US Open", "I(court)US Open:wue_ratio")
-cov_AO <- cov_mat[aus_vars, aus_vars]
-coefs[aus_vars[1]]
-coefs[aus_vars[2]]
-
-
-## plot diags
-my_theme <-  theme_bw(base_size = 20) + # White background, black and white theme
-  theme(text = element_text(family="serif"))
-g <- ggDiagnose(out_list$final_model, which = 1:6, return = TRUE)
-ggs <- g$ggout
-ggthm <- lapply(ggs, function(gg) gg + my_theme)
-pdf("../plots/fed_diags.pdf", width = 16, height = 10)
-do.call("grid.arrange", c(ggthm, ncol = 3))
-dev.off()
-
-## outliers
-fed_df <- out_list$final_model$data
-fed_df[c(31,40,94),]
-sort(fed_df$wue, de = FALSE)
-ind <- which(fed_df$pct_bp == 0)
-fed_df[ind,]
-fed_df[which(fed_df$wue >= 5), ]
-
-mod2 <- lm(out_list$final_model$formula, data = fed_df[-c(38,66,48),])
-summary(mod2)
-
-
-## interaction effects
-
-
-delta_sd <- function(b, m, sigma){
-    sbb <- sigma[1,1]
-    smm <- sigma[2,2]
-    sbm <- sigma[1,2]
-    sqrt(sbb / m^2 - sbm * (1 + b) / m^3 + b * smm / m^4)
-}
-
-## Aus open
-cov_mat <- vcov(out_list$final_model)
-aus_vars <- c("I(court)Australian Open", "I(court)Australian Open:wue_ratio")
-cov_AO <- cov_mat[aus_vars, aus_vars]
-coefs[aus_vars[1]]
-coefs[aus_vars[2]]
-m <- df$estimate[10]
-sd_AO <- sqrt(sum(cov_mat[c(2,10), c(2,10)]))
-h <- c(1 / m, b / m^2)
-d_AO <- (h %*% cov_AO) %*% h
-df$estimate[2] / df$estimate[10]
-2 * d_AO
-## French
-sd_FO <- sqrt(sum(cov_mat[c(3,11), c(3,11)]))
-cov_FO <- cov_mat[c(3,11), c(3, 11)]
-df$estimate[3] + df$estimate[11] + 2 * c(-1, 0, 1) * sd_FO
-df$estimate[3] / df$estimate[11]
-b <- df$estimate[3]
-m <- df$estimate[11]
-sd_AO <- sqrt(sum(cov_mat[c(3,11), c(3,11)]))
-h <- c(1 / m, b / m^2)
-d_FO <- (h %*% cov_FO) %*% h
-df$estimate[3] / df$estimate[11]
-d_FO
-
-## US
-cov_UO <- cov_mat[c(4,12), c(2, 12)]
-sd_UO <- sqrt(sum(cov_mat[c(4,12), c(4,12)]))
-df$estimate[4] + df$estimate[12] +  2 * c(-1, 0, 1) * sd_UO
-df$estimate[4] / df$estimate[12]
-b <- df$estimate[4]
-m <- df$estimate[12]
-sd_UO <- sqrt(sum(cov_mat[c(4,12), c(4,12)]))
-h <- c(1 / m, b / m^2)
-d_UO <- (h %*% cov_UO) %*% h
-df$estimate[4] / df$estimate[12]
-2 * d_UO
-
-
 
 #######################################3
 ## The rest
@@ -268,7 +141,7 @@ for(ii in 1:L){
                               start_lower = start_lower,
                               test_prop = 0,
                               min_year = 2013,
-                              max_year = 2020,
+                              max_year = 2019,
                               seed = seed)
     mod <- out_list$final_model
     mods[[ii]] <- mod
@@ -304,48 +177,6 @@ for(ii in 1:L){
 }
 
 
-inds <- with(sum_df, which(n_obs / n_cov >= 2 & max_vif <= 10))
-out <- sum_df[inds,]
-out <- out[order(out$tour), c("name", "tour",
-                              "n_cov", "n_obs",
-                              "R2", "max_vif")]
-out$tour <- ifelse(out$tour == "atp", "ATP",
-                   ifelse(out$tour == "wta", "WTA", out$tour))
-
-kable(out,
-               format = "latex",
-      row.names = FALSE, col.names = c("Player", "Tour", "\\# Coef.",
-                                       "\\# Obs.",
-                                       "Adj. $R^2$",
-                                       "Max VIF"),
-             caption = "\\label{tab:ind-sum}Summary of best-fit individual models.",
-      booktabs = TRUE, digits = 2, escape = FALSE, linesep = "") %>%
-  kable_styling(latex_options = "striped", "hold_position")
-
-
-player_df <- do.call('rbind', player_list[inds])
-
-##########################################
-## A
-#########################################
-player_df$var_pretty <- gsub("I\\(court\\)", "", player_df$var)
-player_df$slam <- gsub(":.*", "", player_df$var_pretty)
-sub_player_df <- player_df
-sub_player_df$slam <- ifelse(sub_player_df$slam %in% c("Australian Open",
-                                                       "US Open",
-                                                       "Wimbledon"),
-                             sub_player_df$slam, NA)
-sub_player_df <- na.omit(sub_player_df)
-player <- sub_player_df %>% group_by(name, tour, slam) %>%
-    summarize(npos = sum(pos == 1), nneg = sum(pos == -1))
-
-effects <- player %>% group_by(slam, tour) %>%
-    summarize(npos = sum(npos), nneg = sum(nneg))
-
-
-#############################################
-## B
-###############################
 
 L <- nrow(top_player_names)
 player_list <- vector(mode = "list", length = L)
@@ -355,18 +186,13 @@ pred_df <- top_players %>% group_by(name) %>%
     filter(name %in% top_players$name) %>%
     summarize_if(is.numeric, quantile, na.rm = TRUE, probs = quant)
 
-## rank difference
-gs_partial_players_t %>%
-    filter(name %in% top_players$name)  %>%
-    group_by(name) %>%
-    summarize( diff = (max(rank, na.rm = TRUE) - min(rank, na.rm = TRUE))) %>%
-    filter(diff >= 50)
+
 
 pred_list <- vector(mode = "list", length = L)
 for(ll in 1:L){
     ii <- ll
     player_name <- top_player_names$name[ii]
-    if(player_name == "Roger Federer"){
+    if(player_name == "Rafael Nadal"){
       print(ii)
     }
     data_train <- top_players %>% filter(name == player_name)
@@ -378,7 +204,8 @@ for(ll in 1:L){
     df0 <- data[ii]
     df <- data[[ii]]
     tour <- toupper(df$Tour[1])
-    df1 <-  df %>% summarize_if(is.numeric, quantile, na.rm = TRUE, probs = .25)
+    df1 <-  df %>% summarize_if(is.numeric, quantile, na.rm = TRUE,
+                                probs = .25)
     df1$quant <-  "Below avg."
     df1 <- rbind(df1, df1, df1, df1)
     df1$court <- slams
@@ -391,16 +218,22 @@ for(ll in 1:L){
     df3 <- rbind(df3, df3, df3, df3)
     df3$court <- slams
     df <- rbind(df1, df2, df3)
+   # df <- df %>%
+   #   mutate_at(.vars = vars(contains("pct")), ~.x * 10)
     df$opponent_rank <- 10
     df$player_name <- player_name
-    if(player_name == "Roger Federer"){
-        print(kable(df[c(1, 5, 9), c("player_name", "ave_serve_speed",
+    if(player_name == "Rafael Nadal"){
+        print(kable(df[c(1, 5, 9), c("player_name",
+                                     "quant",
+                                     "pct_bp",
                                "pct_ace", "wue_ratio",
-                               "pct_netpt", "quant")],
+                               "pct_netpt")],
                format = "latex",
-      row.names = FALSE, col.names = c("Player", "Ave. serve speed.", "% Aces",
-                                       "W/UE", "% Net points won",
-                                       "Quartile"),
+      row.names = FALSE, col.names = c("Player",
+                                       "Performance Level",
+                                       "% Break points won", "% Aces",
+                                       "W/UE", "% Net points won"
+                                       ),
              caption = "\\label{tab:quart-preds} Data used to predicted expected percent of points won for individual models using different quartiles of predictors.",
       booktabs = TRUE, digits = 2) %>% kable_styling(latex_options = "striped", "hold_position"))
     }
@@ -415,12 +248,12 @@ for(ll in 1:L){
 }
 
 
-library(extrafont)
-loadfonts()
+##library(extrafont)
+##loadfonts()
 
-my_theme <-  theme_bw(base_size = 20) + # White background, black and white theme
-    theme(text = element_text(family="FreeSerif"),
-          strip.text = element_text(size = 12))
+##my_theme <-  theme_bw(base_size = 20) + # White background, black and white theme
+ ##   theme(text = element_text(family="FreeSerif"),
+ ##         strip.text = element_text(size = 12))
 ggdf <- do.call('rbind', pred_list)
 ggdf$pred <- boot::inv.logit(ggdf$fit)
 ggdf$upr <- with(ggdf, boot::inv.logit(fit + 1.96 * se.fit))
@@ -444,35 +277,3 @@ ggplot(data = ggdf, aes(y = pred, x = quant, col = court, group = court)) +
 if(save_graph){
 ggsave("../plots/individual-models-results-mod-sub.pdf", width = 10, height = 14)
 }
-
-## FED QUARTILE PRED
-fed <- ggdf
-
-
-## 0
-###################3
-## Make above graph prettier
-################3
-## A
-## make df with player | surface |# pos interaction |# neg interaction columns
-## look at correlation between the two (# pos and neg)
-## do by different surface
-############################
-## B
-## Expected percent of points won at each slam for IQR of stats
-#############################3
-## C
-## Make df with player_name | coef 1 | .. coeff P
-## look at correlation matrix
-
-
-## TODO
-## diags for federer DONE
-## and interpretation of model DONE
-## table of # of observations, # of covariates, R^2, and VIF DONE
-## rewrite interps of cool graphs DONE
-## add how this work will transform tennis forever DONE
-## Explain about different styles of play and emphasize court differences in
-## discussion/intro DONE
-## variable discussion and statistics ugh DONE
-## R package maintenace// vignette mostly to get EDA, hiearchical model, and individual models
